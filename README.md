@@ -49,7 +49,7 @@ http://localhost:8085/maps
 
     ```
     URL_TERMUX=https://raw.githubusercontent.com/iiab/iiab-android/refs/heads/main/0_termux-setup.sh
-    curl -Lo 0_termux-setup_v2.sh $URL_TERMUX
+    curl -Lo 0_termux-setup.sh $URL_TERMUX
     bash 0_termux-setup.sh --all
     ```
 
@@ -70,7 +70,7 @@ So far we currently only use it in order to confirm "Disable child processes res
 
     ```
     URL_IIAB=https://raw.githubusercontent.com/iiab/iiab-android/refs/heads/main/1_iiab-on-android.sh
-    curl $ URL_IIAB | bash
+    curl $URL_IIAB | bash
     ```
 
     If the installer completes successfully, the installation process is finished. And you'll see a text box reading:
