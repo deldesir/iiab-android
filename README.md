@@ -105,7 +105,7 @@ A copy of Wikipedia (in almost any language) can now be put on your Android phon
 2. Pick a `.zim` file (ZIM file) and copy its full URL, for example:
 
    ``` 
-   https://download.kiwix.org/zim/wikipedia/wikipedia_en_100_maxi_2025-10.zim
+   https://download.kiwix.org/zim/wikipedia/wikipedia_en_100_maxi_2026-01.zim
    ```
 
 3. Open Android's Termux app, and then run:
@@ -145,7 +145,7 @@ A copy of Wikipedia (in almost any language) can now be put on your Android phon
 5. Download the ZIM file, using the URL you chose above, for example:
 
    ```
-   wget https://download.kiwix.org/zim/wikipedia/wikipedia_en_100_maxi_2025-10.zim
+   wget https://download.kiwix.org/zim/wikipedia/wikipedia_en_100_maxi_2026-01.zim
    ```
 
 6. Once the download is complete, re-index your IIAB's ZIM files: (so the new ZIM file appears for users, on page http://localhost:8085/kiwix)
