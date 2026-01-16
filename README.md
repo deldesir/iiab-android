@@ -117,20 +117,20 @@ A copy of Wikipedia (in almost any language) can now be put on your Android phon
    EXPLANATION: Starting from Termux's high-level CLI (Command-Line Interface), you've "shelled into" [PRoot Distro](https://wiki.termux.com/wiki/PRoot)'s low-level IIAB Debian CLI:
 
    ```
-      +----------------------------------+
-      |   Android GUI (Apps, Settings)   |
-      +----------------+-----------------+
-                       |
-              open the | Termux app
-                       v
-      +----------------+-----------------+
-      |       Termux (Android CLI)       |
-      | $ proot-distro login iiab        |
-      +----------------+-----------------+
-                       |
-      "shell into" the | low-level environment
-                       v
-      +----------------+----------------------+
+         +--------------------------------+
+         |  Android GUI (Apps, Settings)  |
+         +----------------+---------------+
+                          |
+                 open the | Termux app
+                          v
+         +----------------+---------------+
+         |      Termux (Android CLI)      |
+         | $ proot-distro login iiab      |
+         +----------------+---------------+
+                          |
+         "shell into" the | low-level environment
+                          v
+      +-------------------+-------------------+
       | proot-distro: IIAB Debian (userspace) |
       | debian root# cd /opt/iiab/iiab        |
       +---------------------------------------+
