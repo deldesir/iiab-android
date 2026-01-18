@@ -1,0 +1,59 @@
+#!/data/data/com.termux/files/usr/bin/bash
+set -euo pipefail
+
+# iiab Termux chained bootstrap launcher
+# Intended usage:
+#   curl iiab.io/termux.txt | bash
+#   curl iiab.io/termux.txt | bash -s -- --help
+#   curl iiab.io/termux.txt | bash -s -- --all --debug
+
+log()  { printf "[iiab] %s\n" "$*"; }
+warn() { printf "[iiab] WARNING: %s\n" "$*" >&2; }
+die()  { printf "[iiab] ERROR: %s\n" "$*" >&2; exit 1; }
+
+need() { command -v "$1" >/dev/null 2>&1; }
+
+# ---- hard requirement: curl, if not exit ----
+need curl || die "Missing 'curl'. Please run first: pkg install -y curl"
+
+CURL=(curl -fsSL --retry 5 --retry-connrefused --retry-delay 2)
+
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+DEST="$PREFIX/bin/iiab-termux"
+BUNDLE_PRIMARY="https://raw.githubusercontent.com/iiab/iiab-android/main/0_termux-setup.sh"
+
+# Temporary file
+mkdir -p "${DEST%/*}"
+tmp="${DEST}.tmp.$$"
+cleanup() { rm -f "$tmp" >/dev/null 2>&1 || true; }
+trap cleanup EXIT INT TERM
+
+# Backup existing installed command
+if [[ -f "$DEST" ]]; then
+  ts="$(date +%Y%m%d-%H%M%S 2>/dev/null || echo now)"
+  mv -f "$DEST" "${DEST}.old.${ts}" 2>/dev/null || true
+fi
+
+log "Downloading iiab-termux bundle..."
+"${CURL[@]}" "$BUNDLE_PRIMARY" -o "$tmp" || die "Unable to download bundle from URL."
+
+# Sanity check: first line must be a shebang mentioning bash
+first_line=""
+IFS= read -r first_line < "$tmp" || true
+if [[ "$first_line" != \#!*bash* ]]; then
+  warn "Downloaded file first line: ${first_line:-<empty>}"
+  die "Downloaded content doesn't look like a bash script (wrong URL or HTML error page)."
+fi
+
+chmod 0755 "$tmp"
+mv -f "$tmp" "$DEST"
+log "Installed: $DEST"
+
+# Run installed command:
+# - If launcher received args -> pass through
+# - Else -> default to --all
+if [[ $# -gt 0 ]]; then
+  exec "$DEST" "$@"
+else
+  exec "$DEST" --all
+fi
