@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-01-18T13:29:21-06:00 - do not edit directly.
+# GENERATED FILE: 2026-01-18T14:15:40-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -23,6 +23,18 @@ indent()   { sed 's/^/ /'; }
 have() { command -v "$1" >/dev/null 2>&1; }
 need() { have "$1" || return 1; }
 die()  { echo "[!] $*" >&2; exit 1; }
+
+# Choose warning level depending on context.
+# - In explicit readiness checks (--check/--all), use red for "will likely fail".
+# - In passive/self-check (baseline runs), keep it yellow to avoid over-alarming.
+warn_red_context() {
+  # args: long message
+  if [[ "${MODE:-}" == "check" || "${MODE:-}" == "all" || "${MODE:-}" == "ppk-only" ]]; then
+    warn_red "$*"
+  else
+    warn "$*"
+  fi
+}
 
 # -------------------------
 # Global defaults (may be overridden via environment)
@@ -926,7 +938,7 @@ check_readiness() {
     if [[ "${mon:-}" == "false" ]]; then
       ok " Child restrictions: OK (monitor=false)"
     elif [[ "${mon:-}" == "true" ]]; then
-      warn " Child restrictions: NOT OK (monitor=true)"
+      warn_red " Child restrictions: NOT OK (monitor=true)"
     elif [[ -n "${mon:-}" && "${mon:-}" != "null" ]]; then
       warn " Child restrictions: unknown (${mon})"
     else
@@ -940,7 +952,7 @@ check_readiness() {
       if (( ppk_eff >= 256 )); then
         ok " PPK: OK (max_phantom_processes=${ppk_eff})"
       else
-        warn " PPK: low (max_phantom_processes=${ppk_eff}) -> suggest: run --ppk-only"
+        warn_red " PPK: low (max_phantom_processes=${ppk_eff}) -> suggest: run --ppk-only"
       fi
     else
       warn " PPK: unreadable (dumpsys max_phantom_processes='${ppk_eff:-}')."
@@ -984,7 +996,7 @@ self_check_android_flags() {
     if [[ "$mon" == "false" ]]; then
       ok " Child restrictions: OK (monitor=false)"
     elif [[ "$mon" == "true" ]]; then
-      warn " Child restrictions: NOT OK (monitor=true) -> check Developer Options"
+      warn_red_context " Child restrictions: NOT OK (monitor=true) -> check Developer Options"
     else
       warn " Child restrictions: unknown/unreadable (monitor='${mon:-}')"
     fi
@@ -998,7 +1010,7 @@ self_check_android_flags() {
       if (( ppk_eff >= 256 )); then
         ok " PPK: OK (max_phantom_processes=$ppk_eff)"
       else
-        warn " PPK: low (max_phantom_processes=$ppk_eff) -> suggest: --ppk-only"
+        warn_red_context " PPK: low (max_phantom_processes=$ppk_eff) -> suggest: --ppk-only"
       fi
     else
       warn " PPK: unreadable (max_phantom_processes='${ppk_eff:-}')"
@@ -1145,6 +1157,12 @@ final_advice() {
 
   # 1) Android-related warnings (only meaningful if we attempted checks)
   local sdk="${CHECK_SDK:-${ANDROID_SDK:-}}"
+  local _active=0
+  case "${MODE:-}" in
+    with-adb|adb-only|connect-only|ppk-only|check|all) _active=1 ;;
+    *) _active=0 ;;
+  esac
+
   local adb_connected=0
   local serial="" mon="" mon_fflag=""
 
@@ -1157,6 +1175,15 @@ final_advice() {
       serial="$(adb_pick_loopback_serial 2>/dev/null || true)"
     fi
   fi
+  # Escalate to red only when user is actively checking/fixing,
+  # OR when we already have ADB connected (strong evidence).
+  advice_warn_bad() {  # args: message
+    if (( _active || adb_connected )); then
+      warn_red "$*"
+    else
+      warn "$*"
+    fi
+  }
 
   # Baseline safety gate:
   # On Android 12-13 (SDK 31-33), IIAB/proot installs can fail if PPK is low (often 32).
@@ -1195,7 +1222,7 @@ final_advice() {
           : # Restrictions already disabled -> ok to continue
         else
           if [[ "${mon:-}" == "true" ]]; then
-            warn "Android 14+: child process restrictions appear ENABLED (monitor=true)."
+            advice_warn_bad "Android 14+: child process restrictions appear ENABLED (monitor=true)."
           else
             warn "Android 14+: child process restrictions haven't been verified (monitor flag unreadable/unknown)."
           fi
@@ -1215,13 +1242,13 @@ final_advice() {
   else
     # A14+ child restrictions proxy (only if readable)
     if [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 34 )) && [[ "${CHECK_MON:-}" == "true" ]]; then
-      warn "A14+: disable child process restrictions before installing IIAB."
+      advice_warn_bad "A14+: disable child process restrictions before installing IIAB."
     fi
 
     # Only warn about PPK on A12-13 (A14+ uses child restrictions)
     if [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 31 && sdk <= 33 )); then
       if [[ "${CHECK_PPK:-}" =~ ^[0-9]+$ ]] && (( CHECK_PPK < 256 )); then
-        warn "PPK is low (${CHECK_PPK}); consider --ppk-only."
+        advice_warn_bad "PPK is low (${CHECK_PPK}); consider --ppk-only."
       fi
     fi
   fi

@@ -128,6 +128,12 @@ final_advice() {
 
   # 1) Android-related warnings (only meaningful if we attempted checks)
   local sdk="${CHECK_SDK:-${ANDROID_SDK:-}}"
+  local _active=0
+  case "${MODE:-}" in
+    with-adb|adb-only|connect-only|ppk-only|check|all) _active=1 ;;
+    *) _active=0 ;;
+  esac
+
   local adb_connected=0
   local serial="" mon="" mon_fflag=""
 
@@ -140,6 +146,15 @@ final_advice() {
       serial="$(adb_pick_loopback_serial 2>/dev/null || true)"
     fi
   fi
+  # Escalate to red only when user is actively checking/fixing,
+  # OR when we already have ADB connected (strong evidence).
+  advice_warn_bad() {  # args: message
+    if (( _active || adb_connected )); then
+      warn_red "$*"
+    else
+      warn "$*"
+    fi
+  }
 
   # Baseline safety gate:
   # On Android 12-13 (SDK 31-33), IIAB/proot installs can fail if PPK is low (often 32).
@@ -178,7 +193,7 @@ final_advice() {
           : # Restrictions already disabled -> ok to continue
         else
           if [[ "${mon:-}" == "true" ]]; then
-            warn "Android 14+: child process restrictions appear ENABLED (monitor=true)."
+            advice_warn_bad "Android 14+: child process restrictions appear ENABLED (monitor=true)."
           else
             warn "Android 14+: child process restrictions haven't been verified (monitor flag unreadable/unknown)."
           fi
@@ -198,13 +213,13 @@ final_advice() {
   else
     # A14+ child restrictions proxy (only if readable)
     if [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 34 )) && [[ "${CHECK_MON:-}" == "true" ]]; then
-      warn "A14+: disable child process restrictions before installing IIAB."
+      advice_warn_bad "A14+: disable child process restrictions before installing IIAB."
     fi
 
     # Only warn about PPK on A12-13 (A14+ uses child restrictions)
     if [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 31 && sdk <= 33 )); then
       if [[ "${CHECK_PPK:-}" =~ ^[0-9]+$ ]] && (( CHECK_PPK < 256 )); then
-        warn "PPK is low (${CHECK_PPK}); consider --ppk-only."
+        advice_warn_bad "PPK is low (${CHECK_PPK}); consider --ppk-only."
       fi
     fi
   fi

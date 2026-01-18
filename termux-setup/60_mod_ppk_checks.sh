@@ -106,7 +106,7 @@ check_readiness() {
     if [[ "${mon:-}" == "false" ]]; then
       ok " Child restrictions: OK (monitor=false)"
     elif [[ "${mon:-}" == "true" ]]; then
-      warn " Child restrictions: NOT OK (monitor=true)"
+      warn_red " Child restrictions: NOT OK (monitor=true)"
     elif [[ -n "${mon:-}" && "${mon:-}" != "null" ]]; then
       warn " Child restrictions: unknown (${mon})"
     else
@@ -120,7 +120,7 @@ check_readiness() {
       if (( ppk_eff >= 256 )); then
         ok " PPK: OK (max_phantom_processes=${ppk_eff})"
       else
-        warn " PPK: low (max_phantom_processes=${ppk_eff}) -> suggest: run --ppk-only"
+        warn_red " PPK: low (max_phantom_processes=${ppk_eff}) -> suggest: run --ppk-only"
       fi
     else
       warn " PPK: unreadable (dumpsys max_phantom_processes='${ppk_eff:-}')."
@@ -164,7 +164,7 @@ self_check_android_flags() {
     if [[ "$mon" == "false" ]]; then
       ok " Child restrictions: OK (monitor=false)"
     elif [[ "$mon" == "true" ]]; then
-      warn " Child restrictions: NOT OK (monitor=true) -> check Developer Options"
+      warn_red_context " Child restrictions: NOT OK (monitor=true) -> check Developer Options"
     else
       warn " Child restrictions: unknown/unreadable (monitor='${mon:-}')"
     fi
@@ -178,7 +178,7 @@ self_check_android_flags() {
       if (( ppk_eff >= 256 )); then
         ok " PPK: OK (max_phantom_processes=$ppk_eff)"
       else
-        warn " PPK: low (max_phantom_processes=$ppk_eff) -> suggest: --ppk-only"
+        warn_red_context " PPK: low (max_phantom_processes=$ppk_eff) -> suggest: --ppk-only"
       fi
     else
       warn " PPK: unreadable (max_phantom_processes='${ppk_eff:-}')"

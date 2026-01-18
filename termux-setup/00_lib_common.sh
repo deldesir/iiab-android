@@ -13,6 +13,18 @@ have() { command -v "$1" >/dev/null 2>&1; }
 need() { have "$1" || return 1; }
 die()  { echo "[!] $*" >&2; exit 1; }
 
+# Choose warning level depending on context.
+# - In explicit readiness checks (--check/--all), use red for "will likely fail".
+# - In passive/self-check (baseline runs), keep it yellow to avoid over-alarming.
+warn_red_context() {
+  # args: long message
+  if [[ "${MODE:-}" == "check" || "${MODE:-}" == "all" || "${MODE:-}" == "ppk-only" ]]; then
+    warn_red "$*"
+  else
+    warn "$*"
+  fi
+}
+
 # -------------------------
 # Global defaults (may be overridden via environment)
 # -------------------------
