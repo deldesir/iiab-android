@@ -58,7 +58,9 @@ Usage:
        (Android 14+) "Disable child process restrictions" proxy flag, and (Android 12-13) PPK effective value.
 
   ./0_termux-setup.sh --all
-    -> baseline + IIAB Debian + ADB pair/connect if needed + (Android 12-13 only) apply --ppk + run --check.
+    -> baseline + IIAB Debian +
+       (Android 12-13) ADB pair/connect + apply PPK + run --check
+       (Android 14+) optionally skip ADB (reminds to disable child process restrictions).
 
   Optional:
     --connect-port [IP:PORT|PORT]  Skip CONNECT PORT prompt (ADB modes)
@@ -359,6 +361,50 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+tty_yesno_default_y() {
+  # args: prompt
+  # Returns 0 for Yes, 1 for No. Default is Yes.
+  local prompt="$1" ans="Y"
+  if [[ -r /dev/tty ]]; then
+    printf "%s" "$prompt" > /dev/tty
+    if ! read -r ans < /dev/tty; then
+      ans="Y"
+    fi
+  else
+    warn "No /dev/tty available; defaulting to YES."
+    ans="Y"
+  fi
+  ans="${ans:-Y}"
+  [[ "$ans" =~ ^[Nn]$ ]] && return 1
+  return 0
+}
+
+all_a14plus_optional_adb() {
+  # Android 14+: ADB is optional. If already connected, run checks (no prompts).
+  local serial=""
+
+  if have adb; then
+    adb start-server >/dev/null 2>&1 || true
+    if serial="$(adb_pick_loopback_serial 2>/dev/null)"; then
+      ok "ADB already connected: $serial (running checks, no prompts)."
+      check_readiness || true
+      return 0
+    fi
+  fi
+
+  # Not connected -> ask whether to skip ADB flows
+  if tty_yesno_default_y "[iiab] Android 14+: Skip ADB pairing/connect steps? [Y/n]: "; then
+    warn "Skipping ADB steps (Android 14+)."
+    warn "Reminder: enable Developer Options -> 'Disable child process restrictions' (otherwise installs may fail)."
+    return 0
+  fi
+
+  # User wants ADB even on A14+: proceed
+  adb_pair_connect_if_needed
+  check_readiness || true
+  return 0
+}
+
 validate_args() {
   if [[ -n "${CONNECT_PORT:-}" ]]; then
     local raw="$CONNECT_PORT" norm=""
@@ -441,9 +487,13 @@ main() {
       step_termux_repo_select_once
       step_termux_base || baseline_bail
       step_iiab_bootstrap_default
-      adb_pair_connect_if_needed
-      attempt_auto_apply_ppk
-      check_readiness || true
+      if [[ "${ANDROID_SDK:-}" =~ ^[0-9]+$ ]] && (( ANDROID_SDK >= 34 )); then
+        all_a14plus_optional_adb
+      else
+        adb_pair_connect
+        attempt_auto_apply_ppk
+        check_readiness || true
+      fi
       ;;
 
     *)
