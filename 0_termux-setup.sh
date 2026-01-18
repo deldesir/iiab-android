@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-01-18T14:15:40-06:00 - do not edit directly.
+# GENERATED FILE: 2026-01-18T14:51:33-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -1055,7 +1055,7 @@ CHECK_MON=""
 CHECK_PPK=""
 
 # Modes are mutually exclusive (baseline is default)
-MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|all
+MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|all|login
 MODE_SET=0
 CONNECT_PORT_FROM=""   # "", "flag", "positional"
 
@@ -1064,6 +1064,9 @@ usage() {
 Usage:
   ./0_termux-setup.sh
     -> Termux baseline + IIAB Debian bootstrap (idempotent). No ADB prompts.
+
+  ./0_termux-setup.sh --login
+    -> Login into IIAB Debian (proot-distro login iiab).
 
   ./0_termux-setup.sh --with-adb
     -> Termux baseline + IIAB Debian bootstrap + ADB pair/connect if needed (skips if already connected).
@@ -1269,6 +1272,66 @@ final_advice() {
   esac
 }
 
+iiab_login() {
+  local stamp="$STATE_DIR/stamp.termux_base"
+
+  # Baseline stamp is advisory only for login (do not block).
+  if [[ -f "$stamp" ]]; then
+    ok "Baseline stamp found: $stamp"
+  else
+    warn_red "Baseline stamp not found ($stamp)."
+    warn "Tip: run the baseline once: iiab-termux"
+  fi
+
+  have proot-distro || die "proot-distro not found. Install baseline first (pkg install proot-distro or run iiab-termux)."
+  if ! iiab_exists; then
+    warn_red "IIAB Debian is not installed in proot-distro (alias 'iiab' missing)."
+    warn "Recommended: iiab-termux --all"
+    warn "Or:          proot-distro install --override-alias iiab debian"
+    return 1
+  fi
+
+  # Best-effort Android advice before user starts doing heavy installs inside proot.
+  local sdk="${ANDROID_SDK:-}"
+  if [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 31 && sdk <= 33 )); then
+    # Android 12-13: PPK is a common hard failure point.
+    if have adb; then
+      adb start-server >/dev/null 2>&1 || true
+      if adb_pick_loopback_serial >/dev/null 2>&1; then
+        check_readiness || true
+      else
+        warn_red "Android 12-13: ADB is not connected, so PPK=256 cannot be verified/applied."
+        warn "Before running the IIAB installer inside proot, run:"
+        ok   "  iiab-termux --all"
+      fi
+    else
+      warn_red "Android 12-13: adb is missing, so PPK=256 cannot be verified/applied."
+      warn "Install adb (android-tools) and run:"
+      ok   "  iiab-termux --all"
+    fi
+  elif [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 34 )); then
+    # Android 14+: rely on 'Disable child process restrictions' (monitor=false).
+    if have adb; then
+      adb start-server >/dev/null 2>&1 || true
+      if adb_pick_loopback_serial >/dev/null 2>&1; then
+        check_readiness || true
+      else
+        warn "Android 14+: ensure 'Disable child process restrictions' is enabled in Developer Options."
+      fi
+    else
+      warn "Android 14+: ensure 'Disable child process restrictions' is enabled in Developer Options."
+    fi
+  fi
+
+  ok "Entering IIAB Debian: proot-distro login iiab"
+
+  # Preserve interactivity even if logging is enabled (avoid pipes/tee issues).
+  if [[ -r /dev/tty ]]; then
+    proot-distro login iiab </dev/tty >&3 2>&4
+  else
+    proot-distro login iiab
+  fi
+}
 # -------------------------
 # Args
 # -------------------------
@@ -1285,6 +1348,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --with-adb) set_mode "with-adb"; shift ;;
     --adb-only) set_mode "adb-only"; shift ;;
+    --login) set_mode "login"; shift ;;
     --connect-only)
       set_mode "connect-only"
       ONLY_CONNECT=1
@@ -1364,6 +1428,10 @@ main() {
   acquire_wakelock
 
   case "$MODE" in
+    login)
+      iiab_login
+      return $?
+      ;;
     baseline)
       step_termux_repo_select_once
       step_termux_base || baseline_bail
@@ -1417,6 +1485,7 @@ main() {
   log "---- Mode list ----"
   log "Connect-only             --connect-only [PORT]"
   log "Pair+connect             --adb-only [--connect-port PORT]"
+  log "Login (proot)            --login"
   log "Check                    --check"
   log "Apply PPK                --ppk-only"
   log "Base+IIAB Debian+Pair+connect --with-adb"
