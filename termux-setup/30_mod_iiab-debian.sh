@@ -74,7 +74,7 @@ step_iiab_bootstrap_default() {
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold \
-      install ca-certificates coreutils curl e2fsprogs sudo
+      install ca-certificates coreutils curl e2fsprogs netcat-traditional sudo
   '
   rc=$?
   set -e

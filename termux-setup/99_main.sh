@@ -332,8 +332,9 @@ while [[ $# -gt 0 ]]; do
       if [[ -n "${2:-}" ]]; then
         local_norm=""
         if local_norm="$(normalize_port_5digits "${2:-}" 2>/dev/null)"; then
-        [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "positional" ]] && \
-          die "CONNECT PORT specified twice (positional + --connect-port). Use only one."
+          if [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "positional" ]]; then
+            die "CONNECT PORT specified twice (positional + --connect-port). Use only one."
+          fi
         CONNECT_PORT="$local_norm"
         CONNECT_PORT_FROM="positional"
         shift 2
@@ -347,10 +348,12 @@ while [[ $# -gt 0 ]]; do
     --check) set_mode "check"; shift ;;
     --all) set_mode "all"; shift ;;
     --connect-port)
-      [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "flag" ]] && \
+      if [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "flag" ]];
         die "CONNECT PORT specified twice (positional + --connect-port). Use only one."
-      CONNECT_PORT="$(normalize_port_5digits "${2:-}" 2>/dev/null)" || \
+      fi
+      CONNECT_PORT="$(normalize_port_5digits "${2:-}" 2>/dev/null)" || {
         die "Invalid --connect-port (must be 5 digits PORT or IP:PORT): '${2:-}'"
+      }
       CONNECT_PORT_FROM="flag"
       shift 2
       ;;
@@ -593,7 +596,7 @@ main() {
       if [[ "${ANDROID_SDK:-}" =~ ^[0-9]+$ ]] && (( ANDROID_SDK >= 34 )); then
         all_a14plus_optional_adb
       else
-        adb_pair_connect
+        adb_pair_connect_if_needed
         attempt_auto_apply_ppk
         check_readiness || true
       fi

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-01-19T12:12:02-06:00 - do not edit directly.
+# GENERATED FILE: 2026-01-19T14:28:21-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -380,7 +380,7 @@ step_iiab_bootstrap_default() {
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold \
-      install ca-certificates coreutils curl e2fsprogs sudo
+      install ca-certificates coreutils curl e2fsprogs netcat-traditional sudo
   '
   rc=$?
   set -e
@@ -1376,8 +1376,9 @@ while [[ $# -gt 0 ]]; do
       if [[ -n "${2:-}" ]]; then
         local_norm=""
         if local_norm="$(normalize_port_5digits "${2:-}" 2>/dev/null)"; then
-        [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "positional" ]] && \
-          die "CONNECT PORT specified twice (positional + --connect-port). Use only one."
+          if [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "positional" ]]; then
+            die "CONNECT PORT specified twice (positional + --connect-port). Use only one."
+          fi
         CONNECT_PORT="$local_norm"
         CONNECT_PORT_FROM="positional"
         shift 2
@@ -1391,10 +1392,12 @@ while [[ $# -gt 0 ]]; do
     --check) set_mode "check"; shift ;;
     --all) set_mode "all"; shift ;;
     --connect-port)
-      [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "flag" ]] && \
+      if [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "flag" ]];
         die "CONNECT PORT specified twice (positional + --connect-port). Use only one."
-      CONNECT_PORT="$(normalize_port_5digits "${2:-}" 2>/dev/null)" || \
+      fi
+      CONNECT_PORT="$(normalize_port_5digits "${2:-}" 2>/dev/null)" || {
         die "Invalid --connect-port (must be 5 digits PORT or IP:PORT): '${2:-}'"
+      }
       CONNECT_PORT_FROM="flag"
       shift 2
       ;;
