@@ -19,7 +19,9 @@ ensure_proot_distro() {
 proot_install_iiab_safe() {
   local out rc
   set +e
-  if ! proot-distro install --help 2>&1 | grep -q -- '--override-alias'; then
+  local help
+  help="$(proot-distro install --help 2>&1 || true)"
+  if ! printf '%s\n' "$help" | grep -q -- '--override-alias'; then
     warn_red "proot-distro is too old (missing --override-alias). Please upgrade Termux packages and retry."
     return 1
   fi
