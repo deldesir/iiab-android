@@ -37,7 +37,7 @@ Usage:
     -> Termux baseline + IIAB Debian bootstrap (idempotent). No ADB prompts.
 
   iiab-termux --login
-    -> Login into IIAB Debian (proot-distro login iiab).
+    -> Login into IIAB Debian (iiab-termux --login).
 
   iiab-termux --with-adb
     -> Termux baseline + IIAB Debian bootstrap + ADB pair/connect if needed (skips if already connected).
@@ -236,10 +236,10 @@ final_advice() {
   case "$MODE" in
     baseline|with-adb|all)
       if iiab_exists; then
-        ok "Next: proot-distro login iiab"
+        ok "Next: iiab-termux --login"
       else
         warn "IIAB Debian not present. Run:"
-        warn "  proot-distro install --override-alias iiab debian"
+        warn "Preferred: iiab-termux --all"
       fi
       ;;
     *)
@@ -299,7 +299,7 @@ iiab_login() {
     fi
   fi
 
-  ok "Entering IIAB Debian: proot-distro login iiab"
+  ok "Entering IIAB Debian (via: iiab-termux --login)"
 
   # Preserve interactivity even if logging is enabled (avoid pipes/tee issues).
   if [[ -r /dev/tty ]]; then

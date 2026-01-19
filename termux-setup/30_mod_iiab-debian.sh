@@ -82,6 +82,6 @@ step_iiab_bootstrap_default() {
     ok "IIAB Debian bootstrap complete."
   else
     warn_red "IIAB Debian bootstrap incomplete (inner apt-get failed, rc=$rc)."
-    warn "You can retry later with: proot-distro login iiab"
+    warn "You can retry later with: iiab-termux --login"
   fi
 }
