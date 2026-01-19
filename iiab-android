@@ -22,11 +22,84 @@ fi
 # Config
 #-----------------------------
 LOCAL_VARS_URL="https://raw.githubusercontent.com/iiab/iiab/refs/heads/master/vars/local_vars_android.yml"
+LOCAL_VARS_DEST="/etc/iiab/local_vars.yml"
 
 INSTALL_PRIMARY="https://iiab.io/install.txt"
 INSTALL_FALLBACK="https://raw.githubusercontent.com/iiab/iiab-factory/refs/heads/master/install.txt"
 
 CURL="curl -fsSL --retry 5 --retry-connrefused --retry-delay 2"
+
+#-----------------------------
+# Minimal helpers
+#-----------------------------
+log()  { printf "[iiab] %s\n" "$*"; }
+warn() { printf "[iiab] WARNING: %s\n" "$*" >&2; }
+die()  { printf "[iiab] ERROR: %s\n" "$*" >&2; exit 1; }
+
+#-----------------------------
+# local_vars.yml validation (is_proot)
+# - Do NOT modify user's file without explicit confirmation.
+#-----------------------------
+show_is_proot_lines() {
+  local f="$1"
+  warn "Relevant lines (please review):"
+  warn "  grep -nE '^[[:space:]]*is_proot[[:space:]]*:' $f"
+  grep -nE '^[[:space:]]*is_proot[[:space:]]*:' "$f" 2>/dev/null || true
+}
+
+validate_is_proot_or_die() {
+  # args: file
+  local f="$1"
+  local lines count has_true has_false
+
+  lines="$(grep -nE '^[[:space:]]*is_proot[[:space:]]*:' "$f" 2>/dev/null || true)"
+  count="$(printf '%s\n' "$lines" | sed '/^$/d' | wc -l | tr -d ' ')"
+  has_true=0; has_false=0
+  printf '%s\n' "$lines" | grep -qE ':[[:space:]]*True[[:space:]]*$' && has_true=1
+  printf '%s\n' "$lines" | grep -qE ':[[:space:]]*False[[:space:]]*$' && has_false=1
+
+  # a) is_proot missing
+  if [[ "${count:-0}" -eq 0 ]]; then
+    die "local_vars.yml: is_proot is not defined. Add: 'is_proot: True'"
+  fi
+
+  # b) exactly one entry
+  if [[ "${count:-0}" -eq 1 ]]; then
+    if [[ "$has_true" -eq 1 ]]; then
+      log "local_vars.yml: is_proot: True (OK)."
+      return 0
+    fi
+    die "local_vars.yml: is_proot must be True (False will break this install)."
+  fi
+
+  # c) multiple entries
+  if [[ "$has_true" -eq 1 && "$has_false" -eq 0 ]]; then
+    warn "local_vars.yml: multiple is_proot: True entries (no conflict). Consider cleaning up later."
+    return 0
+  fi
+
+  die "local_vars.yml: conflicting is_proot entries. Keep only ONE: is_proot: True"
+}
+
+fetch_android_local_vars() {
+  # args: destination
+  local dest="$1"
+  local tmp_vars
+  tmp_vars="$(mktemp)"
+  $CURL "$LOCAL_VARS_URL" -o "$tmp_vars" || { rm -f "$tmp_vars" || true; die "Failed to download: $LOCAL_VARS_URL"; }
+  install -m 0644 "$tmp_vars" "$dest"
+  rm -f "$tmp_vars" || true
+}
+
+tty_yesno_default_n() {
+  # args: prompt
+  local prompt="$1" ans="N"
+  if [[ -r /dev/tty ]]; then
+    printf "%s" "$prompt" > /dev/tty
+    read -r ans < /dev/tty || ans="N"
+  fi
+  [[ "${ans:-N}" =~ ^[Yy]$ ]]
+}
 
 #-----------------------------
 # Update package db + deps
@@ -36,6 +109,7 @@ apt-get install -y ca-certificates \
                    coreutils \
                    curl \
                    e2fsprogs \
+                   netcat-traditional \
                    sudo
 
 #-----------------------------
@@ -45,10 +119,24 @@ if [ ! -d /etc/iiab ]; then
     mkdir -p /etc/iiab
 fi
 
-tmp_vars="$(mktemp)"
-$CURL "$LOCAL_VARS_URL" -o "$tmp_vars"
-install -m 0644 "$tmp_vars" /etc/iiab/local_vars.yml
-rm -f "$tmp_vars"
+# If user already has local_vars.yml, do NOT overwrite it.
+# We only validate is_proot and abort if it's unsafe.
+if [[ -f "$LOCAL_VARS_DEST" ]]; then
+  if ! validate_is_proot_or_die "$LOCAL_VARS_DEST" 2>/dev/null; then
+    show_is_proot_lines "$LOCAL_VARS_DEST"
+    if [[ -r /dev/tty ]] && tty_yesno_default_n "[iiab] Replace local_vars.yml with Android template? [y/N]: "; then
+      warn "Replacing $LOCAL_VARS_DEST with Android template (by user request)."
+      fetch_android_local_vars "$LOCAL_VARS_DEST"
+      validate_is_proot_or_die "$LOCAL_VARS_DEST" || { show_is_proot_lines "$LOCAL_VARS_DEST"; die "local_vars.yml validation failed (even after template)."; }
+    else
+      die "Please fix is_proot in $LOCAL_VARS_DEST before continuing."
+    fi
+  fi
+else
+  log "Installing Android local_vars.yml template -> $LOCAL_VARS_DEST"
+  fetch_android_local_vars "$LOCAL_VARS_DEST"
+  validate_is_proot_or_die "$LOCAL_VARS_DEST" || { show_is_proot_lines "$LOCAL_VARS_DEST"; die "Android template local_vars.yml is invalid; cannot continue."; }
+fi
 
 #-----------------------------
 # Fetch install.txt with fallback and run it
@@ -63,5 +151,5 @@ else
   $CURL "$INSTALL_FALLBACK" -o "$tmp_install"
 fi
 
-bash "$tmp_install"
+bash "$tmp_install" "$@"
 rm -f "$tmp_install"
