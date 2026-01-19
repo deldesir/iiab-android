@@ -407,7 +407,8 @@ install_iiab_android_cmd() {
   local dest="${IIAB_ANDROID_DEST:-/usr/local/sbin/iiab-android}"
   local tmp="/tmp/iiab-android.$$"
 
-  local meta old new
+  local meta old new rc=0
+  set +e
   meta="$(proot-distro login iiab -- env URL="$url" DEST="$dest" TMP="$tmp" bash -lc '
     set -e
     old=""
@@ -422,12 +423,20 @@ install_iiab_android_cmd() {
     new="$(sha256sum "$TMP" | cut -d" " -f1)"
     echo "OLD=$old"
     echo "NEW=$new"
-  ' 2>&1)" || { warn_red "Failed to fetch/install iiab-android in proot."; printf "%s\n" "$meta" | indent >&2; return 1; }"
+  ' 2>&1)"
+  rc=$?
+  set -e
 
-  if printf '%s\n' "$meta" | grep -q '^BAD_SHEBANG$'; then
-    warn_red "Downloaded iiab-android does not look like a bash script (bad shebang).
+  if (( rc != 0 )); then
+    if printf '%s\n' "$meta" | grep -q 'BAD_SHEBANG'; then
+      warn_red "Downloaded iiab-android does not look like a bash script (bad shebang)."
+    else
+      warn_red "Failed to fetch/install iiab-android in proot (rc=$rc)."
+      printf "%s\n" "$meta" | indent >&2
+    fi
     return 1
   fi
+
   old="$(printf '%s\n' "$meta" | sed -n 's/^OLD=//p' | head -n1)"
   new="$(printf '%s\n' "$meta" | sed -n 's/^NEW=//p' | head -n1)"
 
