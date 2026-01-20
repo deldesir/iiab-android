@@ -406,7 +406,7 @@ install_iiab_android_cmd() {
   have proot-distro || die "proot-distro not found"
   iiab_exists || { warn_red "IIAB Debian (alias 'iiab') not installed."; return 1; }
 
-  local url="${IIAB_ANDROID_URL:-https://raw.githubusercontent.com/iiab/iiab-android/main/iiab-android}"
+  local url="${IIAB_ANDROID_URL:-https://raw.githubusercontent.com/deldesir/iiab-android/main/iiab-android}"
   local dest="${IIAB_ANDROID_DEST:-/usr/local/sbin/iiab-android}"
   local tmp="/tmp/iiab-android.$$"
 
