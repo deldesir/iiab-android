@@ -109,6 +109,7 @@ apt-get install -y ca-certificates \
                    coreutils \
                    curl \
                    e2fsprogs \
+                   git \
                    netcat-traditional \
                    sudo
 
@@ -136,6 +137,15 @@ else
   log "Installing Android local_vars.yml template -> $LOCAL_VARS_DEST"
   fetch_android_local_vars "$LOCAL_VARS_DEST"
   validate_is_proot_or_die "$LOCAL_VARS_DEST" || { show_is_proot_lines "$LOCAL_VARS_DEST"; die "Android template local_vars.yml is invalid; cannot continue."; }
+fi
+
+#-----------------------------
+# Auto-clone deldesir fork if missing
+#-----------------------------
+if [ ! -d /opt/iiab/iiab ]; then
+    log "Auto-cloning deldesir/iiab fork..."
+    mkdir -p /opt/iiab
+    git clone -b master https://github.com/deldesir/iiab.git /opt/iiab/iiab
 fi
 
 #-----------------------------
