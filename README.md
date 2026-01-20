@@ -41,9 +41,9 @@ http://localhost:8085/maps
    * Update the **F-Droid repos**.
      - Open the F-Droid app and click "Updates".
    * Search for **Termux** and install:
-    - **Termux** Terminal emulator with packages (com.termux)
-    - **Termux:API** Access Android functions from Termux (com.termux.api)
-    - * You will have to Allow installation from unknown sources (or Install unknown apps) from F-Droid
+     - **Termux** Terminal emulator with packages (com.termux)
+     - **Termux:API** Access Android functions from Termux (com.termux.api)
+     - * You will have to Allow installation from unknown sources (or Install unknown apps) from F-Droid
 
    **Note**: You might see a "*This app was built for an older version of Android and cannot be updated automatically*" label on both apps. You can ignore this as it only refers for the [*auto-update* feature](https://f-droid.org/en/2024/02/01/twif.html). Manual updates will continue to work. [Read more here](https://github.com/termux/termux-packages/wiki/Termux-and-Android-10/3e8102ecd05c4954d67971ff2b508f32900265f7).
 
