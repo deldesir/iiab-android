@@ -21,7 +21,7 @@ fi
 #-----------------------------
 # Config
 #-----------------------------
-LOCAL_VARS_URL="https://raw.githubusercontent.com/iiab/iiab/refs/heads/master/vars/local_vars_android.yml"
+LOCAL_VARS_URL="https://raw.githubusercontent.com/deldesir/iiab/refs/heads/master/vars/local_vars_android.yml"
 LOCAL_VARS_DEST="/etc/iiab/local_vars.yml"
 
 INSTALL_PRIMARY="https://iiab.io/install.txt"

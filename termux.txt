@@ -20,7 +20,7 @@ CURL=(curl -fsSL --retry 5 --retry-connrefused --retry-delay 2)
 
 PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
 DEST="$PREFIX/bin/iiab-termux"
-BUNDLE_PRIMARY="https://raw.githubusercontent.com/iiab/iiab-android/main/iiab-termux"
+BUNDLE_PRIMARY="https://raw.githubusercontent.com/deldesir/iiab-android/main/iiab-termux"
 
 # Temporary file
 mkdir -p "${DEST%/*}"
