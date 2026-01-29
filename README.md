@@ -59,7 +59,7 @@ http://localhost:8085/maps
    curl iiab.io/termux.txt | bash
    ```
 
-   * In Android 12 and 13, make sure to opt in to the ADB Pair/Connect steps when prompted. Enable **Wireless debugging**, and select **Pair device with pairing code**, you will be asked for the **Pair Code**. Please check this (WIP) [video tutorial](https://ark.switnet.org/vid/termux_adb_pair_a16_hb.mp4) for a more interactive explanation. Once connected to ADB the `iiab-termux` script will handle the PPK workaround setup.
+   * In Android 12 and 13, make sure to opt in to the ADB Pair/Connect steps when prompted. Enable **Wireless debugging**, and select **Pair device with pairing code**, you will be asked for the **Pair Code**. Please check this (WIP) [video tutorial](https://iiab.switnet.org/android/vids/A15_mDNS_hb.mp4) for a more interactive explanation. Once connected to ADB the `iiab-termux` script will handle the PPK workaround setup.
 
    * On Android 14 and later, ADB pairing is optional (but recommended). Also, make sure to disable this restriction using Android Settings, in **Developer Options**:
 
