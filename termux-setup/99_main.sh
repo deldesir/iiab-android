@@ -30,58 +30,6 @@ MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|al
 MODE_SET=0
 CONNECT_PORT_FROM=""   # "", "flag", "positional"
 
-usage() {
-  cat <<'EOF'
-Usage:
-  iiab-termux
-    -> Termux baseline + IIAB Debian bootstrap (idempotent). No ADB prompts.
-
-  iiab-termux --login
-    -> Login into IIAB Debian (iiab-termux --login).
-
-  iiab-termux --with-adb
-    -> Termux baseline + IIAB Debian bootstrap + ADB pair/connect if needed (skips if already connected).
-
-  iiab-termux  --adb-only [--connect-port PORT|IP:PORT]
-    -> Only ADB pair/connect if needed (no IIAB Debian; skips if already connected).
-       Tip: --connect-port skips the CONNECT PORT prompt (you’ll still be asked for PAIR PORT + PAIR CODE).
-
-  iiab-termux --connect-only [PORT|IP:PORT]
-    -> Connect-only (no pairing). Use this after the device was already paired before.
-
-  iiab-termux --ppk-only
-    -> Set PPK only: max_phantom_processes=256 (requires ADB already connected).
-       Android 14-16 usually achieve this via "Disable child process restrictions" in Developer Options.
-
-  iiab-termux --iiab-android
-    -> Install/update 'iiab-android' command inside IIAB Debian (does NOT run it).
-
-  iiab-termux --check
-    -> Check readiness: developer options flag (if readable),
-       (Android 14+) "Disable child process restrictions" proxy flag, and (Android 12-13) PPK effective value.
-
-  iiab-termux --all
-    -> baseline + IIAB Debian +
-       (Android 12-13) ADB pair/connect + apply PPK + run --check
-       (Android 14+) optionally skip ADB (reminds to disable child process restrictions).
-
-  Optional:
-    --connect-port [IP:PORT|PORT]  Skip CONNECT PORT prompt (ADB modes)
-    --timeout 180                  Seconds to wait per prompt
-    --reset-iiab                   Reset (reinstall) IIAB Debian in proot-distro
-    --no-log                       Disable logging
-    --log-file /path/file          Write logs to a specific file
-    --debug                        Extra logs
-
-Notes:
-- ADB prompts require: `pkg install termux-api` + Termux:API app installed + notification permission.
-- Wireless debugging must be enabled on Android 12 & 13
-- Wireless debugging (pairing code / QR) is available on Android 11 and later versions.
-- Android 8-10: there is no Wireless debugging pairing flow. 
-- CONNECT PORT and PAIR PORT are auto-detected via mDNS when possible; still prompting for the PAIR CODE.
-EOF
-}
-
 trap 'power_mode_login_exit >/dev/null 2>&1 || true; adb_hint_notif_remove >/dev/null 2>&1 || true; cleanup_notif >/dev/null 2>&1 || true; release_wakelock >/dev/null 2>&1 || true' EXIT INT TERM
 
 # NOTE: Termux:API prompts live in 40_mod_termux_api.sh
@@ -92,7 +40,6 @@ trap 'power_mode_login_exit >/dev/null 2>&1 || true; adb_hint_notif_remove >/dev
 # Guard: avoid running iiab-termux inside proot-distro rootfs.
 in_proot_rootfs() {
   # Debian rootfs indicator
-  [ -f /etc/os-release ] && return 0
   [ -f /etc/debian_version ] && return 0
   return 1
 }
@@ -283,95 +230,6 @@ final_advice() {
       ;;
   esac
 }
-
-iiab_login() {
-  local stamp="$STATE_DIR/stamp.termux_base"
-
-  # Baseline stamp is advisory only for login (do not block).
-  if [[ -f "$stamp" ]]; then
-    ok "Baseline stamp found: $stamp"
-  else
-    warn_red "Baseline stamp not found ($stamp)."
-    warn "Tip: run the baseline once: iiab-termux"
-  fi
-
-  have proot-distro || die "proot-distro not found. Install baseline first (pkg install proot-distro or run iiab-termux)."
-  if ! iiab_exists; then
-    warn_red "IIAB Debian is not installed in proot-distro (alias 'iiab' missing)."
-    warn "Recommended: iiab-termux --all"
-    warn "Or:          proot-distro install --override-alias iiab debian"
-    return 1
-  fi
-
-  # Reminder: Android battery policy must be configured before long installs.
-  if [[ "${POWER_MODE_BATTERY_PROMPT:-1}" -eq 1 ]]; then
-    local bst="$POWER_MODE_BATTERY_STAMP"
-    if [[ ! -f "$bst" ]]; then
-      warn "Reminder: for reliable long installs, set Termux -> Battery to 'Unrestricted'."
-      power_mode_battery_instructions
-      if tty_yesno_default_n "[iiab] Open Termux App info now to adjust Battery policy? [y/N]: "; then
-        if android_open_termux_app_info; then
-          printf "[iiab] When done, return to Termux and press Enter to continue... " >&3
-          if [[ -r /dev/tty ]]; then
-            read -r _ </dev/tty || true
-          else
-            printf "\n" >&3
-          fi
-          date > "$bst" 2>/dev/null || true
-        else
-          warn "Unable to open Settings automatically. Open manually: Settings -> Apps -> Termux."
-        fi
-      fi
-    fi
-  fi
-
-  # Best-effort Android advice before user starts doing heavy installs inside proot.
-  local sdk="${ANDROID_SDK:-}"
-  if [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 31 && sdk <= 33 )); then
-    # Android 12-13: PPK is a common hard failure point.
-    if have adb; then
-      adb start-server >/dev/null 2>&1 || true
-      if adb_pick_loopback_serial >/dev/null 2>&1; then
-        check_readiness || true
-      else
-        warn_red "Android 12-13: ADB is not connected, so PPK=256 cannot be verified/applied."
-        warn "Before running the IIAB installer inside proot, run:"
-        ok   "  iiab-termux --all"
-      fi
-    else
-      warn_red "Android 12-13: adb is missing, so PPK=256 cannot be verified/applied."
-      warn "Install adb (android-tools) and run:"
-      ok   "  iiab-termux --all"
-    fi
-  elif [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 34 )); then
-    # Android 14+: rely on 'Disable child process restrictions' (monitor=false).
-    if have adb; then
-      adb start-server >/dev/null 2>&1 || true
-      if adb_pick_loopback_serial >/dev/null 2>&1; then
-        check_readiness || true
-      else
-        warn "Android 14+: ensure 'Disable child process restrictions' is enabled in Developer Options."
-      fi
-    else
-      warn "Android 14+: ensure 'Disable child process restrictions' is enabled in Developer Options."
-    fi
-  fi
-
-  ok "Entering IIAB Debian (via: iiab-termux --login)"
-  power_mode_login_enter || true
-  # Preserve interactivity even if logging is enabled (avoid pipes/tee issues).
-  local rc=0
-  if [[ -r /dev/tty ]]; then
-    proot-distro login iiab </dev/tty >&3 2>&4
-    rc=$?
-  else
-    proot-distro login iiab
-    rc=$?
-  fi
-
-  power_mode_login_exit || true
-  return $rc
-}
 # -------------------------
 # Args
 # -------------------------
@@ -433,120 +291,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-tty_prompt_print() {
-  local prompt="$1" outfd=1
-  # Prefer original console FD3 if available (set by setup_logging)
-  if { : >&3; } 2>/dev/null; then outfd=3; fi
-  printf '%b' "$prompt" >&"$outfd"
-}
+all_optional_adb_connect_and_check() {
+  # Args:
+  #   $1 = label (e.g. "Android 14+" or "Android 11")
+  #   $2 = reminder line (can be "")
 
-tty_yesno_default_y() {
-  # args: prompt
-  # Returns 0 for Yes, 1 for No. Default is Yes.
-  local prompt="$1" ans="Y"
-  if [[ -r /dev/tty ]]; then
-    tty_prompt_print "$prompt"
-    if ! read -r ans < /dev/tty; then
-      ans="Y"
-    fi
-  else
-    warn "No /dev/tty available; defaulting to YES."
-    ans="Y"
-  fi
-  ans="${ans:-Y}"
-  [[ "$ans" =~ ^[Nn]$ ]] && return 1
-  return 0
-}
+  local label="${1:-Android}"
+  local reminder="${2:-}"
 
-tty_yesno_default_n() {
-  # args: prompt
-  # Returns 0 for Yes, 1 for No. Default is No.
-  local prompt="$1" ans="N"
-  if [[ -r /dev/tty ]]; then
-    tty_prompt_print "$prompt"
-    read -r ans < /dev/tty || ans="N"
-  else
-    warn "No /dev/tty available; defaulting to NO."
-    ans="N"
-  fi
-  ans="${ans:-N}"
-  [[ "$ans" =~ ^[Yy]$ ]] && return 0
-  return 1
-}
-
-install_iiab_android_cmd() {
-  have proot-distro || die "proot-distro not found"
-  iiab_exists || { warn_red "IIAB Debian (alias 'iiab') not installed."; return 1; }
-
-  local url="${IIAB_ANDROID_URL:-https://raw.githubusercontent.com/iiab/iiab-android/main/iiab-android}"
-  local dest="${IIAB_ANDROID_DEST:-/usr/local/sbin/iiab-android}"
-  local tmp="/tmp/iiab-android.$$"
-
-  local meta old new rc=0
-  set +e
-  meta="$(proot-distro login iiab -- env URL="$url" DEST="$dest" TMP="$tmp" bash -lc '
-    set -e
-    old=""
-    if [ -r "$DEST" ]; then old="$(sha256sum "$DEST" 2>/dev/null | cut -d" " -f1 || true)"; fi
-    if ! command -v curl >/dev/null 2>&1; then
-      export DEBIAN_FRONTEND=noninteractive
-      apt-get update
-      apt-get -y -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold install ca-certificates curl coreutils
-    fi
-    curl -fsSL --retry 5 --retry-connrefused --retry-delay 2 "$URL" -o "$TMP"
-    head -n1 "$TMP" | grep -q "bash" || { echo "BAD_SHEBANG"; exit 2; }
-    new="$(sha256sum "$TMP" | cut -d" " -f1)"
-    echo "OLD=$old"
-    echo "NEW=$new"
-  ' 2>&1)"
-  rc=$?
-  set -e
-
-  if (( rc != 0 )); then
-    if printf '%s\n' "$meta" | grep -q 'BAD_SHEBANG'; then
-      warn_red "Downloaded iiab-android does not look like a bash script (bad shebang)."
-    else
-      warn_red "Failed to fetch/install iiab-android in proot (rc=$rc)."
-      printf "%s\n" "$meta" | indent >&2
-    fi
-    return 1
-  fi
-
-  old="$(printf '%s\n' "$meta" | sed -n 's/^OLD=//p' | head -n1)"
-  new="$(printf '%s\n' "$meta" | sed -n 's/^NEW=//p' | head -n1)"
-
-  if [[ -n "$old" && "$old" == "$new" ]]; then
-    ok "iiab-android already up to date inside proot."
-    proot-distro login iiab -- env TMP="$tmp" bash -lc 'rm -f "$TMP" >/dev/null 2>&1 || true' || true
-    return 0
-  fi
-
-  if [[ -n "$old" && "$old" != "$new" ]]; then
-    warn "iiab-android exists and differs inside proot."
-    if ! tty_yesno_default_n "[iiab] Replace existing iiab-android inside proot? [y/N]: "; then
-      warn "Keeping existing iiab-android."
-      proot-distro login iiab -- env TMP="$tmp" bash -lc 'rm -f "$TMP" >/dev/null 2>&1 || true' || true
-     return 0
-    fi
-  fi
-
-  proot-distro login iiab -- env DEST="$dest" TMP="$tmp" bash -lc '
-    set -e
-    mkdir -p "$(dirname "$DEST")"
-    if [ -f "$DEST" ]; then
-      ts="$(date +%Y%m%d-%H%M%S 2>/dev/null || echo now)"
-      mv -f "$DEST" "${DEST}.old.${ts}" 2>/dev/null || true
-    fi
-    install -m 0755 "$TMP" "$DEST"
-    rm -f "$TMP" >/dev/null 2>&1 || true
-  ' || { warn_red "Failed to finalize iiab-android install inside proot."; return 1; }
-
-  ok "Installed inside proot: $dest"
-  ok "Next (inside proot): iiab-android"
-}
-
-all_a14plus_optional_adb() {
-  # Android 14+: ADB is optional. If already connected, run checks (no prompts).
   local serial=""
 
   if have adb; then
@@ -558,15 +310,14 @@ all_a14plus_optional_adb() {
     fi
   fi
 
-  # Not connected -> offer ADB (recommended)
-  if tty_yesno_default_y "[iiab] Android 14+: Connect via Wireless ADB now (recommended)? [Y/n]: "; then
+  if tty_yesno_default_y "[iiab] ${label}: Connect via Wireless ADB now (recommended)? [Y/n]: "; then
     adb_pair_connect_if_needed
     check_readiness || true
     return 0
   fi
 
-  warn "Continuing without ADB (Android 14+)."
-  warn "Reminder: enable Developer Options -> 'Disable child process restrictions' (otherwise installs may fail)."
+  warn "Continuing without ADB (${label})."
+  [[ -n "$reminder" ]] && warn "$reminder"
   CHECK_NO_ADB=1
   CHECK_SDK="${ANDROID_SDK:-}"
   return 0
@@ -584,32 +335,6 @@ warn_skip_adb_pre11() {
 warn_adb_only_pre11() {
   warn "Android 8-10: --adb-only cannot run Wireless debugging pairing (Android 11+ feature)."
   warn "So far, our testing indicates ADB is not required on Android 8-10."
-}
-
-all_a11_optional_adb() {
-  # Android 11: ADB is optional. If already connected, run checks (no prompts).
-  local serial=""
-  if have adb; then
-    adb start-server >/dev/null 2>&1 || true
-    if serial="$(adb_pick_loopback_serial 2>/dev/null)"; then
-      ok "ADB already connected: $serial (running checks, no prompts)."
-      check_readiness || true
-      return 0
-    fi
-  fi
-
-  # Not connected -> offer ADB (recommended, but optional)
-  if tty_yesno_default_y "[iiab] Android 11: Connect via Wireless ADB now (recommended)? [Y/n]: "; then
-    adb_pair_connect_if_needed
-    check_readiness || true
-    return 0
-  fi
-
-  warn "Continuing without ADB (Android 11)."
-  warn "Note: Wireless debugging is optional here; installs usually work without ADB."
-  CHECK_NO_ADB=1
-  CHECK_SDK="${ANDROID_SDK:-}"
-  return 0
 }
 
 validate_args() {
@@ -728,10 +453,14 @@ main() {
       install_iiab_android_cmd || true
       if sdk_is_num && (( ANDROID_SDK >= 34 )); then
         # Android 14+
-        all_a14plus_optional_adb
+        all_optional_adb_connect_and_check \
+          "Android 14+" \
+          "Reminder: enable Developer Options -> 'Disable child process restrictions' (otherwise installs may fail)."
       elif sdk_eq 30; then
         # Android 11
-        all_a11_optional_adb
+        all_optional_adb_connect_and_check \
+          "Android 11" \
+          "Note: Wireless debugging is optional here; installs usually work without ADB."
       elif sdk_le 29; then
         # Android 8-10
         warn_skip_adb_pre11
