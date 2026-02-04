@@ -20,17 +20,25 @@ BASELINE_ERR=""
 RESET_IIAB=0
 ONLY_CONNECT=0
 
+# Optional feature gate: Android HTTP proxy + local haproxy/privoxy
+# Enabled only when explicitly requested.
+PROXY_ADB="${PROXY_ADB:-0}"   # 1=enable proxy feature, 0=disabled
+
 CHECK_NO_ADB=0
 CHECK_SDK=""
 CHECK_MON=""
 CHECK_PPK=""
 
 # Modes are mutually exclusive (baseline is default)
-MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|all|login
+MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|all|login|proxy-status|proxy-reset
+
+PROXY_SESSION_ACTIVE=0
+PROXY_KEEP_SERVICES=0
+
 MODE_SET=0
 CONNECT_PORT_FROM=""   # "", "flag", "positional"
 
-trap 'power_mode_login_exit >/dev/null 2>&1 || true; adb_hint_notif_remove >/dev/null 2>&1 || true; cleanup_notif >/dev/null 2>&1 || true; release_wakelock >/dev/null 2>&1 || true' EXIT INT TERM
+trap 'proxy_cleanup_on_exit >/dev/null 2>&1 || true; power_mode_login_exit >/dev/null 2>&1 || true; adb_hint_notif_remove >/dev/null 2>&1 || true; cleanup_notif >/dev/null 2>&1 || true; release_wakelock >/dev/null 2>&1 || true' EXIT INT TERM
 
 # NOTE: Termux:API prompts live in 40_mod_termux_api.sh
 
@@ -66,6 +74,99 @@ guard_no_iiab_termux_in_proot() {
 }
 
 guard_no_iiab_termux_in_proot
+
+# -------------------------
+# Proxy feature (guarded behind PROXY_ADB=1)
+# -------------------------
+proxy_feature_enabled() {
+  [[ "${PROXY_ADB:-0}" -eq 1 ]]
+}
+
+proxy_restore_android_http_proxy_best_effort() {
+  # Restore only if we changed it in this run (restore_needed stamp).
+  proxy_feature_enabled || return 0
+  proxy_state_init
+  [[ -f "${PROXY_STATE}/restore_needed" ]] || return 0
+  proxy_adb_alive || return 0
+
+  local prev=""
+  prev="$(cat "${PROXY_STATE}/prev_http_proxy" 2>/dev/null || true)"
+  if proxy_is_none_value "$prev"; then
+    proxy_set_http_proxy ":0" || true
+  else
+    proxy_set_http_proxy "$prev" || true
+  fi
+  proxy_clear_prev_proxy
+  ok "Proxy: restored Android http_proxy (best effort)."
+}
+
+proxy_prepare_enable_if_requested() {
+  proxy_feature_enabled || return 0
+  proxy_maybe_enable_feature
+}
+
+proxy_enter_session_if_requested() {
+  # Called just before --login enters proot (so browser traffic works while inside IIAB Debian).
+  proxy_feature_enabled || return 0
+
+  # We require ADB for Android proxy toggling (but we can still start local services without it).
+  if proxy_adb_alive; then
+    # Android 14+: hard gate (your PoC requirement)
+    if ! proxy_android14_disable_phantom_monitor_or_fail; then
+      warn_red "Proxy: Android 14+ phantom monitor could not be disabled/verified; refusing to enable proxy."
+      return 1
+    fi
+
+      # Save current http_proxy (only once) if it's not ours.
+      local cur=""
+      cur="$(proxy_get_http_proxy 2>/dev/null || true)"
+      cur="${cur:-:0}"
+    if proxy_is_ours_value "$cur"; then
+      log "Proxy: Android http_proxy already set to our value (${PRIVOXY_LISTEN})."
+    else
+        if proxy_is_none_value "$cur"; then
+          proxy_write_prev_proxy ":0"
+        else
+          proxy_write_prev_proxy "$cur"
+        fi
+        if proxy_set_http_proxy "${PRIVOXY_LISTEN}"; then
+          ok "Proxy: set Android http_proxy -> ${PRIVOXY_LISTEN}"
+        else
+          warn_red "Proxy: failed to set Android http_proxy"
+          proxy_clear_prev_proxy
+          return 1
+        fi
+    fi
+  else
+    warn "Proxy: ADB not connected; will not toggle Android http_proxy."
+    warn "Tip: run iiab-termux --with-adb (or --adb-only / --connect-only) first."
+  fi
+
+  # Start local services (best effort). If they fail, try to restore Android proxy.
+  if ! proxy_start_services; then
+    warn_red "Proxy: failed to start privoxy/haproxy or healthcheck failed."
+    proxy_restore_android_http_proxy_best_effort || true
+    proxy_stop_services_best_effort || true
+    return 1
+  fi
+
+  ok "Proxy: services started and ready (Privoxy ${PRIVOXY_LISTEN} -> HAProxy ${HAPROXY_LISTEN})."
+  return 0
+}
+
+proxy_exit_session_if_requested() {
+  proxy_feature_enabled || return 0
+
+  if proxy_adb_alive; then
+    proxy_restore_android_http_proxy_best_effort || true
+    proxy_stop_services_best_effort || true
+    return 0
+  fi
+
+  warn_red "Proxy: exiting without ADB. Keeping privoxy/haproxy running to avoid cutting Internet."
+  warn "As soon as ADB is available, run: iiab-termux --proxy-reset"
+  return 0
+}
 
 # -------------------------
 # Self-check
@@ -246,20 +347,32 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --with-adb) set_mode "with-adb"; shift ;;
     --adb-only) set_mode "adb-only"; shift ;;
+    --proxy-iiab)
+      PROXY_ADB=1
+      shift
+      ;;
+    --proxy-status)
+      set_mode "proxy-status"
+      shift
+      ;;
+    --proxy-reset)
+      set_mode "proxy-reset"
+      shift
+      ;;
     --login) set_mode "login"; shift ;;
     --connect-only)
       set_mode "connect-only"
       ONLY_CONNECT=1
       # Optional positional connect spec (accept PORT or IP:PORT)
       if [[ -n "${2:-}" ]]; then
-        local_norm=""
-        if local_norm="$(normalize_port_5digits "${2:-}" 2>/dev/null)"; then
+        connect_norm=""
+        if connect_norm="$(normalize_port_5digits "${2:-}" 2>/dev/null)"; then
           if [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "positional" ]]; then
             die "CONNECT PORT specified twice (positional + --connect-port). Use only one."
           fi
-        CONNECT_PORT="$local_norm"
-        CONNECT_PORT_FROM="positional"
-        shift 2
+          CONNECT_PORT="$connect_norm"
+          CONNECT_PORT_FROM="positional"
+          shift 2
           continue
         fi
       fi
@@ -340,8 +453,9 @@ warn_adb_only_pre11() {
 validate_args() {
   if [[ -n "${CONNECT_PORT:-}" ]]; then
     local raw="$CONNECT_PORT" norm=""
-    norm="$(normalize_port_5digits "$raw" 2>/dev/null)" || \
+    norm="$(normalize_port_5digits "$raw" 2>/dev/null)" || {
       die "Invalid --connect-port (must be 5 digits PORT or IP:PORT): '$raw'"
+    }
     CONNECT_PORT="$norm"
     # Android 8-10 (SDK <=29): Wireless debugging pairing isn't available.
     # If user provided --connect-port, make it explicit it's ignored here.
@@ -385,9 +499,27 @@ main() {
   acquire_wakelock
 
   case "$MODE" in
+    proxy-status)
+      proxy_reconcile_on_startup || true
+      proxy_status
+      exit 0
+      ;;
+    proxy-reset)
+      require_adb_connected || die "Se requiere ADB para resetear el proxy. Ejecuta: iiab-termux --adb-only"
+      proxy_disable
+      exit 0
+      ;;
     login)
-      iiab_login
-      return $?
+    # Only enable proxy feature if explicitly requested.
+    # We do it immediately before login so it doesn't run during baseline installs.
+    if proxy_feature_enabled; then
+      proxy_enter_session_if_requested || {
+        warn_red "Proxy: could not enter proxy session; continuing without proxy."
+      }
+    fi
+    iiab_login
+    # Cleanup after returning from proot login.
+    proxy_exit_session_if_requested || true
       ;;
     baseline)
       power_mode_offer_battery_settings_once || true
@@ -406,9 +538,9 @@ main() {
       # Android 8-10: skip ADB (no Wireless debugging pairing).
       if sdk_le 29; then
         warn_skip_adb_pre11
-        break
+      else
+        adb_pair_connect_if_needed
       fi
-      adb_pair_connect_if_needed
       ;;
 
     adb-only)
