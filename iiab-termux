@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-04T04:14:34-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-04T04:52:57-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -640,39 +640,28 @@ power_mode_offer_battery_settings_once() {
 step_termux_repo_select_once() {
   local stamp="$STATE_DIR/stamp.termux_repo_selected"
   [[ -f "$stamp" ]] && return 0
+
   if ! have termux-change-repo; then
     warn "termux-change-repo not found; skipping mirror selection."
     return 0
   fi
 
-  local did_run=0
   local outfd errfd
   outfd="$(console_outfd)"
   errfd="$(console_errfd)"
 
   if [[ -r /dev/tty ]]; then
     printf "\n${YEL}[iiab] One-time setup:${RST} Select a nearby Termux repository mirror for faster downloads.\n" >&"$outfd"
-    local ans="Y"
-    printf "[iiab] Launch termux-change-repo now? [Y/n]: " >&"$outfd"
-    if ! IFS= read -r ans < /dev/tty; then
-      warn "No interactive TTY available; skipping mirror selection (run 'termux-change-repo' directly to be prompted)."
-      return 0
-    fi
-    ans="${ans:-Y}"
-    if [[ "$ans" =~ ^[Yy]$ ]]; then
-      # Run interactive UI against /dev/tty and the current console fds (works w/ or w/o logging).
-      if termux-change-repo </dev/tty >&"$outfd" 2>&"$errfd"; then
-        did_run=1
-      fi
-      ok "Mirror selection completed (or skipped inside the UI)."
+
+    # Run interactive UI against /dev/tty and the current console fds (works w/ or w/o logging).
+    if termux-change-repo </dev/tty >&"$outfd" 2>&"$errfd"; then
+      ok "Mirror selection UI completed."
     else
-      warn "Mirror selection skipped by user."
+      # Even if user exits/cancels, we still consider it "handled once" to avoid re-prompting.
+      warn "Mirror selection UI exited (canceled or failed). Not prompting again."
     fi
-    if (( did_run )); then
-      date > "$stamp" 2>/dev/null || true
-    else
-      warn "Mirror not selected yet; you'll be asked again next run."
-    fi
+
+    date > "$stamp" 2>/dev/null || true
     return 0
   fi
 
@@ -2090,8 +2079,8 @@ proxy_stop_all() {
 proxy_start_all() {
   proxy_ensure_pkgs || { warn_red "Cannot install haproxy/privoxy"; return 1; }
   proxy_install_configs_from_repo || return 1
-  proxy_start_haproxy || return 1
   proxy_start_privoxy || return 1
+  proxy_start_haproxy || return 1
   return 0
 }
 
