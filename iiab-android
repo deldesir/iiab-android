@@ -81,6 +81,94 @@ validate_is_proot_or_die() {
   die "local_vars.yml: conflicting is_proot entries. Keep only ONE: is_proot: True"
 }
 
+# -------------------------
+# Detect 32bits processor
+# -------------------------
+is_32bits() {
+  local bits
+  bits="$(getconf LONG_BIT 2>/dev/null || true)"
+  [ "$bits" = "32" ]
+}
+
+# -------------------------
+# Enable deb-src repositories for apt 3.0+ on Debian like OS.
+# -------------------------
+apt3_enable_sources() {
+  # Require apt >= 3.0
+  local apt_ver
+  apt_ver="$(apt -v 2>/dev/null | awk '{print $2}' | cut -d. -f1-2)"
+  if [ -z "$apt_ver" ]; then
+    echo "ERROR: couldn't detect apt version" >&2
+    return 1
+  fi
+  if ! dpkg --compare-versions "$apt_ver" ge "3.0"; then
+    echo "ERROR: apt >= 3.0 required (found $apt_ver)" >&2
+    return 1
+  fi
+
+  local apt_src_dir="/etc/apt/sources.list.d"
+  local distro="" f=""
+
+  # Load /etc/os-release
+  if [ -r /etc/os-release ]; then
+    . /etc/os-release
+    distro="${ID:-}"
+  fi
+  if [ -z "$distro" ]; then
+    echo "ERROR: couldn't determine ID from /etc/os-release" >&2
+    return 1
+  fi
+
+  # Strict target: only <ID>.sources (Debian => debian.sources)
+  f="$apt_src_dir/$distro.sources"
+
+  # If not modernized yet, do it once
+  if [ ! -f "$f" ]; then
+    apt modernize-sources -y
+  fi
+
+  if [ ! -f "$f" ]; then
+    echo "ERROR: expected sources file not found: $f" >&2
+    return 1
+  fi
+
+  # Idempotent: if deb-src already enabled, nothing to do
+  if grep -Eq '^[[:space:]]*Types:.*\bdeb-src\b' "$f"; then
+    return 0
+  fi
+
+  # Backup
+  cp -a "$f" "$f.bak"
+
+  # Add deb-src to any Types: line that has deb but not deb-src
+  sed -i -E '/^[[:space:]]*Types:[[:space:]]*/{
+    /deb-src/! s/\bdeb\b/& deb-src/
+  }' "$f"
+
+  apt-get update
+}
+
+disable_role_32bits() {
+  local role="$1" file="$2"
+  local comment="#32bits;pending support."
+
+  is_32bits || return 0
+
+  # role_install
+  if grep -qE "^[[:space:]]*${role}_install:" "$file"; then
+    sed -i -E "s|^[[:space:]]*(${role}_install:)[[:space:]]*.*|\\1 False ${comment}|" "$file"
+  else
+    printf '%s_install: False %s\n' "$role" "$comment" >> "$file"
+  fi
+
+  # role_enabled
+  if grep -qE "^[[:space:]]*${role}_enabled:" "$file"; then
+    sed -i -E "s|^[[:space:]]*(${role}_enabled:)[[:space:]]*.*|\\1 False ${comment}|" "$file"
+  else
+    printf '%s_enabled: False %s\n' "$role" "$comment" >> "$file"
+  fi
+}
+
 fetch_android_local_vars() {
   # args: destination
   local dest="$1"
@@ -113,6 +201,16 @@ apt-get install -y ca-certificates \
                    netcat-traditional \
                    sudo
 
+# Install dependencies for ansible custom builds on 32bits
+if is_32bits; then
+# python-cffi
+  apt3_enable_sources
+  apt-get build-dep -y python-cffi
+#calibre-web
+  apt-get install -y libxml2-dev \
+                     libxslt1-dev
+fi
+
 #-----------------------------
 # Setup Android-specific local vars
 #-----------------------------
@@ -138,6 +236,14 @@ else
   fetch_android_local_vars "$LOCAL_VARS_DEST"
   validate_is_proot_or_die "$LOCAL_VARS_DEST" || { show_is_proot_lines "$LOCAL_VARS_DEST"; die "Android template local_vars.yml is invalid; cannot continue."; }
 fi
+
+#-----------------------------
+# Temporary workaround regarding roles on 32bits
+#-----------------------------
+# kiwix
+disable_role_32bits kiwix "$LOCAL_VARS_DEST"
+# maps
+disable_role_32bits maps "$LOCAL_VARS_DEST"
 
 #-----------------------------
 # Fetch install.txt with fallback and run it
