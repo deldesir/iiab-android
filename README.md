@@ -41,8 +41,8 @@ http://localhost:8085/maps
    * Update the **F-Droid repos**.
      * Open the F-Droid app and click "Updates".
    * Search for **Termux** and install:
-     * **Termux** Terminal emulator with packages (com.termux)
-     * **Termux:API** Access Android functions from Termux (com.termux.api)
+     * [**Termux**](https://f-droid.org/packages/com.termux) Terminal emulator with packages ([com.termux](https://f-droid.org/packages/com.termux))
+     * [**Termux:API**](https://f-droid.org/packages/com.termux.api) Access Android functions from Termux ([com.termux.api](https://f-droid.org/packages/com.termux.api))
      * You will have to Allow installation from unknown sources (or Install unknown apps) from F-Droid
 
    **Note**: You might see a "*This app was built for an older version of Android and cannot be updated automatically*" label on both apps. You can ignore this as it only refers for the [*auto-update* feature](https://f-droid.org/en/2024/02/01/twif.html). Manual updates will continue to work. [Read more here](https://github.com/termux/termux-packages/wiki/Termux-and-Android-10/3e8102ecd05c4954d67971ff2b508f32900265f7).
@@ -218,6 +218,16 @@ iiab-termux --login
 ```
 
 You will then be in a IIAB Debian shell with access to the IIAB CLI (command-line interface) tools.
+
+## What about 32bits?
+
+IIAB on Andriod can run on phones with 32bit processor. CUrrently there are some restrictions as some apps like:
+
+- Maps
+- Kiwix
+
+Which are not yet supported, [we are working on closing that gap](https://github.com/iiab/iiab-android/issues/30), please stay tuned for more updates on this architechture.
+
 
 ## Removal
 
