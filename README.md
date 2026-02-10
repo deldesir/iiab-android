@@ -221,7 +221,7 @@ You will then be in a IIAB Debian shell with access to the IIAB CLI (command-lin
 
 ## What about 32bits?
 
-IIAB on Andriod can run on phones with 32bit processor. CUrrently there are some restrictions as some apps like:
+IIAB on Andriod can run on phones with 32bit processor. Currently there are some restrictions as some apps like:
 
 - Maps
 - Kiwix
