@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-04T08:01:17-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-10T17:49:02-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -64,6 +64,8 @@ TERMUX_PACKAGE="${TERMUX_PACKAGE:-com.termux}"
 # One-time helper: guide user to set Termux battery policy to keep sessions alive.
 POWER_MODE_BATTERY_PROMPT="${POWER_MODE_BATTERY_PROMPT:-1}"  # 1=ask, 0=never ask
 POWER_MODE_BATTERY_STAMP="${POWER_MODE_BATTERY_STAMP:-$STATE_DIR/stamp.termux_battery_settings}"
+
+export PIP_EXTRA_INDEX_URL="https://iiab.switnet.org/simple"
 
 tty_prompt_print() {
   local prompt="$1" outfd=1
@@ -355,7 +357,6 @@ setup_logging() {
 # Python helpers + mDNS deps (zeroconf)
 # -------------------------
 # Rationale: If mDNS autodetect is enabled, prepare it here so it's available from the start.
-
 TERMUX_ZEROCONF_STAMP="${STATE_DIR}/stamp.termux_zeroconf"
 
 # Cache: avoid repeating zeroconf checks/installs/warnings in the same run.

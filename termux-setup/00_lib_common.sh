@@ -54,6 +54,8 @@ TERMUX_PACKAGE="${TERMUX_PACKAGE:-com.termux}"
 POWER_MODE_BATTERY_PROMPT="${POWER_MODE_BATTERY_PROMPT:-1}"  # 1=ask, 0=never ask
 POWER_MODE_BATTERY_STAMP="${POWER_MODE_BATTERY_STAMP:-$STATE_DIR/stamp.termux_battery_settings}"
 
+export PIP_EXTRA_INDEX_URL="https://iiab.switnet.org/simple"
+
 tty_prompt_print() {
   local prompt="$1" outfd=1
   # Prefer original console FD3 if available (set by setup_logging)
