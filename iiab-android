@@ -148,6 +148,14 @@ apt3_enable_sources() {
   apt-get update
 }
 
+enable_custom_iiab_pip() {
+  echo "Add extra wheels pip repo."
+  cat << EOF > /etc/pip.conf
+[global]
+extra-index-url=https://iiab.switnet.org/simple
+EOF
+}
+
 disable_role_32bits() {
   local role="$1" file="$2"
   local comment="#32bits;pending support."
@@ -201,14 +209,12 @@ apt-get install -y ca-certificates \
                    netcat-traditional \
                    sudo
 
-# Install dependencies for ansible custom builds on 32bits
+# Add custom wheels repo for IIAB on Android
+enable_custom_iiab_pip
+
+# Install dependencies for calibre-web builds on 32bits
 if is_32bits; then
-# python-cffi
-  apt3_enable_sources
-  apt-get build-dep -y python-cffi
-#calibre-web
-  apt-get install -y libxml2-dev \
-                     libxslt1-dev
+  apt-get install -y python3-pip python3-dev
 fi
 
 #-----------------------------
