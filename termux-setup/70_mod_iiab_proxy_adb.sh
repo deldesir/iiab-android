@@ -12,6 +12,7 @@
 # Runtime dirs/state
 PROXY_DIR="${HOME}/.iiab-android/proxy"
 PROXY_STATE="${PROXY_DIR}/state"
+PROXY_STAMP_PROVISIONED="${PROXY_STATE}/stamp.provisioned"
 PROXY_PIDDIR="${PROXY_STATE}/pids"
 
 # Runtime config destinations
@@ -45,6 +46,12 @@ proxy_write_prev_proxy() {
   local prev="$1"
   printf '%s\n' "${prev}" > "$(proxy_prev_file)"
   : > "$(proxy_restore_flag)"
+}
+
+proxy_is_provisioned() { [[ -f "${PROXY_STAMP_PROVISIONED}" ]]; }
+proxy_mark_provisioned() {
+  proxy_state_init
+  date > "${PROXY_STAMP_PROVISIONED}" 2>/dev/null || : > "${PROXY_STAMP_PROVISIONED}"
 }
 
 proxy_clear_prev_proxy() {
@@ -132,6 +139,35 @@ proxy_install_configs_from_repo() {
   return 0
 }
 
+# Download configs, do not overwrite user edits on login
+proxy_install_configs_once_from_repo() {
+  proxy_state_init
+  if proxy_is_provisioned; then
+    log "Proxy configs already provisioned (stamp exists). Not downloading."
+    return 0
+  fi
+  proxy_install_configs_from_repo || return 1
+  proxy_mark_provisioned
+  ok "Proxy provisioned: configs installed; stamp created."
+  return 0
+}
+
+# Provision = packages + configs (called by --proxy-iiab).
+proxy_provision() {
+  proxy_state_init
+  proxy_ensure_pkgs || { warn_red "Cannot install haproxy/privoxy"; return 1; }
+  proxy_install_configs_once_from_repo || return 1
+  return 0
+}
+
+# Ensure local configs exist before starting services (no network calls).
+proxy_require_local_configs() {
+  [[ -s "${HAPROXY_CFG}" && -s "${PRIVOXY_CFG}" && -s "${USER_ACTION}" ]] && return 0
+  warn_red "Proxy configs are missing in: ${PROXY_DIR}"
+  warn "Run: iiab-termux --proxy-iiab"
+  return 1
+}
+
 # -------------
 # Process management
 # -------------
@@ -199,8 +235,7 @@ proxy_stop_all() {
 }
 
 proxy_start_all() {
-  proxy_ensure_pkgs || { warn_red "Cannot install haproxy/privoxy"; return 1; }
-  proxy_install_configs_from_repo || return 1
+  proxy_require_local_configs || return 1
   proxy_start_privoxy || return 1
   proxy_start_haproxy || return 1
   return 0

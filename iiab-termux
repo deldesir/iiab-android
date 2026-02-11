@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-10T17:49:02-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-11T14:38:19-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -357,6 +357,7 @@ setup_logging() {
 # Python helpers + mDNS deps (zeroconf)
 # -------------------------
 # Rationale: If mDNS autodetect is enabled, prepare it here so it's available from the start.
+
 TERMUX_ZEROCONF_STAMP="${STATE_DIR}/stamp.termux_zeroconf"
 
 # Cache: avoid repeating zeroconf checks/installs/warnings in the same run.
@@ -1907,6 +1908,7 @@ self_check_android_flags() {
 # Runtime dirs/state
 PROXY_DIR="${HOME}/.iiab-android/proxy"
 PROXY_STATE="${PROXY_DIR}/state"
+PROXY_STAMP_PROVISIONED="${PROXY_STATE}/stamp.provisioned"
 PROXY_PIDDIR="${PROXY_STATE}/pids"
 
 # Runtime config destinations
@@ -1940,6 +1942,12 @@ proxy_write_prev_proxy() {
   local prev="$1"
   printf '%s\n' "${prev}" > "$(proxy_prev_file)"
   : > "$(proxy_restore_flag)"
+}
+
+proxy_is_provisioned() { [[ -f "${PROXY_STAMP_PROVISIONED}" ]]; }
+proxy_mark_provisioned() {
+  proxy_state_init
+  date > "${PROXY_STAMP_PROVISIONED}" 2>/dev/null || : > "${PROXY_STAMP_PROVISIONED}"
 }
 
 proxy_clear_prev_proxy() {
@@ -2027,6 +2035,35 @@ proxy_install_configs_from_repo() {
   return 0
 }
 
+# Download configs, do not overwrite user edits on login
+proxy_install_configs_once_from_repo() {
+  proxy_state_init
+  if proxy_is_provisioned; then
+    log "Proxy configs already provisioned (stamp exists). Not downloading."
+    return 0
+  fi
+  proxy_install_configs_from_repo || return 1
+  proxy_mark_provisioned
+  ok "Proxy provisioned: configs installed; stamp created."
+  return 0
+}
+
+# Provision = packages + configs (called by --proxy-iiab).
+proxy_provision() {
+  proxy_state_init
+  proxy_ensure_pkgs || { warn_red "Cannot install haproxy/privoxy"; return 1; }
+  proxy_install_configs_once_from_repo || return 1
+  return 0
+}
+
+# Ensure local configs exist before starting services (no network calls).
+proxy_require_local_configs() {
+  [[ -s "${HAPROXY_CFG}" && -s "${PRIVOXY_CFG}" && -s "${USER_ACTION}" ]] && return 0
+  warn_red "Proxy configs are missing in: ${PROXY_DIR}"
+  warn "Run: iiab-termux --proxy-iiab"
+  return 1
+}
+
 # -------------
 # Process management
 # -------------
@@ -2094,8 +2131,7 @@ proxy_stop_all() {
 }
 
 proxy_start_all() {
-  proxy_ensure_pkgs || { warn_red "Cannot install haproxy/privoxy"; return 1; }
-  proxy_install_configs_from_repo || return 1
+  proxy_require_local_configs || return 1
   proxy_start_privoxy || return 1
   proxy_start_haproxy || return 1
   return 0
@@ -2448,6 +2484,7 @@ MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|al
 
 PROXY_SESSION_ACTIVE=0
 PROXY_KEEP_SERVICES=0
+PROXY_PROVISION=0   # set by --proxy-iiab (provision once, not on --login)
 
 MODE_SET=0
 CONNECT_PORT_FROM=""   # "", "flag", "positional"
@@ -2522,6 +2559,12 @@ proxy_prepare_enable_if_requested() {
 proxy_enter_session_if_requested() {
   # Called just before --login enters proot (so browser traffic works while inside IIAB Debian).
   proxy_feature_enabled || return 0
+
+  # Require that --proxy-iiab was run at least once (provisioning stamp exists).
+  if ! proxy_is_provisioned; then
+    warn "Proxy: not provisioned yet; skipping activation. Run once: iiab-termux --proxy-iiab"
+    return 0
+  fi
 
   # We require ADB for Android proxy toggling (but we can still start local services without it).
   if proxy_adb_alive; then
@@ -2762,6 +2805,8 @@ while [[ $# -gt 0 ]]; do
     --adb-only) set_mode "adb-only"; shift ;;
     --proxy-iiab)
       PROXY_ADB=1
+      # Provision proxy bits once (pkgs + configs)
+      PROXY_PROVISION=1
       shift
       ;;
     --proxy-status)
@@ -2910,6 +2955,11 @@ main() {
   validate_args
   sanitize_timeout
   acquire_wakelock
+
+  # If user requested proxy provisioning, do it once here (no activation, no login needed).
+  if [[ "${PROXY_PROVISION:-0}" -eq 1 ]]; then
+    proxy_provision || die "Proxy provisioning failed."
+  fi
 
   case "$MODE" in
     proxy-status)

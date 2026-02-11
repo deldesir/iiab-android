@@ -34,6 +34,7 @@ MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|al
 
 PROXY_SESSION_ACTIVE=0
 PROXY_KEEP_SERVICES=0
+PROXY_PROVISION=0   # set by --proxy-iiab (provision once, not on --login)
 
 MODE_SET=0
 CONNECT_PORT_FROM=""   # "", "flag", "positional"
@@ -108,6 +109,12 @@ proxy_prepare_enable_if_requested() {
 proxy_enter_session_if_requested() {
   # Called just before --login enters proot (so browser traffic works while inside IIAB Debian).
   proxy_feature_enabled || return 0
+
+  # Require that --proxy-iiab was run at least once (provisioning stamp exists).
+  if ! proxy_is_provisioned; then
+    warn "Proxy: not provisioned yet; skipping activation. Run once: iiab-termux --proxy-iiab"
+    return 0
+  fi
 
   # We require ADB for Android proxy toggling (but we can still start local services without it).
   if proxy_adb_alive; then
@@ -348,6 +355,8 @@ while [[ $# -gt 0 ]]; do
     --adb-only) set_mode "adb-only"; shift ;;
     --proxy-iiab)
       PROXY_ADB=1
+      # Provision proxy bits once (pkgs + configs)
+      PROXY_PROVISION=1
       shift
       ;;
     --proxy-status)
@@ -496,6 +505,11 @@ main() {
   validate_args
   sanitize_timeout
   acquire_wakelock
+
+  # If user requested proxy provisioning, do it once here (no activation, no login needed).
+  if [[ "${PROXY_PROVISION:-0}" -eq 1 ]]; then
+    proxy_provision || die "Proxy provisioning failed."
+  fi
 
   case "$MODE" in
     proxy-status)
