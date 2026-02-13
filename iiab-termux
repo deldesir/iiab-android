@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-12T20:57:10-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-13T01:59:18-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -15,7 +15,7 @@ set -euo pipefail
 RED="\033[31m"; YEL="\033[33m"; GRN="\033[32m"; BLU="\033[34m"; RST="\033[0m"; BOLD="\033[1m"
 
 log()      { printf "${BLU}[iiab]${RST} %s\n" "$*"; }
-log_yel()      { printf "${YEL}[iiab]${RST} %s\n" "$*"; }
+log_yel()  { printf "${YEL}[iiab]${RST} %s\n" "$*"; }
 ok()       { printf "${GRN}[iiab]${RST} %s\n" "$*"; }
 warn()     { printf "${YEL}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
 warn_red() { printf "${RED}${BOLD}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
@@ -784,7 +784,8 @@ repo_selector_ask_configure() {
     return 0
   fi
 
-  log "Detected repo group: $label"
+  log "Detected repo group: "
+  printf "> ${BOLD}${BLU}$label${RST}\n"
   if tty_yesno_default_y "[iiab] Apply this mirror group now? [Y/n]: "; then
     repo_selector__apply_group "$group" || true
     ok "Region repo set, continuing with the installation."

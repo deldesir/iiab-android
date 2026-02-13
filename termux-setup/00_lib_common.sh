@@ -4,7 +4,7 @@
 RED="\033[31m"; YEL="\033[33m"; GRN="\033[32m"; BLU="\033[34m"; RST="\033[0m"; BOLD="\033[1m"
 
 log()      { printf "${BLU}[iiab]${RST} %s\n" "$*"; }
-log_yel()      { printf "${YEL}[iiab]${RST} %s\n" "$*"; }
+log_yel()  { printf "${YEL}[iiab]${RST} %s\n" "$*"; }
 ok()       { printf "${GRN}[iiab]${RST} %s\n" "$*"; }
 warn()     { printf "${YEL}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
 warn_red() { printf "${RED}${BOLD}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
