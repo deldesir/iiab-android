@@ -99,9 +99,9 @@ boxyproxy_stop() {
 
 boxyproxy_status() {
   boxyproxy_state_init
-  boxyproxy_is_installed || { echo "[boxyproxy] installed=no"; return 0; }
+  boxyproxy_is_installed || { warn "installed=no"; return 0; }
   "$BOXYPROXY_BIN" --status --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null || true
-  echo "[boxyproxy] bin=$BOXYPROXY_BIN"
-  echo "[boxyproxy] raw_url=$BOXYPROXY_RAW_URL"
-  echo "[boxyproxy] log=$BOXYPROXY_LOG"
+  boxyp_log "bin=$BOXYPROXY_BIN"
+  boxyp_log "raw_url=$BOXYPROXY_RAW_URL"
+  boxyp_log "log=$BOXYPROXY_LOG"
 }

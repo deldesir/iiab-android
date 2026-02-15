@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-15T13:04:19-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-15T16:00:35-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -14,12 +14,13 @@ set -euo pipefail
 
 RED="\033[31m"; YEL="\033[33m"; GRN="\033[32m"; BLU="\033[34m"; RST="\033[0m"; BOLD="\033[1m"
 
-log()      { printf "${BLU}[iiab]${RST} %s\n" "$*"; }
-log_yel()  { printf "${YEL}[iiab]${RST} %s\n" "$*"; }
-ok()       { printf "${GRN}[iiab]${RST} %s\n" "$*"; }
-warn()     { printf "${YEL}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
-warn_red() { printf "${RED}${BOLD}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
-indent()   { sed 's/^/ /'; }
+log()       { printf "${BLU}[iiab]${RST} %s\n" "$*"; }
+log_yel()   { printf "${YEL}[iiab]${RST} %s\n" "$*"; }
+ok()        { printf "${GRN}[iiab]${RST} %s\n" "$*"; }
+warn()      { printf "${YEL}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
+warn_red()  { printf "${RED}${BOLD}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
+boxyp_log() { printf "${BLU}[boxyproxy]${RST} %s\n" "$*"; }
+indent()    { sed 's/^/ /'; }
 
 have() { command -v "$1" >/dev/null 2>&1; }
 need() { have "$1" || return 1; }
@@ -475,13 +476,7 @@ termux_prepare_boxyproxy_deps() {
   have python || have python3 || return 0
   python_has_aiohttp && return 0
 
-  warn "Python module 'aiohttp' not found. Trying Termux pkg first (python-aiohttp), then pip fallback..."
-
-  # 1) Preferred: Termux packaged module (avoid building wheels)
-  termux_apt install python-aiohttp >/dev/null 2>&1 || true
-  python_has_aiohttp && { ok "Installed 'aiohttp' via Termux package (python-aiohttp)."; return 0; }
-
-  # 2) Fallback: pip
+  warn "Python module 'aiohttp' not found. Trying pip install..."
   python_pip_install_aiohttp >/dev/null 2>&1 || true
   python_has_aiohttp && { ok "Installed 'aiohttp' via pip."; return 0; }
 
@@ -1137,12 +1132,6 @@ LAST_NOTIF_ID=""
 # Termux:API sanity check (notifications)
 termux_api_ready() {
   have termux-notification || return 1
-
-  # Quick probe: some setups fail until Termux:API app is installed/allowed.
-  local msg="iiab test notification"
-  if ! termux-notification --id "$NOTIF_BASE_ID" --title "iiab" --content "$msg" --priority max --sound >/dev/null 2>&1; then
-    return 1
-  fi
   if have termux-notification-remove; then
     termux-notification-remove "$NOTIF_BASE_ID" >/dev/null 2>&1 || true
   fi
@@ -2283,11 +2272,11 @@ boxyproxy_stop() {
 
 boxyproxy_status() {
   boxyproxy_state_init
-  boxyproxy_is_installed || { echo "[boxyproxy] installed=no"; return 0; }
+  boxyproxy_is_installed || { warn "installed=no"; return 0; }
   "$BOXYPROXY_BIN" --status --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null || true
-  echo "[boxyproxy] bin=$BOXYPROXY_BIN"
-  echo "[boxyproxy] raw_url=$BOXYPROXY_RAW_URL"
-  echo "[boxyproxy] log=$BOXYPROXY_LOG"
+  boxyp_log "bin=$BOXYPROXY_BIN"
+  boxyp_log "raw_url=$BOXYPROXY_RAW_URL"
+  boxyp_log "log=$BOXYPROXY_LOG"
 }
 
 # ---- END 70_mod_boxyproxy.sh ----
@@ -2685,7 +2674,7 @@ main() {
 
   case "$MODE" in
     proxy-start)
-      step_termux_base || baseline_bail
+      termux_prepare_boxyproxy_deps || baseline_bail
       boxyproxy_start
       ;;
     proxy-stop)
@@ -2704,6 +2693,7 @@ main() {
       boxyproxy_install_or_update || true
       step_iiab_bootstrap_default
       install_iiab_android_cmd || true
+      self_check
       ;;
 
     with-adb)
@@ -2719,6 +2709,7 @@ main() {
       else
         adb_pair_connect_if_needed
       fi
+      self_check
       ;;
 
     adb-only)
@@ -2729,17 +2720,20 @@ main() {
         return 0
       fi
       adb_pair_connect_if_needed
+      self_check
       ;;
 
     connect-only)
       step_termux_base || baseline_bail
       adb_pair_connect
+      self_check
       ;;
 
     ppk-only)
       # No baseline, no IIAB Debian. Requires adb already available + connected.
       require_adb_connected || exit 1
       ppk_fix_via_adb || true
+      self_check
       ;;
 
     iiab-android)
@@ -2754,6 +2748,7 @@ main() {
     check)
       step_termux_base || baseline_bail
       check_readiness || true
+      self_check
       ;;
 
     all)
@@ -2783,6 +2778,7 @@ main() {
         attempt_auto_apply_ppk
         check_readiness || true
       fi
+      self_check
       ;;
 
     *)
@@ -2790,7 +2786,6 @@ main() {
       ;;
   esac
 
-  self_check
   ok "iiab-termux completed (mode=$MODE)."
   log "Please check the complete mode list using:"
   log "iiab-termux --help"

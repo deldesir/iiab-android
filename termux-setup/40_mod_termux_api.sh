@@ -11,12 +11,6 @@ LAST_NOTIF_ID=""
 # Termux:API sanity check (notifications)
 termux_api_ready() {
   have termux-notification || return 1
-
-  # Quick probe: some setups fail until Termux:API app is installed/allowed.
-  local msg="iiab test notification"
-  if ! termux-notification --id "$NOTIF_BASE_ID" --title "iiab" --content "$msg" --priority max --sound >/dev/null 2>&1; then
-    return 1
-  fi
   if have termux-notification-remove; then
     termux-notification-remove "$NOTIF_BASE_ID" >/dev/null 2>&1 || true
   fi

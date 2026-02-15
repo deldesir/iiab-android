@@ -389,7 +389,7 @@ main() {
 
   case "$MODE" in
     proxy-start)
-      step_termux_base || baseline_bail
+      termux_prepare_boxyproxy_deps || baseline_bail
       boxyproxy_start
       ;;
     proxy-stop)
@@ -408,6 +408,7 @@ main() {
       boxyproxy_install_or_update || true
       step_iiab_bootstrap_default
       install_iiab_android_cmd || true
+      self_check
       ;;
 
     with-adb)
@@ -423,6 +424,7 @@ main() {
       else
         adb_pair_connect_if_needed
       fi
+      self_check
       ;;
 
     adb-only)
@@ -433,17 +435,20 @@ main() {
         return 0
       fi
       adb_pair_connect_if_needed
+      self_check
       ;;
 
     connect-only)
       step_termux_base || baseline_bail
       adb_pair_connect
+      self_check
       ;;
 
     ppk-only)
       # No baseline, no IIAB Debian. Requires adb already available + connected.
       require_adb_connected || exit 1
       ppk_fix_via_adb || true
+      self_check
       ;;
 
     iiab-android)
@@ -458,6 +463,7 @@ main() {
     check)
       step_termux_base || baseline_bail
       check_readiness || true
+      self_check
       ;;
 
     all)
@@ -487,6 +493,7 @@ main() {
         attempt_auto_apply_ppk
         check_readiness || true
       fi
+      self_check
       ;;
 
     *)
@@ -494,7 +501,6 @@ main() {
       ;;
   esac
 
-  self_check
   ok "iiab-termux completed (mode=$MODE)."
   log "Please check the complete mode list using:"
   log "iiab-termux --help"
