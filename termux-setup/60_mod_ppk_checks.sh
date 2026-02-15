@@ -32,6 +32,8 @@ ppk_fix_via_adb() {
 # Some Android versions may ignore/rename this; we don't hard-fail.
 adb -s "$serial" shell sh -s -- "$max" <<'EOF' || true
     set -e
+    max="${1:-256}"
+
     # Prefer device_config binary; fallback to "cmd device_config" on some ROMs.
     if command -v device_config >/dev/null 2>&1; then
       dc() { device_config "$@"; }
@@ -113,7 +115,7 @@ adb_get_monitor_phantom_procs() {
   done
 
   # 2) device_config fallbacks
-  if adb -s "$serial" shell command -v device_config >/dev/null 2>&1; then
+  if adb -s "$serial" shell 'command -v device_config >/dev/null 2>&1 || command -v cmd >/dev/null 2>&1'; then
     for k in "${keys[@]}"; do
       v="$(adb_device_config_get_key "$serial" activity_manager "$k")"
       v="$(normalize_bool_tf01 "$v")"
