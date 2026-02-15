@@ -186,12 +186,28 @@ iiab_login() {
 
   ok "Entering IIAB Debian (via: iiab-termux --login)"
   power_mode_login_enter || true
+
+  # Auto-start boxyproxy for the duration of this proot session.
+  BOXYPROXY_MANAGED=1
+  if boxyproxy_is_running; then
+    boxyp_log "Auto-start: already running (will stop on exit)."
+  else
+    # Best-effort: install once if missing (avoid forcing updates every login).
+    if ! boxyproxy_is_installed; then
+      boxyp_log "Auto-start: installing boxyproxy.py (best-effort)..."
+      boxyproxy_install_or_update >/dev/null 2>&1 || true
+    fi
+    boxyproxy_start >/dev/null 2>&1 || true
+  fi
+
   # Preserve interactivity even if logging is enabled (avoid pipes/tee issues).
   local rc=0
   local outfd errfd
   outfd="$(console_outfd)"
   errfd="$(console_errfd)"
 
+  # Don't let a non-zero exit from proot skip cleanup (set -e).
+  set +e
   if [[ -r /dev/tty ]]; then
     proot-distro login iiab </dev/tty >&"$outfd" 2>&"$errfd"
     rc=$?
@@ -199,6 +215,11 @@ iiab_login() {
     proot-distro login iiab
     rc=$?
   fi
+  set -e
+
+  # Stop proxy after leaving proot session (also covered by trap for signals).
+  boxyproxy_stop >/dev/null 2>&1 || true
+  BOXYPROXY_MANAGED=0
 
   power_mode_login_exit || true
   return $rc
