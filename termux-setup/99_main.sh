@@ -26,7 +26,7 @@ CHECK_MON=""
 CHECK_PPK=""
 
 # Modes are mutually exclusive (baseline is default)
-MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|all|login
+MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|all|login|proxy-start|proxy-stop|proxy-status
 
 MODE_SET=0
 CONNECT_PORT_FROM=""   # "", "flag", "positional"
@@ -268,6 +268,9 @@ while [[ $# -gt 0 ]]; do
     --iiab-android) set_mode "iiab-android"; shift ;;
     --check) set_mode "check"; shift ;;
     --all) set_mode "all"; shift ;;
+    --proxy-start) set_mode "proxy-start"; shift ;;
+    --proxy-stop) set_mode "proxy-stop"; shift ;;
+    --proxy-status) set_mode "proxy-status"; shift ;;
     --connect-port)
       if [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "flag" ]]; then
         die "CONNECT PORT specified twice (positional + --connect-port). Use only one."
@@ -385,6 +388,16 @@ main() {
   acquire_wakelock
 
   case "$MODE" in
+    proxy-start)
+      step_termux_base || baseline_bail
+      boxyproxy_start
+      ;;
+    proxy-stop)
+      boxyproxy_stop
+      ;;
+    proxy-status)
+      boxyproxy_status
+      ;;
     login)
     iiab_login
       ;;
@@ -486,7 +499,11 @@ main() {
   log "Please check the complete mode list using:"
   log "iiab-termux --help"
   log "-------------------"
-  final_advice
+  # Do not print generic "next steps" for proxy control modes.
+  case "$MODE" in
+    proxy-start|proxy-stop|proxy-status) : ;;
+    *) final_advice ;;
+  esac
 }
 
 main "$@"

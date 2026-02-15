@@ -5,6 +5,8 @@
 # boxyproxy.py companion management
 # - Installs/updates to: $PREFIX/bin/boxyproxy.py
 # - Runtime state: ~/.iiab-android/boxyproxy/
+# - Controlled by iiab-termux flags:
+#     --proxy-start | --proxy-stop | --proxy-status
 # -----------------------------------------------------------------------------
 
 BOXYPROXY_BIN="${PREFIX}/bin/boxyproxy.py"
