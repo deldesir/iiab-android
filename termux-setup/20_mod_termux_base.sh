@@ -120,13 +120,7 @@ termux_prepare_boxyproxy_deps() {
   have python || have python3 || return 0
   python_has_aiohttp && return 0
 
-  warn "Python module 'aiohttp' not found. Trying Termux pkg first (python-aiohttp), then pip fallback..."
-
-  # 1) Preferred: Termux packaged module (avoid building wheels)
-  termux_apt install python-aiohttp >/dev/null 2>&1 || true
-  python_has_aiohttp && { ok "Installed 'aiohttp' via Termux package (python-aiohttp)."; return 0; }
-
-  # 2) Fallback: pip
+  warn "Python module 'aiohttp' not found. Trying pip install..."
   python_pip_install_aiohttp >/dev/null 2>&1 || true
   python_has_aiohttp && { ok "Installed 'aiohttp' via pip."; return 0; }
 

@@ -3,12 +3,13 @@
 
 RED="\033[31m"; YEL="\033[33m"; GRN="\033[32m"; BLU="\033[34m"; RST="\033[0m"; BOLD="\033[1m"
 
-log()      { printf "${BLU}[iiab]${RST} %s\n" "$*"; }
-log_yel()  { printf "${YEL}[iiab]${RST} %s\n" "$*"; }
-ok()       { printf "${GRN}[iiab]${RST} %s\n" "$*"; }
-warn()     { printf "${YEL}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
-warn_red() { printf "${RED}${BOLD}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
-indent()   { sed 's/^/ /'; }
+log()       { printf "${BLU}[iiab]${RST} %s\n" "$*"; }
+log_yel()   { printf "${YEL}[iiab]${RST} %s\n" "$*"; }
+ok()        { printf "${GRN}[iiab]${RST} %s\n" "$*"; }
+warn()      { printf "${YEL}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
+warn_red()  { printf "${RED}${BOLD}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
+boxyp_log() { printf "${BLU}[boxyproxy]${RST} %s\n" "$*"; }
+indent()    { sed 's/^/ /'; }
 
 have() { command -v "$1" >/dev/null 2>&1; }
 need() { have "$1" || return 1; }
