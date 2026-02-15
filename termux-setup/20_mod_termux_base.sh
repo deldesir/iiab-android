@@ -12,6 +12,21 @@ TERMUX_ZEROCONF_STAMP="${STATE_DIR}/stamp.termux_zeroconf"
 PY_ZEROCONF_CHECKED=0
 PY_ZEROCONF_OK=0
 
+# -------------------------
+# Python deps for boxyproxy (aiohttp)
+# -------------------------
+# Prepare it early so proxy-start works reliably.
+
+TERMUX_AIOHTTP_STAMP="${STATE_DIR}/stamp.termux_aiohttp"
+
+# Cache: avoid repeating aiohttp checks/installs/warnings in the same run.
+PY_AIOHTTP_CHECKED=0
+PY_AIOHTTP_OK=0
+
+# Allow disabling auto-install (keep default enabled).
+BOXYPROXY_DEPS_INSTALL="${BOXYPROXY_DEPS_INSTALL:-1}"
+BOXYPROXY_DEPS_PIP_INSTALL="${BOXYPROXY_DEPS_PIP_INSTALL:-1}"
+
 python_cmd() {
   command -v python 2>/dev/null || command -v python3 2>/dev/null || true
 }
@@ -21,6 +36,13 @@ python_has_zeroconf() {
   py="$(python_cmd)"
   [[ -n "$py" ]] || return 1
   "$py" -c 'import zeroconf' >/dev/null 2>&1
+}
+
+python_has_aiohttp() {
+  local py=""
+  py="$(python_cmd)"
+  [[ -n "$py" ]] || return 1
+  "$py" -c 'import aiohttp' >/dev/null 2>&1
 }
 
 python_pip_install_zeroconf() {
@@ -72,6 +94,43 @@ python_ensure_zeroconf() {
   fi
   warn "Could not install 'zeroconf' (no network, pip missing, or install failed). Falling back to manual prompts."
   PY_ZEROCONF_OK=0
+  return 1
+}
+
+python_pip_install_aiohttp() {
+  local py=""
+  py="$(python_cmd)"
+  [[ -n "$py" ]] || return 1
+  if ! "$py" -m pip --version >/dev/null 2>&1; then
+    if "$py" -c 'import ensurepip' >/dev/null 2>&1; then
+      "$py" -m ensurepip --upgrade || return 1
+      "$py" -m pip --version || return 1
+    else
+      return 1
+    fi
+  fi
+  if : >&3 2>/dev/null && : >&4 2>/dev/null; then
+    ( exec 1>&3 2>&4; "$py" -m pip install --upgrade aiohttp --progress-bar on )
+  else
+    "$py" -m pip install --upgrade aiohttp --progress-bar on
+  fi
+}
+
+termux_prepare_boxyproxy_deps() {
+  have python || have python3 || return 0
+  python_has_aiohttp && return 0
+
+  warn "Python module 'aiohttp' not found. Trying Termux pkg first (python-aiohttp), then pip fallback..."
+
+  # 1) Preferred: Termux packaged module (avoid building wheels)
+  termux_apt install python-aiohttp >/dev/null 2>&1 || true
+  python_has_aiohttp && { ok "Installed 'aiohttp' via Termux package (python-aiohttp)."; return 0; }
+
+  # 2) Fallback: pip
+  python_pip_install_aiohttp >/dev/null 2>&1 || true
+  python_has_aiohttp && { ok "Installed 'aiohttp' via pip."; return 0; }
+
+  warn "Could not install 'aiohttp'. boxyproxy may fail until it's installed."
   return 1
 }
 
@@ -455,6 +514,8 @@ step_termux_base() {
       ok "Termux baseline already prepared (stamp found)."
       # Ensure optional mDNS deps are ready from the start (does not affect stamp).
       termux_prepare_mdns_deps || true
+      # Ensure boxyproxy deps are ready from the start (does not affect stamp).
+      termux_prepare_boxyproxy_deps || true
       return 0
     fi
     warn "Baseline stamp found but prerequisites are missing; forcing reinstall."
@@ -504,6 +565,8 @@ step_termux_base() {
     ok "Termux baseline ready."
     # Prepare Python zeroconf *now* if mDNS autodetect is enabled.
     termux_prepare_mdns_deps || true
+    # Prepare aiohttp now so proxy-start is reliable.
+    termux_prepare_boxyproxy_deps || true
     date > "$stamp"
     return 0
   fi
