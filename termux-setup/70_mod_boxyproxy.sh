@@ -25,7 +25,11 @@ boxyproxy_state_init() {
 
 boxyproxy_is_running() {
   boxyproxy_is_installed || return 1
-  "$BOXYPROXY_BIN" --status --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null | grep -q "running"
+  [[ -f "$BOXYPROXY_PIDFILE" ]] || return 1
+  local pid=""
+  pid="$(tr -d '\r' <"$BOXYPROXY_PIDFILE" 2>/dev/null | head -n1)" || return 1
+  [[ "$pid" =~ ^[0-9]+$ ]] || return 1
+  kill -0 "$pid" 2>/dev/null
 }
 
 boxyproxy_install_or_update() {
@@ -60,6 +64,11 @@ boxyproxy_start() {
   boxyproxy_state_init
   boxyproxy_is_running && { ok "boxyproxy already running."; return 0; }
 
+  # Ensure Python deps (aiohttp) before launching.
+  if declare -F termux_prepare_boxyproxy_deps >/dev/null 2>&1; then
+    termux_prepare_boxyproxy_deps || true
+  fi
+
   boxyproxy_is_installed || {
     warn "boxyproxy.py not installed yet. Installing now..."
     boxyproxy_install_or_update || return 1
@@ -72,7 +81,8 @@ boxyproxy_start() {
   "$BOXYPROXY_BIN" -d \
     --pidfile "$BOXYPROXY_PIDFILE" \
     --logfile "$BOXYPROXY_LOG" \
-    "${args[@]}" >/dev/null 2>&1 || true
+    "${args[@]}" >/dev/null 2>&1
+  sleep 0.2
 
   "$BOXYPROXY_BIN" --status --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null | indent || true
   boxyproxy_is_running || { warn_red "boxyproxy failed to start (see $BOXYPROXY_LOG)"; return 1; }
