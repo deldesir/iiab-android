@@ -30,9 +30,9 @@ MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|al
 
 MODE_SET=0
 CONNECT_PORT_FROM=""   # "", "flag", "positional"
+BOXYPROXY_MANAGED=0
 
-trap 'power_mode_login_exit >/dev/null 2>&1 || true; adb_hint_notif_remove >/dev/null 2>&1 || true; cleanup_notif >/dev/null 2>&1 || true; release_wakelock >/dev/null 2>&1 || true' EXIT INT TERM
-
+trap 'if [[ "${BOXYPROXY_MANAGED:-0}" -eq 1 ]]; then boxyproxy_stop >/dev/null 2>&1 || true; fi; power_mode_login_exit >/dev/null 2>&1 || true; adb_hint_notif_remove >/dev/null 2>&1 || true; cleanup_notif >/dev/null 2>&1 || true; release_wakelock >/dev/null 2>&1 || true' EXIT INT TERM
 # NOTE: Termux:API prompts live in 40_mod_termux_api.sh
 
 # -------------------------
