@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-15T16:15:57-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-17T10:17:20-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -919,6 +919,7 @@ step_termux_base() {
     openssh
     proot
     proot-distro
+    python
     sed
     termux-api
     which

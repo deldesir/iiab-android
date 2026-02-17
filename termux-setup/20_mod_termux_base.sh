@@ -542,6 +542,7 @@ step_termux_base() {
     openssh
     proot
     proot-distro
+    python
     sed
     termux-api
     which
