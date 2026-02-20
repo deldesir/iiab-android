@@ -53,6 +53,55 @@ BOXYPROXY_NO_EXTERNAL="${BOXYPROXY_NO_EXTERNAL:-0}"
 # Package name for the Termux app.
 TERMUX_PACKAGE="${TERMUX_PACKAGE:-com.termux}"
 
+# Version and Update logic
+IIAB_TERMUX_RAW_URL="${IIAB_TERMUX_RAW_URL:-https://raw.githubusercontent.com/iiab/iiab-android/main/iiab-termux}"
+
+get_iiab_termux_version() {
+  local file="${1:-$0}"
+  if [[ -f "$file" ]]; then
+    grep '^# GENERATED FILE:' "$file" 2>/dev/null | sed -E 's/.*GENERATED FILE: ([^ ]+).*/\1/' | head -n1 || echo "unknown"
+  else
+    echo "unknown"
+  fi
+}
+
+update_iiab_termux() {
+  local current_file="${1:-$0}"
+  log "downloading latest version..."
+  have curl || { warn_red "curl is required to update. Run: pkg install curl"; return 1; }
+
+  local tmp_file="/tmp/iiab-termux-update.$$"
+
+  if ! curl -fsSL --retry 5 --retry-connrefused --retry-delay 2 "$IIAB_TERMUX_RAW_URL" -o "$tmp_file"; then
+    warn_red "Failed to download update from $IIAB_TERMUX_RAW_URL"
+    rm -f "$tmp_file" >/dev/null 2>&1 || true
+    return 1
+  fi
+
+  local first_line=""
+  IFS= read -r first_line < "$tmp_file" || true
+  if [[ "$first_line" != \#!*bash* ]]; then
+    warn_red "Downloaded file doesn't look like a valid bash script (bad shebang)."
+    rm -f "$tmp_file" >/dev/null 2>&1 || true
+    return 1
+  fi
+
+  local old_v new_v backup_dir ts
+  old_v="$(get_iiab_termux_version "$current_file")"
+  new_v="$(get_iiab_termux_version "$tmp_file")"
+
+  log "updating iiab-termux $new_v over $old_v"
+
+  backup_dir="${STATE_DIR}/termux"
+  mkdir -p "$backup_dir"
+  ts="$(date +%Y%m%d-%H%M%S)"
+  cp -f "$current_file" "${backup_dir}/iiab-termux.old.${ts}" 2>/dev/null || true
+
+  mv -f "$tmp_file" "$current_file" && chmod 700 "$current_file"
+  log "installed version: $new_v"
+  return 0
+}
+
 # One-time helper: guide user to set Termux battery policy to keep sessions alive.
 POWER_MODE_BATTERY_PROMPT="${POWER_MODE_BATTERY_PROMPT:-1}"  # 1=ask, 0=never ask
 POWER_MODE_BATTERY_STAMP="${POWER_MODE_BATTERY_STAMP:-$STATE_DIR/stamp.termux_battery_settings}"
@@ -238,6 +287,12 @@ iiab_login() {
 usage() {
   cat <<'EOF'
 Usage:
+  iiab-termux  --version
+    -> Show current installed version of iiab-termux
+
+  iiab-termux --update
+    -> Update iiab-termux script to the latest version
+
   iiab-termux
     -> Termux baseline + IIAB Debian bootstrap (idempotent). No ADB prompts.
 
@@ -270,12 +325,22 @@ Usage:
        (Android 12-13) ADB pair/connect + apply PPK + run --check
        (Android 14+) optionally skip ADB (reminds to disable child process restrictions).
 
+  iiab-termux --proxy-start
+    -> Start the background proxy (boxyproxy).
+
+  iiab-termux --proxy-stop
+    -> Stop the background proxy.
+
+  iiab-termux --proxy-status
+    -> Show the current status and configuration of the background proxy.
+
   Optional:
     --connect-port [IP:PORT|PORT]  Skip CONNECT PORT prompt (ADB modes)
     --timeout 180                  Seconds to wait per prompt
     --reset-iiab                   Reset (reinstall) IIAB Debian in proot-distro
     --no-log                       Disable logging
     --log-file /path/file          Write logs to a specific file
+    --proxy-no-external            Start proxy in walled-garden mode (blocks external SOCKS5 hosts)
     --debug                        Extra logs
 
 Notes:
