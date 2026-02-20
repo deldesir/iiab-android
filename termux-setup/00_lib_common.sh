@@ -48,6 +48,7 @@ TIMEOUT_SECS="${TIMEOUT_SECS:-180}"
 # Defaults used by ADB flows / logging / misc
 CLEANUP_OFFLINE="${CLEANUP_OFFLINE:-1}"
 DEBUG="${DEBUG:-0}"
+BOXYPROXY_NO_EXTERNAL="${BOXYPROXY_NO_EXTERNAL:-0}"
 
 # Package name for the Termux app.
 TERMUX_PACKAGE="${TERMUX_PACKAGE:-com.termux}"
@@ -190,7 +191,13 @@ iiab_login() {
   # Auto-start boxyproxy for the duration of this proot session.
   BOXYPROXY_MANAGED=1
   if boxyproxy_is_running; then
-    boxyp_log "Auto-start: already running (will stop on exit)."
+    if [[ "${BOXYPROXY_NO_EXTERNAL:-0}" -eq 1 ]]; then
+      boxyp_log "Auto-start: restarting proxy to apply --no-external..."
+      boxyproxy_stop >/dev/null 2>&1 || true
+      boxyproxy_start >/dev/null 2>&1 || true
+    else
+      boxyp_log "Auto-start: already running (will stop on exit)."
+    fi
   else
     # Best-effort: install once if missing (avoid forcing updates every login).
     if ! boxyproxy_is_installed; then

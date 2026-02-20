@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-17T10:17:20-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-20T11:27:37-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -59,6 +59,7 @@ TIMEOUT_SECS="${TIMEOUT_SECS:-180}"
 # Defaults used by ADB flows / logging / misc
 CLEANUP_OFFLINE="${CLEANUP_OFFLINE:-1}"
 DEBUG="${DEBUG:-0}"
+BOXYPROXY_NO_EXTERNAL="${BOXYPROXY_NO_EXTERNAL:-0}"
 
 # Package name for the Termux app.
 TERMUX_PACKAGE="${TERMUX_PACKAGE:-com.termux}"
@@ -201,7 +202,13 @@ iiab_login() {
   # Auto-start boxyproxy for the duration of this proot session.
   BOXYPROXY_MANAGED=1
   if boxyproxy_is_running; then
-    boxyp_log "Auto-start: already running (will stop on exit)."
+    if [[ "${BOXYPROXY_NO_EXTERNAL:-0}" -eq 1 ]]; then
+      boxyp_log "Auto-start: restarting proxy to apply --no-external..."
+      boxyproxy_stop >/dev/null 2>&1 || true
+      boxyproxy_start >/dev/null 2>&1 || true
+    else
+      boxyp_log "Auto-start: already running (will stop on exit)."
+    fi
   else
     # Best-effort: install once if missing (avoid forcing updates every login).
     if ! boxyproxy_is_installed; then
@@ -2273,6 +2280,11 @@ boxyproxy_start() {
   if [[ -n "${BOXYPROXY_ARGS:-}" ]]; then
     args=( $BOXYPROXY_ARGS )
   fi
+
+  # Append --no-external if requested via flag
+  if [[ "${BOXYPROXY_NO_EXTERNAL:-0}" -eq 1 ]]; then
+    args+=( "--no-external" )
+  fi
   "$BOXYPROXY_BIN" -d \
     --pidfile "$BOXYPROXY_PIDFILE" \
     --logfile "$BOXYPROXY_LOG" \
@@ -2578,6 +2590,7 @@ while [[ $# -gt 0 ]]; do
     --proxy-start) set_mode "proxy-start"; shift ;;
     --proxy-stop) set_mode "proxy-stop"; shift ;;
     --proxy-status) set_mode "proxy-status"; shift ;;
+    --proxy-no-external) BOXYPROXY_NO_EXTERNAL=1; shift ;;
     --connect-port)
       if [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "flag" ]]; then
         die "CONNECT PORT specified twice (positional + --connect-port). Use only one."

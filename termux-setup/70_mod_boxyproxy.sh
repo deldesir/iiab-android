@@ -78,6 +78,11 @@ boxyproxy_start() {
   if [[ -n "${BOXYPROXY_ARGS:-}" ]]; then
     args=( $BOXYPROXY_ARGS )
   fi
+
+  # Append --no-external if requested via flag
+  if [[ "${BOXYPROXY_NO_EXTERNAL:-0}" -eq 1 ]]; then
+    args+=( "--no-external" )
+  fi
   "$BOXYPROXY_BIN" -d \
     --pidfile "$BOXYPROXY_PIDFILE" \
     --logfile "$BOXYPROXY_LOG" \
