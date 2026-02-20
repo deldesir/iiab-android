@@ -271,6 +271,7 @@ while [[ $# -gt 0 ]]; do
     --proxy-start) set_mode "proxy-start"; shift ;;
     --proxy-stop) set_mode "proxy-stop"; shift ;;
     --proxy-status) set_mode "proxy-status"; shift ;;
+    --proxy-no-external) BOXYPROXY_NO_EXTERNAL=1; shift ;;
     --connect-port)
       if [[ -n "${CONNECT_PORT_FROM:-}" && "${CONNECT_PORT_FROM}" != "flag" ]]; then
         die "CONNECT PORT specified twice (positional + --connect-port). Use only one."
