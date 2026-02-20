@@ -106,6 +106,21 @@ boxyproxy_status() {
   boxyproxy_state_init
   boxyproxy_is_installed || { warn "installed=no"; return 0; }
   "$BOXYPROXY_BIN" --status --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null || true
+
+  # Check if the process is actually running with the --no-external flag
+  local running_no_ext="no"
+  local pid
+  pid="$(tr -d '\r' <"$BOXYPROXY_PIDFILE" 2>/dev/null || true)"
+  if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+    if grep -aq "no-external" "/proc/$pid/cmdline" 2>/dev/null; then
+      running_no_ext="yes"
+    fi
+  fi
+
+  # Report current state vs intended configuration
+  boxyp_log "walled-garden (active): $running_no_ext"
+  boxyp_log "walled-garden (intended): $([[ "${BOXYPROXY_NO_EXTERNAL:-0}" -eq 1 ]] && echo "yes" || echo "no")"
+
   boxyp_log "bin=$BOXYPROXY_BIN"
   boxyp_log "raw_url=$BOXYPROXY_RAW_URL"
   boxyp_log "log=$BOXYPROXY_LOG"

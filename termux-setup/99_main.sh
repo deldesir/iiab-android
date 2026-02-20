@@ -289,6 +289,11 @@ while [[ $# -gt 0 ]]; do
     --log-file) LOG_FILE="${2:-}"; shift 2 ;;
     --debug) DEBUG=1; shift ;;
     -h|--help) usage; exit 0 ;;
+    --version)
+      log "installed version: $(get_iiab_termux_version "$0")"
+      exit 0
+      ;;
+    --update) set_mode "update"; shift ;;
     --*) die "Unknown option: $1. See --help." ;;
     *) shift ;;
   esac
@@ -399,6 +404,9 @@ main() {
     proxy-status)
       boxyproxy_status
       ;;
+    update)
+      update_iiab_termux "$0"
+      ;;
     login)
     iiab_login
       ;;
@@ -508,7 +516,7 @@ main() {
   log "-------------------"
   # Do not print generic "next steps" for proxy control modes.
   case "$MODE" in
-    proxy-start|proxy-stop|proxy-status) : ;;
+    proxy-start|proxy-stop|proxy-status|update) : ;;
     *) final_advice ;;
   esac
 }
