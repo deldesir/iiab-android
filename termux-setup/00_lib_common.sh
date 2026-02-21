@@ -70,7 +70,8 @@ update_iiab_termux() {
   log "downloading latest version..."
   have curl || { warn_red "curl is required to update. Run: pkg install curl"; return 1; }
 
-  local tmp_file="/tmp/iiab-termux-update.$$"
+  # Use the state directory since Termux lacks a standard /tmp
+  local tmp_file="${STATE_DIR}/iiab-termux-update.tmp.$$"
 
   if ! curl -fsSL --retry 5 --retry-connrefused --retry-delay 2 "$IIAB_TERMUX_RAW_URL" -o "$tmp_file"; then
     warn_red "Failed to download update from $IIAB_TERMUX_RAW_URL"
@@ -89,6 +90,23 @@ update_iiab_termux() {
   local old_v new_v backup_dir ts
   old_v="$(get_iiab_termux_version "$current_file")"
   new_v="$(get_iiab_termux_version "$tmp_file")"
+
+  # Compare versions if both are successfully parsed
+  if [[ "$old_v" != "unknown" && "$new_v" != "unknown" ]]; then
+    if [[ "$old_v" == "$new_v" ]]; then
+      ok "You already have the latest version ($old_v)."
+      rm -f "$tmp_file" >/dev/null 2>&1 || true
+      return 0
+    elif [[ "$old_v" > "$new_v" ]]; then
+      log_yel "Your local version ($old_v) appears to be newer than the repository version ($new_v)."
+      log_yel "You might be running local uncommitted changes."
+      if ! tty_yesno_default_n "[iiab] Do you want to overwrite your local version with the repository version? [y/N]: "; then
+        log "Update aborted by user. Keeping local version."
+        rm -f "$tmp_file" >/dev/null 2>&1 || true
+        return 0
+      fi
+    fi
+  fi
 
   log "updating iiab-termux $new_v over $old_v"
 
