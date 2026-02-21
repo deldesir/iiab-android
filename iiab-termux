@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-20T21:32:47-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-21T00:23:50-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -69,11 +69,16 @@ IIAB_TERMUX_RAW_URL="${IIAB_TERMUX_RAW_URL:-https://raw.githubusercontent.com/ii
 
 get_iiab_termux_version() {
   local file="${1:-$0}"
+  local raw_ts=""
   if [[ -f "$file" ]]; then
-    grep '^# GENERATED FILE:' "$file" 2>/dev/null | sed -E 's/.*GENERATED FILE: ([^ ]+).*/\1/' | head -n1 || echo "unknown"
-  else
-    echo "unknown"
+    raw_ts="$(grep '^# GENERATED FILE:' "$file" 2>/dev/null | sed -E 's/.*GENERATED FILE: ([^ ]+).*/\1/' | head -n1)"
+    if [[ -n "$raw_ts" ]]; then
+      # Convert ISO 8601 to YYYY.DDD.HHMM in UTC
+      # %Y = Year, %j = Day of year (001-366), %H%M = Hours/Minutes
+      date -u -d "$raw_ts" +"%Y.%j.%H%M" 2>/dev/null && return 0
+    fi
   fi
+  echo "unknown"
 }
 
 update_iiab_termux() {
