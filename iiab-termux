@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-21T00:23:50-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-24T07:31:48-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -366,9 +366,8 @@ Usage:
     --debug                        Extra logs
 
 Notes:
-- ADB prompts require: `pkg install termux-api` + Termux:API app installed + notification permission.
 - Wireless debugging must be enabled on Android 12 & 13
-- Wireless debugging (pairing code / QR) is available on Android 11 and later versions.
+- Wireless debugging is available on Android 11 and later versions.
 - Android 8-10: there is no Wireless debugging pairing flow. 
 - CONNECT PORT and PAIR PORT are auto-detected via mDNS when possible; still prompting for the PAIR CODE.
 EOF
@@ -990,6 +989,7 @@ step_termux_base() {
 
   local pkgs=(
     android-tools
+    aria2c
     ca-certificates
     coreutils
     curl
@@ -1050,6 +1050,187 @@ step_termux_python_zeroconf() {
 # ---- END 20_mod_termux_base.sh ----
 
 
+# ---- BEGIN 25_mod_backup_restore.sh ----
+# shellcheck shell=bash
+# Module file (no shebang). Bundled by build_bundle.sh
+
+get_android_arch() {
+  case "$(uname -m)" in
+    aarch64)       echo "arm64-v8a" ;;
+    armv7l|armv8l) echo "armeabi-v7a" ;;
+    x86_64)        echo "x86_64" ;;
+    i686)          echo "x86" ;;
+    *)             echo "unknown" ;;
+  esac
+}
+
+cmd_backup_rootfs() {
+  local custom_path="${1:-}"
+  local out_file
+
+  have proot-distro || die "proot-distro is not installed. Run the baseline first."
+  iiab_exists || die "IIAB Debian (alias 'iiab') is not installed. Nothing to backup."
+
+  if [[ -n "$custom_path" ]]; then
+    out_file="$custom_path"
+  else
+    local ts arch
+    # Format: YYYY.DDD.HHMM (Day of year: %j)
+    ts="$(date -u +"%Y.%j.%H%M")"
+    arch="$(get_android_arch)"
+    out_file="iiab-android_rootfs_${ts}_${arch}.tar.gz"
+  fi
+
+  log "Starting backup of IIAB Debian..."
+  log "Destination: $out_file"
+
+  if proot-distro backup iiab --output "$out_file"; then
+    ok "Backup completed successfully: $out_file"
+  else
+    warn_red "Failed to create backup."
+    return 1
+  fi
+}
+
+cmd_restore_rootfs() {
+  local backup_file="${1:-}"
+
+  [[ -z "$backup_file" ]] && die "You must specify the path to the backup file to restore."
+  [[ -f "$backup_file" ]] || die "Backup file does not exist: $backup_file"
+
+  have proot-distro || die "proot-distro is not installed."
+
+  log "Restoring IIAB Debian from: $backup_file"
+
+  if iiab_exists; then
+    log_yel "IIAB Debian already exists. Restoration will overwrite the current system."
+    tty_yesno_default_y "[iiab] Do you want to continue and overwrite IIAB Debian? [Y/n]: " || die "Restoration aborted by user."
+  fi
+
+  if proot-distro restore "$backup_file"; then
+    ok "Restoration completed successfully."
+  else
+    warn_red "Failed to restore backup."
+    return 1
+  fi
+}
+
+cmd_pull_rootfs() {
+  local target_url="${1:-}"
+  local use_meta4="${2:-1}"  # 1 = yes, 0 = no (--no-meta4)
+  local autoclean="${3:-0}"  # 1 = yes, 0 = no (--autoclean)
+
+  [[ -z "$target_url" ]] && die "You must provide a URL to download the rootfs."
+
+  # Ensure aria2c and curl are available
+  have aria2c || { log "Installing aria2c..."; termux_apt update || true; termux_apt install aria2c || die "Failed to install aria2c."; }
+  have curl || { log "Installing curl..."; termux_apt install curl || die "Failed to install curl."; }
+
+  local dest_dir="${STATE_DIR}/downloads"
+  mkdir -p "$dest_dir"
+
+  # --- PRE-DOWNLOAD CHECK: Find and report previous images ---
+  local count=0
+  local total_bytes=0
+  for f in "$dest_dir"/*.tar.gz; do
+    [[ -f "$f" ]] || continue
+
+    count=$((count + 1))
+    local b
+    b="$(stat -c %s "$f" 2>/dev/null || echo 0)"
+    total_bytes=$((total_bytes + b))
+  done
+
+  if (( count > 0 )); then
+    local size_gb
+    size_gb="$(awk "BEGIN {printf \"%.2f\", $total_bytes / 1073741824}")"
+    log_yel "Found $count image file(s) stored in .iiab-android/downloads, taking up ${size_gb}GB of space."
+    if tty_yesno_default_n "[iiab] Do you want to delete them? [y/N]: "; then
+      rm -f "$dest_dir"/*.tar.gz >/dev/null 2>&1 || true
+      ok "Previous images deleted."
+      ls -hal "$dest_dir"/
+    else
+      log "Keeping existing images."
+    fi
+  fi
+  # -------------------------------------------------------------
+
+  local download_url="$target_url"
+
+  # Meta4 Logic
+  if [[ "$use_meta4" -eq 1 ]]; then
+    if [[ "$target_url" == *.meta4 ]]; then
+      log "URL directly provides a .meta4 file."
+    else
+      log "Checking for Metalink (.meta4) availability on the server..."
+      if curl -Isf "${target_url}.meta4" > /dev/null 2>&1; then
+        ok "Found .meta4 file. Distributed download will be prioritized."
+        download_url="${target_url}.meta4"
+      else
+        log_yel "No .meta4 file found. Falling back to direct download."
+      fi
+    fi
+  else
+    log "Mode --no-meta4 is active. Skipping Metalink check."
+  fi
+
+  # Generate temporary file paths
+  local file_name
+  file_name="${target_url##*/}"     # Extract filename from URL
+  file_name="${file_name%.meta4}"   # Strip .meta4 extension if present
+  local out_path="${dest_dir}/${file_name}"
+
+  # Remove any previous corrupted/interrupted downloads
+  rm -f "${out_path}" "${out_path}.aria2" >/dev/null 2>&1 || true
+
+  log "Downloading rootfs..."
+
+  # Mimic aria2 arguments in ansible playbooks
+  local aria_args=(
+    "--dir=$dest_dir"
+    "--async-dns=false"
+    "--connect-timeout=60"
+    "--log-level=warn"
+    "--console-log-level=warn"
+    "--summary-interval=0"
+    "--show-console-readout=true"
+    "--download-result=hide"
+    "--follow-metalink=mem"
+    "--max-connection-per-server=4"
+    "--file-allocation=falloc"
+    "--enable-http-pipelining=true"
+    "--seed-time=0"
+    "--allow-overwrite=true"
+    "$download_url"
+  )
+
+  # Run aria2c bypassing the log to maintain the interactive bar
+  if : >&3 2>/dev/null && : >&4 2>/dev/null; then
+    aria2c "${aria_args[@]}" >&3 2>&4 || die "aria2c download failed."
+  else
+    aria2c "${aria_args[@]}" || die "aria2c download failed."
+  fi
+
+  ok "Download finished: $out_path"
+
+  # Proceed with restoration
+  cmd_restore_rootfs "$out_path"
+
+  # --- POST-RESTORE CLEANUP ---
+  if [[ "$autoclean" -eq 1 ]]; then
+    log "Cleaning up downloaded file to save space (--autoclean active)..."
+    rm -f "$out_path" >/dev/null 2>&1 || true
+  else
+    local final_bytes final_gb
+    final_bytes="$(stat -c %s "$out_path" 2>/dev/null || echo 0)"
+    final_gb="$(awk "BEGIN {printf \"%.2f\", $final_bytes / 1073741824}")"
+    log "The --autoclean option was not used, keeping ${final_gb}GB in $dest_dir."
+  fi
+}
+
+# ---- END 25_mod_backup_restore.sh ----
+
+
 # ---- BEGIN 30_mod_iiab-debian.sh ----
 # shellcheck shell=bash
 # Module file (no shebang). Bundled by build_bundle.sh
@@ -1060,6 +1241,24 @@ step_termux_python_zeroconf() {
 iiab_exists() {
   have proot-distro || return 1
   proot-distro login iiab -- true >/dev/null 2>&1
+}
+
+cmd_remove_iiab() {
+  have proot-distro || die "proot-distro is not installed."
+  
+  if ! iiab_exists; then
+    log "IIAB Debian (alias 'iiab') is not installed. Nothing to remove."
+    return 0
+  fi
+  
+  warn_red "This will completely delete the IIAB Debian rootfs and ALL its data."
+  if tty_yesno_default_n "[iiab] Are you sure you want to remove IIAB Debian? [y/N]: "; then
+    log "Removing IIAB Debian..."
+    proot-distro remove iiab || { warn_red "Failed to remove IIAB Debian."; return 1; }
+    ok "IIAB Debian successfully removed."
+  else
+    log "Removal aborted by user."
+  fi
 }
 
 ensure_proot_distro() {
@@ -1097,7 +1296,7 @@ step_iiab_bootstrap_default() {
   fi
 
   if [[ "$RESET_IIAB" -eq 1 ]]; then
-    warn "Reset requested: reinstalling IIAB Debian (clean environment)..."
+    log_yel "Reset requested: reinstalling IIAB Debian (clean environment)..."
     if proot-distro help 2>/dev/null | grep -qE '\breset\b'; then
       proot-distro reset iiab || true
       # If reset was requested but iiab wasn't installed yet (or reset failed), ensure it's present.
@@ -2229,8 +2428,10 @@ self_check_android_flags() {
 
   local serial sdk rel mon mon_fflag ds ppk_eff
   serial="$(adb_pick_loopback_serial 2>/dev/null)" || {
+  if [[ "${sdk:-}" =~ ^[0-9]+$ ]] && (( sdk >= 31 && sdk <= 33 )); then
     log "ADB: no loopback device connected. Tip: run --adb-only or --check if you require it."
     return 0
+  fi
   }
 
   sdk="$(adb -s "$serial" shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"
@@ -2396,7 +2597,6 @@ boxyproxy_status() {
   boxyp_log "walled-garden (active): $running_no_ext"
 
   boxyp_log "bin=$BOXYPROXY_BIN"
-  boxyp_log "raw_url=$BOXYPROXY_RAW_URL"
   boxyp_log "log=$BOXYPROXY_LOG"
 }
 
@@ -2437,6 +2637,11 @@ MODE="baseline"      # baseline|with-adb|adb-only|connect-only|ppk-only|check|al
 MODE_SET=0
 CONNECT_PORT_FROM=""   # "", "flag", "positional"
 BOXYPROXY_MANAGED=0
+
+# Set backup / restore vars
+PULL_USE_META4=1
+PULL_AUTOCLEAN=0
+BACKUP_RESTORE_TARGET=""
 
 trap 'if [[ "${BOXYPROXY_MANAGED:-0}" -eq 1 ]]; then boxyproxy_stop >/dev/null 2>&1 || true; fi; power_mode_login_exit >/dev/null 2>&1 || true; adb_hint_notif_remove >/dev/null 2>&1 || true; cleanup_notif >/dev/null 2>&1 || true; release_wakelock >/dev/null 2>&1 || true' EXIT INT TERM
 # NOTE: Termux:API prompts live in 40_mod_termux_api.sh
@@ -2517,9 +2722,6 @@ baseline_bail() {
 }
 
 final_advice() {
-  case "${MODE:-}" in
-    login) return 0 ;;
-  esac
   if [[ "${BASELINE_OK:-0}" -ne 1 ]]; then
     warn_red "Baseline is not ready, so ADB prompts / IIAB Debian bootstrap may be unavailable."
     [[ -n "${BASELINE_ERR:-}" ]] && warn "Reason: ${BASELINE_ERR}"
@@ -2538,8 +2740,7 @@ final_advice() {
   local adb_connected=0
   local serial="" mon="" mon_fflag=""
 
-  # Best-effort: detect whether an ADB loopback device is already connected.
-  # (We do NOT prompt/pair here; we only check current state.)
+  # Passive ADB detection
   if have adb; then
     adb start-server >/dev/null 2>&1 || true
     if adb_pick_loopback_serial >/dev/null 2>&1; then
@@ -2589,12 +2790,10 @@ final_advice() {
           : # Restrictions already disabled -> ok to continue
         else
           if [[ "${mon:-}" == "true" ]]; then
-            log_yel "Android 14+: child process restrictions appear ENABLED (monitor=true)."
-          else
-            log_yel "Android 14+: child process restrictions haven't been verified (monitor flag unreadable/unknown)."
+            log_yel "Child process restrictions appear ENABLED (monitor=true)."
+            log_yel "Please make sure to set 'Disable child process restrictions' enabled; otherwise the installation may fail."
+            return 0
           fi
-          log_yel "Please make sure to set 'Disable child process restrictions' enabled; otherwise the installation may fail."
-          return 0
         fi
       fi
     fi
@@ -2689,7 +2888,8 @@ while [[ $# -gt 0 ]]; do
       ;;
     --timeout) TIMEOUT_SECS="${2:-180}"; shift 2 ;;
     --host) HOST="${2:-127.0.0.1}"; shift 2 ;;
-    --reset-iiab|--clean-iiab) RESET_IIAB=1; shift ;;
+    --reset-iiab) RESET_IIAB=1; shift ;;
+    --remove-iiab|--remove-rootfs) set_mode "remove-iiab"; shift ;;
     --no-log) LOG_ENABLED=0; shift ;;
     --log-file) LOG_FILE="${2:-}"; shift 2 ;;
     --debug) DEBUG=1; shift ;;
@@ -2699,6 +2899,42 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     --update) set_mode "update"; shift ;;
+    --backup-rootfs)
+      set_mode "backup-rootfs"
+      # Check if the next argument is a path (and not another flag)
+      if [[ -n "${2:-}" && "${2}" != -* ]]; then
+        BACKUP_RESTORE_TARGET="$2"
+        shift 2
+      else
+        shift 1
+      fi
+      ;;
+    --restore-rootfs)
+      set_mode "restore-rootfs"
+      if [[ -n "${2:-}" && "${2}" != -* ]]; then
+        BACKUP_RESTORE_TARGET="$2"
+        shift 2
+      else
+        die "--restore-rootfs requires a file path."
+      fi
+      ;;
+    --pull-rootfs)
+      set_mode "pull-rootfs"
+      if [[ -n "${2:-}" && "${2}" != -* ]]; then
+        BACKUP_RESTORE_TARGET="$2"
+        shift 2
+      else
+        die "--pull-rootfs requires a URL."
+      fi
+      ;;
+    --no-meta4)
+      PULL_USE_META4=0
+      shift
+      ;;
+    --autoclean)
+      PULL_AUTOCLEAN=1
+      shift
+      ;;
     --*) die "Unknown option: $1. See --help." ;;
     *) shift ;;
   esac
@@ -2767,21 +3003,23 @@ main() {
   acquire_wakelock
 
   case "$MODE" in
-    proxy-start)
-      termux_prepare_boxyproxy_deps || baseline_bail
-      boxyproxy_start
-      ;;
-    proxy-stop)
-      boxyproxy_stop
-      ;;
-    proxy-status)
-      boxyproxy_status
-      ;;
     update)
       update_iiab_termux "$0"
       ;;
     login)
     iiab_login
+      ;;
+    backup-rootfs)
+      cmd_backup_rootfs "$BACKUP_RESTORE_TARGET"
+      ;;
+    restore-rootfs)
+      cmd_restore_rootfs "$BACKUP_RESTORE_TARGET"
+      ;;
+    pull-rootfs)
+      cmd_pull_rootfs "$BACKUP_RESTORE_TARGET" "$PULL_USE_META4" "$PULL_AUTOCLEAN"
+      ;;
+    remove-iiab)
+      cmd_remove_iiab
       ;;
     baseline)
       power_mode_offer_battery_settings_once || true
@@ -2847,7 +3085,6 @@ main() {
       check_readiness || true
       self_check
       ;;
-
     all)
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
@@ -2881,7 +3118,16 @@ main() {
       fi
       self_check
       ;;
-
+    proxy-start)
+      termux_prepare_boxyproxy_deps || baseline_bail
+      boxyproxy_start
+      ;;
+    proxy-stop)
+      boxyproxy_stop
+      ;;
+    proxy-status)
+      boxyproxy_status
+      ;;
     *)
       die "Unknown MODE='$MODE'"
       ;;
@@ -2891,9 +3137,17 @@ main() {
   log "Please check the complete mode list using:"
   log "iiab-termux --help"
   log "-------------------"
-  # Do not print generic "next steps" for proxy control modes.
+  # Do not print generic "next steps" for certain modes.
   case "$MODE" in
-    proxy-start|proxy-stop|proxy-status|update) : ;;
+    # Backup and system utilities
+    backup-rootfs | restore-rootfs | pull-rootfs | remove-iiab)
+      : ;;
+    # Proxy Management
+    proxy-start | proxy-stop | proxy-status)
+      : ;;
+    # Single commands with no final advice
+    login | update)
+      : ;;
     *) final_advice ;;
   esac
 }

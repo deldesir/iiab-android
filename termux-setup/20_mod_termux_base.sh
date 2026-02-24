@@ -530,6 +530,7 @@ step_termux_base() {
 
   local pkgs=(
     android-tools
+    aria2c
     ca-certificates
     coreutils
     curl

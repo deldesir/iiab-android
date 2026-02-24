@@ -9,6 +9,24 @@ iiab_exists() {
   proot-distro login iiab -- true >/dev/null 2>&1
 }
 
+cmd_remove_iiab() {
+  have proot-distro || die "proot-distro is not installed."
+  
+  if ! iiab_exists; then
+    log "IIAB Debian (alias 'iiab') is not installed. Nothing to remove."
+    return 0
+  fi
+  
+  warn_red "This will completely delete the IIAB Debian rootfs and ALL its data."
+  if tty_yesno_default_n "[iiab] Are you sure you want to remove IIAB Debian? [y/N]: "; then
+    log "Removing IIAB Debian..."
+    proot-distro remove iiab || { warn_red "Failed to remove IIAB Debian."; return 1; }
+    ok "IIAB Debian successfully removed."
+  else
+    log "Removal aborted by user."
+  fi
+}
+
 ensure_proot_distro() {
   if have proot-distro; then return 0; fi
   warn "proot-distro not found; attempting to install..."
@@ -44,7 +62,7 @@ step_iiab_bootstrap_default() {
   fi
 
   if [[ "$RESET_IIAB" -eq 1 ]]; then
-    warn "Reset requested: reinstalling IIAB Debian (clean environment)..."
+    log_yel "Reset requested: reinstalling IIAB Debian (clean environment)..."
     if proot-distro help 2>/dev/null | grep -qE '\breset\b'; then
       proot-distro reset iiab || true
       # If reset was requested but iiab wasn't installed yet (or reset failed), ensure it's present.

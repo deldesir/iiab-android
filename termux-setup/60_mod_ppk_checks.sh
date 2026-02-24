@@ -278,8 +278,10 @@ self_check_android_flags() {
 
   local serial sdk rel mon mon_fflag ds ppk_eff
   serial="$(adb_pick_loopback_serial 2>/dev/null)" || {
+  if [[ "${sdk:-}" =~ ^[0-9]+$ ]] && (( sdk >= 31 && sdk <= 33 )); then
     log "ADB: no loopback device connected. Tip: run --adb-only or --check if you require it."
     return 0
+  fi
   }
 
   sdk="$(adb -s "$serial" shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"

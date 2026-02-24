@@ -5,6 +5,7 @@ MODULES=(
   "00_lib_common.sh"
   "10_mod_logging.sh"
   "20_mod_termux_base.sh"
+  "25_mod_backup_restore.sh"
   "30_mod_iiab-debian.sh"
   "40_mod_termux_api.sh"
   "45_mod_power_mode.sh"

@@ -121,6 +121,5 @@ boxyproxy_status() {
   boxyp_log "walled-garden (active): $running_no_ext"
 
   boxyp_log "bin=$BOXYPROXY_BIN"
-  boxyp_log "raw_url=$BOXYPROXY_RAW_URL"
   boxyp_log "log=$BOXYPROXY_LOG"
 }
