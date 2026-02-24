@@ -32,6 +32,11 @@ MODE_SET=0
 CONNECT_PORT_FROM=""   # "", "flag", "positional"
 BOXYPROXY_MANAGED=0
 
+# Set backup / restore vars
+PULL_USE_META4=1
+PULL_AUTOCLEAN=0
+BACKUP_RESTORE_TARGET=""
+
 trap 'if [[ "${BOXYPROXY_MANAGED:-0}" -eq 1 ]]; then boxyproxy_stop >/dev/null 2>&1 || true; fi; power_mode_login_exit >/dev/null 2>&1 || true; adb_hint_notif_remove >/dev/null 2>&1 || true; cleanup_notif >/dev/null 2>&1 || true; release_wakelock >/dev/null 2>&1 || true' EXIT INT TERM
 # NOTE: Termux:API prompts live in 40_mod_termux_api.sh
 
@@ -111,9 +116,6 @@ baseline_bail() {
 }
 
 final_advice() {
-  case "${MODE:-}" in
-    login) return 0 ;;
-  esac
   if [[ "${BASELINE_OK:-0}" -ne 1 ]]; then
     warn_red "Baseline is not ready, so ADB prompts / IIAB Debian bootstrap may be unavailable."
     [[ -n "${BASELINE_ERR:-}" ]] && warn "Reason: ${BASELINE_ERR}"
@@ -132,8 +134,7 @@ final_advice() {
   local adb_connected=0
   local serial="" mon="" mon_fflag=""
 
-  # Best-effort: detect whether an ADB loopback device is already connected.
-  # (We do NOT prompt/pair here; we only check current state.)
+  # Passive ADB detection
   if have adb; then
     adb start-server >/dev/null 2>&1 || true
     if adb_pick_loopback_serial >/dev/null 2>&1; then
@@ -183,12 +184,10 @@ final_advice() {
           : # Restrictions already disabled -> ok to continue
         else
           if [[ "${mon:-}" == "true" ]]; then
-            log_yel "Android 14+: child process restrictions appear ENABLED (monitor=true)."
-          else
-            log_yel "Android 14+: child process restrictions haven't been verified (monitor flag unreadable/unknown)."
+            log_yel "Child process restrictions appear ENABLED (monitor=true)."
+            log_yel "Please make sure to set 'Disable child process restrictions' enabled; otherwise the installation may fail."
+            return 0
           fi
-          log_yel "Please make sure to set 'Disable child process restrictions' enabled; otherwise the installation may fail."
-          return 0
         fi
       fi
     fi
@@ -283,7 +282,8 @@ while [[ $# -gt 0 ]]; do
       ;;
     --timeout) TIMEOUT_SECS="${2:-180}"; shift 2 ;;
     --host) HOST="${2:-127.0.0.1}"; shift 2 ;;
-    --reset-iiab|--clean-iiab) RESET_IIAB=1; shift ;;
+    --reset-iiab) RESET_IIAB=1; shift ;;
+    --remove-iiab|--remove-rootfs) set_mode "remove-iiab"; shift ;;
     --no-log) LOG_ENABLED=0; shift ;;
     --log-file) LOG_FILE="${2:-}"; shift 2 ;;
     --debug) DEBUG=1; shift ;;
@@ -293,6 +293,42 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     --update) set_mode "update"; shift ;;
+    --backup-rootfs)
+      set_mode "backup-rootfs"
+      # Check if the next argument is a path (and not another flag)
+      if [[ -n "${2:-}" && "${2}" != -* ]]; then
+        BACKUP_RESTORE_TARGET="$2"
+        shift 2
+      else
+        shift 1
+      fi
+      ;;
+    --restore-rootfs)
+      set_mode "restore-rootfs"
+      if [[ -n "${2:-}" && "${2}" != -* ]]; then
+        BACKUP_RESTORE_TARGET="$2"
+        shift 2
+      else
+        die "--restore-rootfs requires a file path."
+      fi
+      ;;
+    --pull-rootfs)
+      set_mode "pull-rootfs"
+      if [[ -n "${2:-}" && "${2}" != -* ]]; then
+        BACKUP_RESTORE_TARGET="$2"
+        shift 2
+      else
+        die "--pull-rootfs requires a URL."
+      fi
+      ;;
+    --no-meta4)
+      PULL_USE_META4=0
+      shift
+      ;;
+    --autoclean)
+      PULL_AUTOCLEAN=1
+      shift
+      ;;
     --*) die "Unknown option: $1. See --help." ;;
     *) shift ;;
   esac
@@ -361,21 +397,23 @@ main() {
   acquire_wakelock
 
   case "$MODE" in
-    proxy-start)
-      termux_prepare_boxyproxy_deps || baseline_bail
-      boxyproxy_start
-      ;;
-    proxy-stop)
-      boxyproxy_stop
-      ;;
-    proxy-status)
-      boxyproxy_status
-      ;;
     update)
       update_iiab_termux "$0"
       ;;
     login)
     iiab_login
+      ;;
+    backup-rootfs)
+      cmd_backup_rootfs "$BACKUP_RESTORE_TARGET"
+      ;;
+    restore-rootfs)
+      cmd_restore_rootfs "$BACKUP_RESTORE_TARGET"
+      ;;
+    pull-rootfs)
+      cmd_pull_rootfs "$BACKUP_RESTORE_TARGET" "$PULL_USE_META4" "$PULL_AUTOCLEAN"
+      ;;
+    remove-iiab)
+      cmd_remove_iiab
       ;;
     baseline)
       power_mode_offer_battery_settings_once || true
@@ -441,7 +479,6 @@ main() {
       check_readiness || true
       self_check
       ;;
-
     all)
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
@@ -475,7 +512,16 @@ main() {
       fi
       self_check
       ;;
-
+    proxy-start)
+      termux_prepare_boxyproxy_deps || baseline_bail
+      boxyproxy_start
+      ;;
+    proxy-stop)
+      boxyproxy_stop
+      ;;
+    proxy-status)
+      boxyproxy_status
+      ;;
     *)
       die "Unknown MODE='$MODE'"
       ;;
@@ -485,9 +531,17 @@ main() {
   log "Please check the complete mode list using:"
   log "iiab-termux --help"
   log "-------------------"
-  # Do not print generic "next steps" for proxy control modes.
+  # Do not print generic "next steps" for certain modes.
   case "$MODE" in
-    proxy-start|proxy-stop|proxy-status|update) : ;;
+    # Backup and system utilities
+    backup-rootfs | restore-rootfs | pull-rootfs | remove-iiab)
+      : ;;
+    # Proxy Management
+    proxy-start | proxy-stop | proxy-status)
+      : ;;
+    # Single commands with no final advice
+    login | update)
+      : ;;
     *) final_advice ;;
   esac
 }
