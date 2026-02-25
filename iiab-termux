@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-24T07:55:48-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-25T01:04:03-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -307,70 +307,44 @@ iiab_login() {
 # Help / usage (static text)
 # -------------------------
 usage() {
-  cat <<'EOF'
-Usage:
-  iiab-termux  --version
-    -> Show current installed version of iiab-termux
+  printf '%b\n' "
+${BOLD}Usage:${RST} iiab-termux [MODE] [OPTIONS]
 
-  iiab-termux --update
-    -> Update iiab-termux script to the latest version
+${BLU}=== CORE & INSTALL ===${RST}
+  ${GRN}(no args)${RST}       Baseline + IIAB Debian bootstrap.
+  ${GRN}--all${RST}           Full setup: baseline, Debian, ADB, PPK, & checks.
+  ${GRN}--login${RST}         Login into IIAB Debian.
+  ${GRN}--iiab-android${RST}  Install/update 'iiab-android' tool inside proot.
 
-  iiab-termux
-    -> Termux baseline + IIAB Debian bootstrap (idempotent). No ADB prompts.
+${BLU}=== ADB & SYSTEM TUNING ===${RST}
+  ${GRN}--with-adb${RST}      Baseline + Debian + ADB wireless pair/connect.
+  ${GRN}--adb-only${RST}      Only ADB pair/connect (skips Debian).
+  ${GRN}--connect-only${RST}  Connect to an already-paired device.
+  ${GRN}--ppk-only${RST}      Set max_phantom_processes=256 via ADB.
+  ${GRN}--check${RST}         Check Android readiness (Child restrictions, PPK).
 
-  iiab-termux --login
-    -> Login into IIAB Debian (iiab-termux --login).
+${BLU}=== BACKUP & RESTORE ===${RST}
+  ${GRN}--backup-rootfs${RST} Backup IIAB Debian to .tar.gz.
+  ${GRN}--restore-rootfs${RST} Restore IIAB Debian from local .tar.gz.
+  ${GRN}--pull-rootfs${RST}   Download & restore rootfs from URL (P2P enabled).
+  ${GRN}--remove-rootfs${RST} Delete IIAB Debian rootfs and all data.
 
-  iiab-termux --with-adb
-    -> Termux baseline + IIAB Debian bootstrap + ADB pair/connect if needed (skips if already connected).
+${BLU}=== PROXY (BOXYPROXY) ===${RST}
+  ${GRN}--proxy-start${RST}   Start background proxy.
+  ${GRN}--proxy-stop${RST}    Stop background proxy.
+  ${GRN}--proxy-status${RST}  Show proxy status.
 
-  iiab-termux  --adb-only [--connect-port PORT|IP:PORT]
-    -> Only ADB pair/connect if needed (no IIAB Debian; skips if already connected).
-       Tip: --connect-port skips the CONNECT PORT prompt (you’ll still be asked for PAIR PORT + PAIR CODE).
+${BOLD}Options:${RST}
+  --connect-port [P]  Skip CONNECT PORT prompt.
+  --timeout [SECS]    Wait time per prompt (default 180).
+  --no-meta4          Disable Metalink/P2P for --pull-rootfs.
+  --autoclean         Delete archive after --pull-rootfs.
+  --reset-iiab        Reinstall IIAB Debian.
+  --debug             Enable extra logs.
+  --help, --version   Show this help or version.
 
-  iiab-termux --connect-only [PORT|IP:PORT]
-    -> Connect-only (no pairing). Use this after the device was already paired before.
-
-  iiab-termux --ppk-only
-    -> Set PPK only: max_phantom_processes=256 (requires ADB already connected).
-       Android 14-16 usually achieve this via "Disable child process restrictions" in Developer Options.
-
-  iiab-termux --iiab-android
-    -> Install/update 'iiab-android' command inside IIAB Debian (does NOT run it).
-
-  iiab-termux --check
-    -> Check readiness: developer options flag (if readable),
-       (Android 14+) "Disable child process restrictions" proxy flag, and (Android 12-13) PPK effective value.
-
-  iiab-termux --all
-    -> baseline + IIAB Debian +
-       (Android 12-13) ADB pair/connect + apply PPK + run --check
-       (Android 14+) optionally skip ADB (reminds to disable child process restrictions).
-
-  iiab-termux --proxy-start
-    -> Start the background proxy (boxyproxy).
-
-  iiab-termux --proxy-stop
-    -> Stop the background proxy.
-
-  iiab-termux --proxy-status
-    -> Show the current status and configuration of the background proxy.
-
-  Optional:
-    --connect-port [IP:PORT|PORT]  Skip CONNECT PORT prompt (ADB modes)
-    --timeout 180                  Seconds to wait per prompt
-    --reset-iiab                   Reset (reinstall) IIAB Debian in proot-distro
-    --no-log                       Disable logging
-    --log-file /path/file          Write logs to a specific file
-    --proxy-no-external            Start proxy in walled-garden mode (blocks external SOCKS5 hosts)
-    --debug                        Extra logs
-
-Notes:
-- Wireless debugging must be enabled on Android 12 & 13
-- Wireless debugging is available on Android 11 and later versions.
-- Android 8-10: there is no Wireless debugging pairing flow. 
-- CONNECT PORT and PAIR PORT are auto-detected via mDNS when possible; still prompting for the PAIR CODE.
-EOF
+${YEL}Notes:${RST} Setup on Android 12 & 13 requires ADB due to OS design. 14+ simplifies this with system UI toggles
+"
 }
 
 # ---- END 00_lib_common.sh ----
@@ -1104,11 +1078,13 @@ cmd_restore_rootfs() {
 
   if iiab_exists; then
     log_yel "IIAB Debian already exists. Restoration will overwrite the current system."
-    tty_yesno_default_y "[iiab] Do you want to continue and overwrite IIAB Debian? [Y/n]: " || die "Restoration aborted by user."
+    # Seems natural that we move forward once the download finish, we keep this for now.
+    #tty_yesno_default_y "[iiab] Do you want to continue and overwrite IIAB Debian? [Y/n]: " || die "Restoration aborted by user."
   fi
 
   if proot-distro restore "$backup_file"; then
     ok "Restoration completed successfully."
+    BASELINE_OK=1
   else
     warn_red "Failed to restore backup."
     return 1
@@ -1128,32 +1104,6 @@ cmd_pull_rootfs() {
 
   local dest_dir="${STATE_DIR}/downloads"
   mkdir -p "$dest_dir"
-
-  # --- PRE-DOWNLOAD CHECK: Find and report previous images ---
-  local count=0
-  local total_bytes=0
-  for f in "$dest_dir"/*.tar.gz; do
-    [[ -f "$f" ]] || continue
-
-    count=$((count + 1))
-    local b
-    b="$(stat -c %s "$f" 2>/dev/null || echo 0)"
-    total_bytes=$((total_bytes + b))
-  done
-
-  if (( count > 0 )); then
-    local size_gb
-    size_gb="$(awk "BEGIN {printf \"%.2f\", $total_bytes / 1073741824}")"
-    log_yel "Found $count image file(s) stored in .iiab-android/downloads, taking up ${size_gb}GB of space."
-    if tty_yesno_default_n "[iiab] Do you want to delete them? [y/N]: "; then
-      rm -f "$dest_dir"/*.tar.gz >/dev/null 2>&1 || true
-      ok "Previous images deleted."
-      ls -hal "$dest_dir"/
-    else
-      log "Keeping existing images."
-    fi
-  fi
-  # -------------------------------------------------------------
 
   local download_url="$target_url"
 
@@ -1179,28 +1129,57 @@ cmd_pull_rootfs() {
   file_name="${target_url##*/}"     # Extract filename from URL
   file_name="${file_name%.meta4}"   # Strip .meta4 extension if present
   local out_path="${dest_dir}/${file_name}"
+  local dht_file="${STATE_DIR}/dht.dat"
 
-  # Remove any previous corrupted/interrupted downloads
-  rm -f "${out_path}" "${out_path}.aria2" >/dev/null 2>&1 || true
+  # UX trick: "Preheat" DHT before execution.
+  if [[ ! -f "$dht_file" ]]; then
+    log "Define P2P network cache..."
+    aria2c --enable-dht=true \
+           --dht-file-path="$dht_file" \
+           --stop=1 \
+           "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567" \
+           >/dev/null 2>&1 || true
+  fi
+
+  # Smart Toggle: verufy integrity only if available.
+  local check_int="false"
+  if [[ -f "$out_path" ]]; then
+    log "Local file detected. Verifying integrity via P2P/Metalink..."
+    check_int="true"
+  fi
 
   log "Downloading rootfs..."
 
   # Mimic aria2 arguments in ansible playbooks
   local aria_args=(
+    # --- Dirs and files ---
     "--dir=$dest_dir"
+    "--continue=true"
+    "--auto-file-renaming=false"
+
+    # --- Connections and performance ---
+    "--max-connection-per-server=4"
+    "--file-allocation=falloc"
+    "--enable-http-pipelining=true"
     "--async-dns=false"
     "--connect-timeout=60"
+
+    # --- P2P & metalink ---
+    "--follow-metalink=mem"
+    "--enable-dht=true"
+    "--dht-file-path=$dht_file"
+    "--bt-enable-lpd=true"
+    "--check-integrity=$check_int"
+    "--seed-time=0"
+
+    # --- Console output & logs ---
     "--log-level=warn"
     "--console-log-level=warn"
     "--summary-interval=0"
     "--show-console-readout=true"
     "--download-result=hide"
-    "--follow-metalink=mem"
-    "--max-connection-per-server=4"
-    "--file-allocation=falloc"
-    "--enable-http-pipelining=true"
-    "--seed-time=0"
-    "--allow-overwrite=true"
+
+    # --- Target ---
     "$download_url"
   )
 
@@ -1221,10 +1200,25 @@ cmd_pull_rootfs() {
     log "Cleaning up downloaded file to save space (--autoclean active)..."
     rm -f "$out_path" >/dev/null 2>&1 || true
   else
-    local final_bytes final_gb
-    final_bytes="$(stat -c %s "$out_path" 2>/dev/null || echo 0)"
-    final_gb="$(awk "BEGIN {printf \"%.2f\", $final_bytes / 1073741824}")"
-    log "The --autoclean option was not used, keeping ${final_gb}GB in $dest_dir."
+    # Get the disk amount used and ask about final cleaning
+    local count=0 total_bytes=0
+    for f in "$dest_dir"/*.tar.gz; do
+      [[ -f "$f" ]] || continue
+      count=$((count + 1))
+      total_bytes=$((total_bytes + $(stat -c %s "$f" 2>/dev/null || echo 0)))
+    done
+
+    if (( count > 0 )); then
+      local size_gb
+      size_gb="$(awk "BEGIN {printf \"%.2f\", $total_bytes / 1073741824}")"
+      log_yel "You have $count image file(s) in .iiab-android/downloads, using ${size_gb}GB."
+      if tty_yesno_default_n "[iiab] Do you want to free up this space and delete them? [y/N]: "; then
+        rm -f "$dest_dir"/*.tar.gz >/dev/null 2>&1 || true
+        ok "Downloaded images deleted."
+      else
+        log "Keeping existing images."
+      fi
+    fi
   fi
 }
 
@@ -1245,12 +1239,12 @@ iiab_exists() {
 
 cmd_remove_iiab() {
   have proot-distro || die "proot-distro is not installed."
-  
+
   if ! iiab_exists; then
     log "IIAB Debian (alias 'iiab') is not installed. Nothing to remove."
     return 0
   fi
-  
+
   warn_red "This will completely delete the IIAB Debian rootfs and ALL its data."
   if tty_yesno_default_n "[iiab] Are you sure you want to remove IIAB Debian? [y/N]: "; then
     log "Removing IIAB Debian..."
@@ -2820,7 +2814,7 @@ final_advice() {
 
   # 2) IIAB Debian "next step" should only be shown for modes that actually bootstrap IIAB
   case "$MODE" in
-    baseline|with-adb|all)
+    baseline|with-adb|pull-rootfs|all)
       if iiab_exists; then
         ok "Next: iiab-termux --login"
       else
@@ -3140,7 +3134,7 @@ main() {
   # Do not print generic "next steps" for certain modes.
   case "$MODE" in
     # Backup and system utilities
-    backup-rootfs | restore-rootfs | pull-rootfs | remove-iiab)
+    backup-rootfs | remove-iiab)
       : ;;
     # Proxy Management
     proxy-start | proxy-stop | proxy-status)

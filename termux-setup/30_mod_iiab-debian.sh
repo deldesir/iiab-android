@@ -11,12 +11,12 @@ iiab_exists() {
 
 cmd_remove_iiab() {
   have proot-distro || die "proot-distro is not installed."
-  
+
   if ! iiab_exists; then
     log "IIAB Debian (alias 'iiab') is not installed. Nothing to remove."
     return 0
   fi
-  
+
   warn_red "This will completely delete the IIAB Debian rootfs and ALL its data."
   if tty_yesno_default_n "[iiab] Are you sure you want to remove IIAB Debian? [y/N]: "; then
     log "Removing IIAB Debian..."
