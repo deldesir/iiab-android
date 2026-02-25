@@ -300,37 +300,38 @@ usage() {
 ${BOLD}Usage:${RST} iiab-termux [MODE] [OPTIONS]
 
 ${BLU}=== CORE & INSTALL ===${RST}
-  ${GRN}(no args)${RST}       Baseline + IIAB Debian bootstrap.
-  ${GRN}--all${RST}           Full setup: baseline, Debian, ADB, PPK, & checks.
-  ${GRN}--login${RST}         Login into IIAB Debian.
-  ${GRN}--iiab-android${RST}  Install/update 'iiab-android' tool inside proot.
+  ${GRN}(no args)${RST}       Baseline + IIAB Debian bootstrap
+  ${GRN}--all${RST}           Full setup: baseline, Debian, ADB, PPK, & checks
+  ${GRN}--barebone${RST}      Minimal installation: Termux base + proxy (no rootfs)
+  ${GRN}--login${RST}         Login into IIAB Debian
+  ${GRN}--iiab-android${RST}  Install/update 'iiab-android' tool inside proot
 
 ${BLU}=== ADB & SYSTEM TUNING ===${RST}
-  ${GRN}--with-adb${RST}      Baseline + Debian + ADB wireless pair/connect.
-  ${GRN}--adb-only${RST}      Only ADB pair/connect (skips Debian).
-  ${GRN}--connect-only${RST}  Connect to an already-paired device.
-  ${GRN}--ppk-only${RST}      Set max_phantom_processes=256 via ADB.
-  ${GRN}--check${RST}         Check Android readiness (Child restrictions, PPK).
+  ${GRN}--with-adb${RST}      Baseline + Debian + ADB wireless pair/connect
+  ${GRN}--adb-only${RST}      Only ADB pair/connect (skips Debian)
+  ${GRN}--connect-only${RST}  Connect to an already-paired device
+  ${GRN}--ppk-only${RST}      Set max_phantom_processes=256 via ADB
+  ${GRN}--check${RST}         Check Android readiness (Process restrictions, PPK)
 
 ${BLU}=== BACKUP & RESTORE ===${RST}
-  ${GRN}--backup-rootfs${RST} Backup IIAB Debian to .tar.gz.
-  ${GRN}--restore-rootfs${RST} Restore IIAB Debian from local .tar.gz.
-  ${GRN}--pull-rootfs${RST}   Download & restore rootfs from URL (P2P enabled).
-  ${GRN}--remove-rootfs${RST} Delete IIAB Debian rootfs and all data.
+  ${GRN}--backup-rootfs${RST} Backup IIAB Debian to .tar.gz
+  ${GRN}--restore-rootfs${RST} Restore IIAB Debian from local .tar.gz
+  ${GRN}--pull-rootfs${RST}   Download & restore rootfs from URL (P2P enabled)
+  ${GRN}--remove-rootfs${RST} Delete IIAB Debian rootfs and all data
 
 ${BLU}=== PROXY (BOXYPROXY) ===${RST}
-  ${GRN}--proxy-start${RST}   Start background proxy.
-  ${GRN}--proxy-stop${RST}    Stop background proxy.
-  ${GRN}--proxy-status${RST}  Show proxy status.
+  ${GRN}--proxy-start${RST}   Start background proxy
+  ${GRN}--proxy-stop${RST}    Stop background proxy
+  ${GRN}--proxy-status${RST}  Show proxy status
 
 ${BOLD}Options:${RST}
-  --connect-port [P]  Skip CONNECT PORT prompt.
-  --timeout [SECS]    Wait time per prompt (default 180).
-  --no-meta4          Disable Metalink/P2P for --pull-rootfs.
-  --autoclean         Delete archive after --pull-rootfs.
-  --reset-iiab        Reinstall IIAB Debian.
-  --debug             Enable extra logs.
-  --help, --version   Show this help or version.
+  --connect-port [P]  Skip CONNECT PORT prompt
+  --timeout [SECS]    Wait time per prompt (default 180)
+  --no-meta4          Disable Metalink/P2P for --pull-rootfs
+  --autoclean         Delete archive after --pull-rootfs
+  --reset-iiab        Reinstall IIAB Debian
+  --debug             Enable extra logs
+  --help, --version   Show this help or version
 
 ${YEL}Notes:${RST} Setup on Android 12 & 13 requires ADB due to OS design. 14+ simplifies this with system UI toggles
 "
