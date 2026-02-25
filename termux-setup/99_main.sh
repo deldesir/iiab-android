@@ -214,7 +214,7 @@ final_advice() {
 
   # 2) IIAB Debian "next step" should only be shown for modes that actually bootstrap IIAB
   case "$MODE" in
-    baseline|with-adb|all)
+    baseline|with-adb|pull-rootfs|all)
       if iiab_exists; then
         ok "Next: iiab-termux --login"
       else
@@ -534,7 +534,7 @@ main() {
   # Do not print generic "next steps" for certain modes.
   case "$MODE" in
     # Backup and system utilities
-    backup-rootfs | restore-rootfs | pull-rootfs | remove-iiab)
+    backup-rootfs | remove-iiab)
       : ;;
     # Proxy Management
     proxy-start | proxy-stop | proxy-status)

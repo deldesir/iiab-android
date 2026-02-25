@@ -296,68 +296,42 @@ iiab_login() {
 # Help / usage (static text)
 # -------------------------
 usage() {
-  cat <<'EOF'
-Usage:
-  iiab-termux  --version
-    -> Show current installed version of iiab-termux
+  printf '%b\n' "
+${BOLD}Usage:${RST} iiab-termux [MODE] [OPTIONS]
 
-  iiab-termux --update
-    -> Update iiab-termux script to the latest version
+${BLU}=== CORE & INSTALL ===${RST}
+  ${GRN}(no args)${RST}       Baseline + IIAB Debian bootstrap.
+  ${GRN}--all${RST}           Full setup: baseline, Debian, ADB, PPK, & checks.
+  ${GRN}--login${RST}         Login into IIAB Debian.
+  ${GRN}--iiab-android${RST}  Install/update 'iiab-android' tool inside proot.
 
-  iiab-termux
-    -> Termux baseline + IIAB Debian bootstrap (idempotent). No ADB prompts.
+${BLU}=== ADB & SYSTEM TUNING ===${RST}
+  ${GRN}--with-adb${RST}      Baseline + Debian + ADB wireless pair/connect.
+  ${GRN}--adb-only${RST}      Only ADB pair/connect (skips Debian).
+  ${GRN}--connect-only${RST}  Connect to an already-paired device.
+  ${GRN}--ppk-only${RST}      Set max_phantom_processes=256 via ADB.
+  ${GRN}--check${RST}         Check Android readiness (Child restrictions, PPK).
 
-  iiab-termux --login
-    -> Login into IIAB Debian (iiab-termux --login).
+${BLU}=== BACKUP & RESTORE ===${RST}
+  ${GRN}--backup-rootfs${RST} Backup IIAB Debian to .tar.gz.
+  ${GRN}--restore-rootfs${RST} Restore IIAB Debian from local .tar.gz.
+  ${GRN}--pull-rootfs${RST}   Download & restore rootfs from URL (P2P enabled).
+  ${GRN}--remove-rootfs${RST} Delete IIAB Debian rootfs and all data.
 
-  iiab-termux --with-adb
-    -> Termux baseline + IIAB Debian bootstrap + ADB pair/connect if needed (skips if already connected).
+${BLU}=== PROXY (BOXYPROXY) ===${RST}
+  ${GRN}--proxy-start${RST}   Start background proxy.
+  ${GRN}--proxy-stop${RST}    Stop background proxy.
+  ${GRN}--proxy-status${RST}  Show proxy status.
 
-  iiab-termux  --adb-only [--connect-port PORT|IP:PORT]
-    -> Only ADB pair/connect if needed (no IIAB Debian; skips if already connected).
-       Tip: --connect-port skips the CONNECT PORT prompt (you’ll still be asked for PAIR PORT + PAIR CODE).
+${BOLD}Options:${RST}
+  --connect-port [P]  Skip CONNECT PORT prompt.
+  --timeout [SECS]    Wait time per prompt (default 180).
+  --no-meta4          Disable Metalink/P2P for --pull-rootfs.
+  --autoclean         Delete archive after --pull-rootfs.
+  --reset-iiab        Reinstall IIAB Debian.
+  --debug             Enable extra logs.
+  --help, --version   Show this help or version.
 
-  iiab-termux --connect-only [PORT|IP:PORT]
-    -> Connect-only (no pairing). Use this after the device was already paired before.
-
-  iiab-termux --ppk-only
-    -> Set PPK only: max_phantom_processes=256 (requires ADB already connected).
-       Android 14-16 usually achieve this via "Disable child process restrictions" in Developer Options.
-
-  iiab-termux --iiab-android
-    -> Install/update 'iiab-android' command inside IIAB Debian (does NOT run it).
-
-  iiab-termux --check
-    -> Check readiness: developer options flag (if readable),
-       (Android 14+) "Disable child process restrictions" proxy flag, and (Android 12-13) PPK effective value.
-
-  iiab-termux --all
-    -> baseline + IIAB Debian +
-       (Android 12-13) ADB pair/connect + apply PPK + run --check
-       (Android 14+) optionally skip ADB (reminds to disable child process restrictions).
-
-  iiab-termux --proxy-start
-    -> Start the background proxy (boxyproxy).
-
-  iiab-termux --proxy-stop
-    -> Stop the background proxy.
-
-  iiab-termux --proxy-status
-    -> Show the current status and configuration of the background proxy.
-
-  Optional:
-    --connect-port [IP:PORT|PORT]  Skip CONNECT PORT prompt (ADB modes)
-    --timeout 180                  Seconds to wait per prompt
-    --reset-iiab                   Reset (reinstall) IIAB Debian in proot-distro
-    --no-log                       Disable logging
-    --log-file /path/file          Write logs to a specific file
-    --proxy-no-external            Start proxy in walled-garden mode (blocks external SOCKS5 hosts)
-    --debug                        Extra logs
-
-Notes:
-- Wireless debugging must be enabled on Android 12 & 13
-- Wireless debugging is available on Android 11 and later versions.
-- Android 8-10: there is no Wireless debugging pairing flow. 
-- CONNECT PORT and PAIR PORT are auto-detected via mDNS when possible; still prompting for the PAIR CODE.
-EOF
+${YEL}Notes:${RST} Setup on Android 12 & 13 requires ADB due to OS design. 14+ simplifies this with system UI toggles
+"
 }
