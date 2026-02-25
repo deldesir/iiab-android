@@ -262,6 +262,7 @@ while [[ $# -gt 0 ]]; do
       fi
       shift
       ;;
+    --barebone) set_mode "barebone"; shift ;;
     --ppk-only) set_mode "ppk-only"; shift ;;
     --iiab-android) set_mode "iiab-android"; shift ;;
     --check) set_mode "check"; shift ;;
@@ -415,6 +416,13 @@ main() {
     remove-iiab)
       cmd_remove_iiab
       ;;
+    barebone)
+      power_mode_offer_battery_settings_once || true
+      repo_selector_ask_configure
+      step_termux_base || baseline_bail
+      boxyproxy_install_or_update || true
+      self_check
+      ;;
     baseline)
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
@@ -424,7 +432,6 @@ main() {
       install_iiab_android_cmd || true
       self_check
       ;;
-
     with-adb)
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure

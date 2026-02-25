@@ -65,7 +65,17 @@ log "Installed: $DEST"
 # - If launcher received args -> pass through
 # - Else -> default to --all
 if [[ $# -gt 0 ]]; then
-  exec "$DEST" "$@"
+  # Normalize arguments: if they don't have '--', add them
+  FINAL_ARGS=()
+  for arg in "$@"; do
+    if [[ "$arg" != -* ]]; then
+      FINAL_ARGS+=("--$arg")
+    else
+      FINAL_ARGS+=("$arg")
+    fi
+  done
+  log "Running with: ${FINAL_ARGS[*]}"
+  exec "$DEST" "${FINAL_ARGS[@]}"
 else
   exec "$DEST" --all
 fi
