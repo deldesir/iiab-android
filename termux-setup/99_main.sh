@@ -262,7 +262,7 @@ while [[ $# -gt 0 ]]; do
       fi
       shift
       ;;
-    --barebone) set_mode "barebone"; shift ;;
+    --barebones) set_mode "barebones"; shift ;;
     --ppk-only) set_mode "ppk-only"; shift ;;
     --iiab-android) set_mode "iiab-android"; shift ;;
     --check) set_mode "check"; shift ;;
@@ -416,7 +416,7 @@ main() {
     remove-iiab)
       cmd_remove_iiab
       ;;
-    barebone)
+    barebones)
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail

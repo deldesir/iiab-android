@@ -302,7 +302,7 @@ ${BOLD}Usage:${RST} iiab-termux [MODE] [OPTIONS]
 ${BLU}=== CORE & INSTALL ===${RST}
   ${GRN}(no args)${RST}       Baseline + IIAB Debian bootstrap
   ${GRN}--all${RST}           Full setup: baseline, Debian, ADB, PPK, & checks
-  ${GRN}--barebone${RST}      Minimal installation: Termux base + proxy (no rootfs)
+  ${GRN}--barebones${RST}     Minimal installation: Termux base + proxy (no rootfs)
   ${GRN}--login${RST}         Login into IIAB Debian
   ${GRN}--iiab-android${RST}  Install/update 'iiab-android' tool inside proot
 
