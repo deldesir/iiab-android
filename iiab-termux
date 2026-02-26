@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-25T12:11:16-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-25T18:12:44-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -313,7 +313,7 @@ ${BOLD}Usage:${RST} iiab-termux [MODE] [OPTIONS]
 ${BLU}=== CORE & INSTALL ===${RST}
   ${GRN}(no args)${RST}       Baseline + IIAB Debian bootstrap
   ${GRN}--all${RST}           Full setup: baseline, Debian, ADB, PPK, & checks
-  ${GRN}--barebone${RST}      Minimal installation: Termux base + proxy (no rootfs)
+  ${GRN}--barebones${RST}     Minimal installation: Termux base + proxy (no rootfs)
   ${GRN}--login${RST}         Login into IIAB Debian
   ${GRN}--iiab-android${RST}  Install/update 'iiab-android' tool inside proot
 
@@ -2863,7 +2863,7 @@ while [[ $# -gt 0 ]]; do
       fi
       shift
       ;;
-    --barebone) set_mode "barebone"; shift ;;
+    --barebones) set_mode "barebones"; shift ;;
     --ppk-only) set_mode "ppk-only"; shift ;;
     --iiab-android) set_mode "iiab-android"; shift ;;
     --check) set_mode "check"; shift ;;
@@ -3017,7 +3017,7 @@ main() {
     remove-iiab)
       cmd_remove_iiab
       ;;
-    barebone)
+    barebones)
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
