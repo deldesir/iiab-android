@@ -6,7 +6,7 @@
 # -------------------------
 LOG_ENABLED=1
 LOG_FILE=""          # if empty, auto-generate under $LOG_DIR
-LOG_KEEP=3           # keep only the last 3 logs
+LOG_KEEP=5           # keep only the last 5 days worth of logs
 
 prune_old_logs() {
   [[ -d "${LOG_DIR:-}" ]] || return 0
@@ -36,7 +36,7 @@ setup_logging() {
   mkdir -p "$LOG_DIR"
 
   if [[ -z "${LOG_FILE:-}" ]]; then
-    LOG_FILE="${LOG_DIR}/iiab-termux.$(date +%Y%m%d-%H%M%S).log"
+    LOG_FILE="${LOG_DIR}/iiab-termux.$(date +%Y%m%d).log"
   else
     mkdir -p "$(dirname -- "$LOG_FILE")"
   fi
@@ -62,7 +62,7 @@ setup_logging() {
       # Single pipeline for stable ordering (no stdout/stderr interleaving) at FD3.
       exec > >(tee >(sed -E 's/\x1B\[[0-9;]*[ -/]*[@-~]//g' >>"$LOG_FILE") >&3) 2>&1
 
-  ok "Logging to: $LOG_FILE"
+  ok "Logging to: ${LOG_FILE/#$HOME/\~}"
 
   # If --debug, send xtrace only to log
   if [[ "${DEBUG:-0}" -eq 1 ]]; then

@@ -292,6 +292,124 @@ iiab_login() {
   return $rc
 }
 
+### --- Pre-flight Check & Metrics ---
+check_preflight_requirements() {
+  local outfd; outfd="$(console_outfd)"
+  printf "${BLU}[iiab] --- Pre-flight System Checks ---${RST}\n" >&"$outfd"
+
+  # 1. Architecture Check
+  local arch; arch=$(get_android_arch)
+  local arch_stat="${GRN}OK${RST}"
+  [[ "$arch" == "unknown" ]] && arch_stat="${YEL}WARN${RST}"
+  printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Architecture ($arch)" "$arch_stat" >&"$outfd"
+
+  # 2. Disk Space Logic (Thresholds: 2.5GB and 5GB)
+  local free_mb; free_mb=$(df -k "$PREFIX" | awk 'END{print $4 / 1024}' | cut -d. -f1)
+  local free_gb; free_gb=$(awk -v mb="$free_mb" 'BEGIN { printf "%.1f", mb / 1024 }')
+  local disk_stat="${GRN}OK${RST}"
+  if [[ "$free_mb" -lt 2500 ]]; then disk_stat="${RED}FAIL${RST}"; elif [[ "$free_mb" -lt 5000 ]]; then disk_stat="${YEL}WARN${RST}"; fi
+  printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Free Space (${free_gb} GB)" "$disk_stat" >&"$outfd"
+
+  # 3. Android Version Context
+  local sdk="${ANDROID_SDK:-0}"
+  local rel="${ANDROID_REL:-?}"
+  local os_stat="${GRN}OK${RST}"
+  [[ "$sdk" -ge 31 ]] && os_stat="${YEL}NOTE${RST}"
+  printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Android OS (Rel $rel/SDK $sdk)" "$os_stat" >&"$outfd"
+
+  printf "${BLU}[iiab] --------------------------------------${RST}\n" >&"$outfd"
+
+  # --- Checks and warnings (summary) ---
+  [[ "$arch" == "unknown" ]] && warn "Unknown architecture. Results may vary."
+
+  if [[ "$free_mb" -lt 2500 ]]; then
+    warn_red "Error: Insufficient space to install IIAB on Android."
+    die "Please free up space (at least 2.5GB) to continue."
+  elif [[ "$free_mb" -lt 5000 ]]; then
+    log_yel "Warning: Limited storage detected (${free_gb} GB)."
+    warn "You may face limitations when adding additional content later."
+    tty_yesno_default_n "[iiab] Do you want to continue with a tight installation? [y/N]: " || die "Aborted by user."
+  else
+    ok "Sufficient disk space for installation (${free_gb} GB)."
+    log "Note: Space for multimedia content depends on the specific modules you add later."
+  fi
+
+  local sdk="${ANDROID_SDK:-0}"
+  if [[ "$sdk" -ge 34 ]]; then
+    log_yel "Note: 'Child Process' restrictions might apply for Android $rel."
+  elif [[ "$sdk" -ge 31 ]]; then
+    log_yel "Note: 'Phantom Processes' restrictions might apply for Android $rel."
+  elif [[ "$sdk" -gt 0 && "$sdk" -le 30 ]]; then
+    ok "No known process restrictions for Android $rel."
+  fi
+
+  # 4. Network Latency Check
+  log "Testing network latency..."
+  local start_t; start_t=$(date +%s%N)
+  if curl -Isf --connect-timeout 5 google.com >/dev/null 2>&1; then
+    local end_t; end_t=$(date +%s%N)
+    local delta=$(( (end_t - start_t) / 1000000 ))
+    log "Network check: Latency ${delta}ms. (Speed estimation will be calculated during download)."
+  else
+    warn "Network unreachable or slow. Downloads may fail."
+  fi
+  
+  ok "Pre-flight checks completed."
+}
+
+welcome_interactive() {
+  local mode_label="${1:-Installation}"
+  local outfd; outfd="$(console_outfd)"
+  {
+    clear
+    printf "${BLU}====================================================${RST}\n"
+    printf " 🌐 WELCOME TO IIAB on Android 🌐\n"
+    printf "     Starting mode: ${mode_label}\n"
+    printf "${BLU}====================================================${RST}\n"
+    printf "\n${BOLD}Internet-in-a-Box (IIAB) on Android${RST} will allow\n"
+    printf "millions of people worldwide to build their own \n"
+    printf "family libraries, inside their own phones!\n\n"
+    printf "This script prepares your Android device as an\n"
+    printf "Offline Learning Environment (Internet-in-a-Box).\n\n"
+    printf " ${YEL}*${RST} Website: https://internet-in-a-box.org/\n"
+    printf " ${YEL}*${RST} Issues:  https://github.com/iiab/iiab-android\n"
+    printf "%s\n" "----------------------------------------------------"
+    printf " Tip: Keep the charger connected and ensure Termux\n"
+    printf " battery settings are set to 'Unrestricted'.\n"
+    printf "${BLU}====================================================${RST}\n"
+    
+    if [[ -r /dev/tty ]]; then
+      printf "Press [ENTER] to start system validation... "
+    fi
+  } >&"$outfd"
+
+  if [[ -r /dev/tty ]]; then
+    read -r _ < /dev/tty || true
+   fi
+ }
+
+offer_welcome_once() {
+  local mode_label="$1"
+  local stamp="${STATE_DIR}/stamp.welcome"
+  
+  if [[ ! -f "$stamp" ]]; then
+    welcome_interactive "$mode_label"
+    date > "$stamp" 2>/dev/null || true
+  fi
+}
+
+measure_disk_usage() {
+  # $1 = Function or mode name to execute
+  local before; before=$(du -sm "$PREFIX/.." | awk '{print $1}')
+  log "Calculating installation footprint..."
+  
+  # Execute the passed logic
+  "$@" 
+
+  local after; after=$(du -sm "$PREFIX/.." | awk '{print $1}')
+  local footprint=$((after - before))
+  ok "Installation completed. System footprint: +${footprint}MB."
+}
 # -------------------------
 # Help / usage (static text)
 # -------------------------
@@ -330,6 +448,8 @@ ${BOLD}Options:${RST}
   --no-meta4          Disable Metalink/P2P for --pull-rootfs
   --autoclean         Delete archive after --pull-rootfs
   --reset-iiab        Reinstall IIAB Debian
+  --install-self      Install the current script to Termux bin path
+  --welcome           Show the welcome screen
   --debug             Enable extra logs
   --help, --version   Show this help or version
 

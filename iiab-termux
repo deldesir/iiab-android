@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-25T18:12:44-06:00 - do not edit directly.
+# GENERATED FILE: 2026-02-27T10:29:15-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -303,6 +303,124 @@ iiab_login() {
   return $rc
 }
 
+### --- Pre-flight Check & Metrics ---
+check_preflight_requirements() {
+  local outfd; outfd="$(console_outfd)"
+  printf "${BLU}[iiab] --- Pre-flight System Checks ---${RST}\n" >&"$outfd"
+
+  # 1. Architecture Check
+  local arch; arch=$(get_android_arch)
+  local arch_stat="${GRN}OK${RST}"
+  [[ "$arch" == "unknown" ]] && arch_stat="${YEL}WARN${RST}"
+  printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Architecture ($arch)" "$arch_stat" >&"$outfd"
+
+  # 2. Disk Space Logic (Thresholds: 2.5GB and 5GB)
+  local free_mb; free_mb=$(df -k "$PREFIX" | awk 'END{print $4 / 1024}' | cut -d. -f1)
+  local free_gb; free_gb=$(awk -v mb="$free_mb" 'BEGIN { printf "%.1f", mb / 1024 }')
+  local disk_stat="${GRN}OK${RST}"
+  if [[ "$free_mb" -lt 2500 ]]; then disk_stat="${RED}FAIL${RST}"; elif [[ "$free_mb" -lt 5000 ]]; then disk_stat="${YEL}WARN${RST}"; fi
+  printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Free Space (${free_gb} GB)" "$disk_stat" >&"$outfd"
+
+  # 3. Android Version Context
+  local sdk="${ANDROID_SDK:-0}"
+  local rel="${ANDROID_REL:-?}"
+  local os_stat="${GRN}OK${RST}"
+  [[ "$sdk" -ge 31 ]] && os_stat="${YEL}NOTE${RST}"
+  printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Android OS (Rel $rel/SDK $sdk)" "$os_stat" >&"$outfd"
+
+  printf "${BLU}[iiab] --------------------------------------${RST}\n" >&"$outfd"
+
+  # --- Checks and warnings (summary) ---
+  [[ "$arch" == "unknown" ]] && warn "Unknown architecture. Results may vary."
+
+  if [[ "$free_mb" -lt 2500 ]]; then
+    warn_red "Error: Insufficient space to install IIAB on Android."
+    die "Please free up space (at least 2.5GB) to continue."
+  elif [[ "$free_mb" -lt 5000 ]]; then
+    log_yel "Warning: Limited storage detected (${free_gb} GB)."
+    warn "You may face limitations when adding additional content later."
+    tty_yesno_default_n "[iiab] Do you want to continue with a tight installation? [y/N]: " || die "Aborted by user."
+  else
+    ok "Sufficient disk space for installation (${free_gb} GB)."
+    log "Note: Space for multimedia content depends on the specific modules you add later."
+  fi
+
+  local sdk="${ANDROID_SDK:-0}"
+  if [[ "$sdk" -ge 34 ]]; then
+    log_yel "Note: 'Child Process' restrictions might apply for Android $rel."
+  elif [[ "$sdk" -ge 31 ]]; then
+    log_yel "Note: 'Phantom Processes' restrictions might apply for Android $rel."
+  elif [[ "$sdk" -gt 0 && "$sdk" -le 30 ]]; then
+    ok "No known process restrictions for Android $rel."
+  fi
+
+  # 4. Network Latency Check
+  log "Testing network latency..."
+  local start_t; start_t=$(date +%s%N)
+  if curl -Isf --connect-timeout 5 google.com >/dev/null 2>&1; then
+    local end_t; end_t=$(date +%s%N)
+    local delta=$(( (end_t - start_t) / 1000000 ))
+    log "Network check: Latency ${delta}ms. (Speed estimation will be calculated during download)."
+  else
+    warn "Network unreachable or slow. Downloads may fail."
+  fi
+  
+  ok "Pre-flight checks completed."
+}
+
+welcome_interactive() {
+  local mode_label="${1:-Installation}"
+  local outfd; outfd="$(console_outfd)"
+  {
+    clear
+    printf "${BLU}====================================================${RST}\n"
+    printf " 🌐 WELCOME TO IIAB on Android 🌐\n"
+    printf "     Starting mode: ${mode_label}\n"
+    printf "${BLU}====================================================${RST}\n"
+    printf "\n${BOLD}Internet-in-a-Box (IIAB) on Android${RST} will allow\n"
+    printf "millions of people worldwide to build their own \n"
+    printf "family libraries, inside their own phones!\n\n"
+    printf "This script prepares your Android device as an\n"
+    printf "Offline Learning Environment (Internet-in-a-Box).\n\n"
+    printf " ${YEL}*${RST} Website: https://internet-in-a-box.org/\n"
+    printf " ${YEL}*${RST} Issues:  https://github.com/iiab/iiab-android\n"
+    printf "%s\n" "----------------------------------------------------"
+    printf " Tip: Keep the charger connected and ensure Termux\n"
+    printf " battery settings are set to 'Unrestricted'.\n"
+    printf "${BLU}====================================================${RST}\n"
+    
+    if [[ -r /dev/tty ]]; then
+      printf "Press [ENTER] to start system validation... "
+    fi
+  } >&"$outfd"
+
+  if [[ -r /dev/tty ]]; then
+    read -r _ < /dev/tty || true
+   fi
+ }
+
+offer_welcome_once() {
+  local mode_label="$1"
+  local stamp="${STATE_DIR}/stamp.welcome"
+  
+  if [[ ! -f "$stamp" ]]; then
+    welcome_interactive "$mode_label"
+    date > "$stamp" 2>/dev/null || true
+  fi
+}
+
+measure_disk_usage() {
+  # $1 = Function or mode name to execute
+  local before; before=$(du -sm "$PREFIX/.." | awk '{print $1}')
+  log "Calculating installation footprint..."
+  
+  # Execute the passed logic
+  "$@" 
+
+  local after; after=$(du -sm "$PREFIX/.." | awk '{print $1}')
+  local footprint=$((after - before))
+  ok "Installation completed. System footprint: +${footprint}MB."
+}
 # -------------------------
 # Help / usage (static text)
 # -------------------------
@@ -341,6 +459,8 @@ ${BOLD}Options:${RST}
   --no-meta4          Disable Metalink/P2P for --pull-rootfs
   --autoclean         Delete archive after --pull-rootfs
   --reset-iiab        Reinstall IIAB Debian
+  --install-self      Install the current script to Termux bin path
+  --welcome           Show the welcome screen
   --debug             Enable extra logs
   --help, --version   Show this help or version
 
@@ -360,7 +480,7 @@ ${YEL}Notes:${RST} Setup on Android 12 & 13 requires ADB due to OS design. 14+ s
 # -------------------------
 LOG_ENABLED=1
 LOG_FILE=""          # if empty, auto-generate under $LOG_DIR
-LOG_KEEP=3           # keep only the last 3 logs
+LOG_KEEP=5           # keep only the last 5 days worth of logs
 
 prune_old_logs() {
   [[ -d "${LOG_DIR:-}" ]] || return 0
@@ -390,7 +510,7 @@ setup_logging() {
   mkdir -p "$LOG_DIR"
 
   if [[ -z "${LOG_FILE:-}" ]]; then
-    LOG_FILE="${LOG_DIR}/iiab-termux.$(date +%Y%m%d-%H%M%S).log"
+    LOG_FILE="${LOG_DIR}/iiab-termux.$(date +%Y%m%d).log"
   else
     mkdir -p "$(dirname -- "$LOG_FILE")"
   fi
@@ -416,7 +536,7 @@ setup_logging() {
       # Single pipeline for stable ordering (no stdout/stderr interleaving) at FD3.
       exec > >(tee >(sed -E 's/\x1B\[[0-9;]*[ -/]*[@-~]//g' >>"$LOG_FILE") >&3) 2>&1
 
-  ok "Logging to: $LOG_FILE"
+  ok "Logging to: ${LOG_FILE/#$HOME/\~}"
 
   # If --debug, send xtrace only to log
   if [[ "${DEBUG:-0}" -eq 1 ]]; then
@@ -520,7 +640,7 @@ python_ensure_zeroconf() {
   fi
   [[ "${ADB_MDNS_PIP_INSTALL:-1}" -eq 1 ]] || { PY_ZEROCONF_OK=0; return 1; }
 
-  warn "Python module 'zeroconf' not found. Trying to install it: python -m pip install --upgrade zeroconf"
+  log_yel "Python module 'zeroconf' not found. Installing it..."
   if python_pip_install_zeroconf && python_has_zeroconf; then
     ok "Installed Python module 'zeroconf' (mDNS autodetect enabled)."
     PY_ZEROCONF_OK=1
@@ -554,7 +674,7 @@ termux_prepare_boxyproxy_deps() {
   have python || have python3 || return 0
   python_has_aiohttp && return 0
 
-  warn "Python module 'aiohttp' not found. Trying pip install..."
+  log_yel "Python module 'aiohttp' not found. Installing it ..."
   python_pip_install_aiohttp >/dev/null 2>&1 || true
   python_has_aiohttp && { ok "Installed 'aiohttp' via pip."; return 0; }
 
@@ -570,7 +690,6 @@ termux_prepare_mdns_deps() {
 
   # If we stamped success before and it's still present, do nothing.
   if [[ -f "$TERMUX_ZEROCONF_STAMP" ]] && python_has_zeroconf; then
-    ok "mDNS autodetect dependency already present (python: zeroconf)."
     return 0
   fi
   # If stamp exists but module disappeared, drop stamp and retry.
@@ -707,33 +826,11 @@ power_mode_battery_instructions() {
   local fd=1
   if { : >&3; } 2>/dev/null; then fd=3; fi
   {
-    # Print header in yellow. + bold
-    printf '%b' "${YEL}${BOLD}"
-    cat <<'EOF'
-[iiab] Power-mode needs one manual Android setting:
-EOF
-
-    # Print body in blue
-    printf '%b' "${RST}"
-    printf '%b' "${BOLD}"
-    cat <<'EOF'
-
-Some devices let Termux set "Battery usage" correctly by default, but not all do; please double-check:
-
- Settings -> Apps -> Termux -> Battery
-   - Set: Unrestricted
-     - or: Don't optimize / No restrictions
-   - Allow background activity = ON (if present)
-
- If you can't find Battery under App info, use Android's Battery optimization list and set Termux to "Don't optimize".
-
-> Note: Power-mode (wakelock + notification) helps keep the session alive, but it cannot override Android's battery restrictions.
-
-EOF
-
-    # Reset colors
-    printf '%b' "${RST}"
-  } >&"$fd"
+    printf '%b' "\n${YEL}${BOLD}[iiab] CRITICAL: Android Battery Restrictions${RST}\n"
+    printf '%b' "To prevent Android from killing the installation, apply:\n"
+    printf '%b' "  ${BLU}1.${RST} Battery -> ${BOLD}Unrestricted${RST} (or 'Don't optimize')\n"
+    printf '%b' "  ${BLU}2.${RST} Allow background activity -> ${BOLD}ON${RST}\n\n"
+   } >&"$fd"
 }
 
 power_mode_offer_battery_settings_once() {
@@ -745,28 +842,29 @@ power_mode_offer_battery_settings_once() {
 
   power_mode_battery_instructions
 
-  if tty_yesno_default_y "${YEL}[iiab] Open Termux App info to adjust Battery policy? [Y/n]: ${RST}"; then
-    if android_open_termux_app_info; then
-      local outfd
-      outfd="$(console_outfd)"
-      printf "[iiab] When done, return to Termux and press Enter to continue... " >&"$outfd"
-      if [[ -r /dev/tty ]]; then
-        read -r _ </dev/tty || true
-      else
-        local outfd
-        outfd="$(console_outfd)"
-        printf "\n" >&"$outfd"
-      fi
-      date > "$stamp" 2>/dev/null || true
+  local outfd; outfd="$(console_outfd)"
+  # Contador regresivo en la misma línea
+  if [[ -r /dev/tty ]]; then
+    for i in {5..1}; do
+      printf "\r${YEL}[iiab] Opening Battery Settings in %d seconds...${RST}" "$i" >&"$outfd"
+      sleep 1
+    done
+    printf "\r                                                              \r" >&"$outfd"
+  fi
+
+  if android_open_termux_app_info; then
+    printf "${YEL}[iiab] Adjust the settings. When done, return here.${RST}\n" >&"$outfd"
+    if [[ -r /dev/tty ]]; then
+      # -n 1 captura un solo caracter, -s lo hace silencioso
+      read -n 1 -s -r -p "Press any key to continue... " </dev/tty || true
+      printf "\n" >&"$outfd"
     else
-      warn "Unable to open Settings automatically. Open manually: Settings -> Apps -> Termux."
-      warn "Fallback: you may try opening the Battery optimization list from Android settings."
-      # Best-effort fallback (ignore errors)
-      android_open_battery_optimization_list || true
-      # Do not stamp here: user likely still needs to configure it.
+      printf "\n" >&"$outfd"
     fi
+    date > "$stamp" 2>/dev/null || true
   else
-    warn "Battery settings step skipped by user; you'll be asked again next time."
+    warn "Unable to open Settings automatically. Open manually: Settings -> Apps -> Termux."
+    android_open_battery_optimization_list || true
   fi
   return 0
 }
@@ -1078,9 +1176,7 @@ cmd_restore_rootfs() {
   log "Restoring IIAB Debian from: $backup_file"
 
   if iiab_exists; then
-    log_yel "IIAB Debian already exists. Restoration will overwrite the current system."
-    # Seems natural that we move forward once the download finish, we keep this for now.
-    #tty_yesno_default_y "[iiab] Do you want to continue and overwrite IIAB Debian? [Y/n]: " || die "Restoration aborted by user."
+    log_yel "Restoration will overwrite the current system."
   fi
 
   if proot-distro restore "$backup_file"; then
@@ -1092,12 +1188,57 @@ cmd_restore_rootfs() {
   fi
 }
 
+check_url_architecture() {
+  local url="$1" dev_arch="$2" allow_mismatch="$3"
+  local url_lower; url_lower="$(printf '%s' "$url" | tr '[:upper:]' '[:lower:]')"
+
+  local count=0 detected=""
+
+  # Identification by keywords
+  if [[ "$url_lower" == *arm64* || "$url_lower" == *aarch64* || "$url_lower" == *v8a* ]]; then
+    detected="arm64-v8a"; count=$((count + 1))
+  fi
+  if [[ "$url_lower" == *armv7* || "$url_lower" == *v7a* || "$url_lower" == *armeabi* ]]; then
+    detected="armeabi-v7a"; count=$((count + 1))
+  fi
+  if [[ "$url_lower" == *x86_64* || "$url_lower" == *amd64* ]]; then
+    detected="x86_64"; count=$((count + 1))
+  elif [[ "$url_lower" == *x86* || "$url_lower" == *i686* || "$url_lower" == *i386* ]]; then
+    detected="x86"; count=$((count + 1)) # Excluded if x86_64 matched
+  fi
+
+  # Case B: None or a contradictory mixture
+  if (( count == 0 )); then
+    log_yel "Image architecture not clearly defined in URL, continuing..."
+    return 0
+  elif (( count > 1 )); then
+    log_yel "Image URL contains mixed/ambiguous architecture flags, continuing..."
+    return 0
+  fi
+
+  # Case A: Exact match (Silent to avoid screen clutter)
+  [[ "$detected" == "$dev_arch" ]] && return 0
+
+  # Case C: Clear mismatch
+  if [[ "$allow_mismatch" -eq 1 ]]; then
+    log_yel "Arch mismatch ($detected vs $dev_arch) ignored via --arch-mismatch-ok."
+    return 0
+  else
+    warn_red "The URL indicates an architecture ($detected) that doesn't match your device ($dev_arch)."
+    die "To proceed anyway, run again with: --arch-mismatch-ok"
+  fi
+}
+
 cmd_pull_rootfs() {
   local target_url="${1:-}"
   local use_meta4="${2:-1}"  # 1 = yes, 0 = no (--no-meta4)
-  local autoclean="${3:-0}"  # 1 = yes, 0 = no (--autoclean)
+  local keep_tarball="${3:-0}" # 1 = keep, 0 = delete (default)
+  local arch_mismatch_ok="${4:-0}" 
 
   [[ -z "$target_url" ]] && die "You must provide a URL to download the rootfs."
+
+  # Arch checkup
+  check_url_architecture "$target_url" "$(get_android_arch)" "$arch_mismatch_ok"
 
   # Ensure aria2c and curl are available
   have aria2c || { log "Installing aria2c..."; termux_apt update || true; termux_apt install aria2c || die "Failed to install aria2c."; }
@@ -1113,9 +1254,7 @@ cmd_pull_rootfs() {
     if [[ "$target_url" == *.meta4 ]]; then
       log "URL directly provides a .meta4 file."
     else
-      log "Checking for Metalink (.meta4) availability on the server..."
       if curl -Isf "${target_url}.meta4" > /dev/null 2>&1; then
-        ok "Found .meta4 file. Distributed download will be prioritized."
         download_url="${target_url}.meta4"
       else
         log_yel "No .meta4 file found. Falling back to direct download."
@@ -1134,7 +1273,6 @@ cmd_pull_rootfs() {
 
   # UX trick: "Preheat" DHT before execution.
   if [[ ! -f "$dht_file" ]]; then
-    log "Define P2P network cache..."
     aria2c --enable-dht=true \
            --dht-file-path="$dht_file" \
            --stop=1 \
@@ -1142,11 +1280,36 @@ cmd_pull_rootfs() {
            >/dev/null 2>&1 || true
   fi
 
-  # Smart Toggle: verufy integrity only if available.
+  # Smart Toggle: verify integrity only if available.
   local check_int="false"
   if [[ -f "$out_path" ]]; then
     log "Local file detected. Verifying integrity via P2P/Metalink..."
     check_int="true"
+  fi
+
+  # 1. Check size before downloading
+  local size_url="$target_url"
+  # Ensure we probe the .tar.gz even if using a .meta4 URL
+  [[ "$size_url" == *.meta4 ]] && size_url="${size_url%.meta4}"
+  local remote_bytes; remote_bytes=$(curl -sI "$size_url" | grep -i "^Content-Length" | awk '{print $2}' | tr -d '\r')
+  # Get free space in MB (Using block size 1024 for compatibility)
+  local free_mb; free_mb=$(df -k "$PREFIX" | awk 'END{print $4 / 1024}' | cut -d. -f1)
+
+  if [[ -n "$remote_bytes" ]]; then
+     local req_space=$(( remote_bytes * 25 / 10 / 1048576 )) # 2.5x in MB [cite: 128]
+     # Floor fallback: ensure at least 5GB for pull-rootfs
+     [[ "$req_space" -lt 5120 ]] && req_space=5120
+     log "Image size: $((remote_bytes / 1048576))MB. Safety threshold: ${req_space}MB."
+
+     if [[ "$free_mb" -lt "$req_space" ]]; then
+        die "Insufficient space! You need ${req_space}MB, but only ${free_mb}MB are free."
+     fi
+  else
+     # Fallback if server doesn't report size
+     log_yel "Could not determine remote size. Applying 5GB safety floor."
+     if [[ "$free_mb" -lt 5120 ]]; then
+        die "Risk of saturation! At least 5GB free required when size is unknown."
+     fi
   fi
 
   log "Downloading rootfs..."
@@ -1197,28 +1360,20 @@ cmd_pull_rootfs() {
   cmd_restore_rootfs "$out_path"
 
   # --- POST-RESTORE CLEANUP ---
-  if [[ "$autoclean" -eq 1 ]]; then
-    log "Cleaning up downloaded file to save space (--autoclean active)..."
-    rm -f "$out_path" >/dev/null 2>&1 || true
+  if [[ "$keep_tarball" -eq 1 ]]; then
+    ok "Flag '--keep-tarball' active. Keeping rootfs archive at: $out_path"
   else
-    # Get the disk amount used and ask about final cleaning
-    local count=0 total_bytes=0
-    for f in "$dest_dir"/*.tar.gz; do
-      [[ -f "$f" ]] || continue
-      count=$((count + 1))
-      total_bytes=$((total_bytes + $(stat -c %s "$f" 2>/dev/null || echo 0)))
-    done
+    # 1. Gather stats before deletion
+    local count; count=$(ls -1 "$dest_dir"/*.tar.gz 2>/dev/null | wc -l)
+    local folder_size; folder_size=$(du -sh "$dest_dir" 2>/dev/null | awk '{print $1}')
 
-    if (( count > 0 )); then
-      local size_gb
-      size_gb="$(awk "BEGIN {printf \"%.2f\", $total_bytes / 1073741824}")"
-      log_yel "You have $count image file(s) in .iiab-android/downloads, using ${size_gb}GB."
-      if tty_yesno_default_n "[iiab] Do you want to free up this space and delete them? [y/N]: "; then
-        rm -f "$dest_dir"/*.tar.gz >/dev/null 2>&1 || true
-        ok "Downloaded images deleted."
-      else
-        log "Keeping existing images."
-      fi
+    if rm -f "$dest_dir"/*.tar.gz >/dev/null 2>&1; then
+      local final_free; final_free=$(df -h "$PREFIX" | awk 'END{print $4}')
+      ok "Space freed: $folder_size out of $count tarball(s)."
+      log "Remaining free space: $final_free"
+      log "Tip: Use '--keep-tarball' next time to preserve the downloaded images."
+    else
+      warn "Cleanup failed. Please check permissions in $dest_dir"
     fi
   fi
 }
@@ -2139,6 +2294,13 @@ adb_loopback_serial_or_die() {
   echo "$s"
 }
 
+run_if_adb_connected() {
+  # run input command only if adb_pick_loopback_serial is connected 
+  if adb_pick_loopback_serial >/dev/null 2>&1; then
+    "$@"
+  fi
+}
+
 # ---- END 50_mod_adb.sh ----
 
 
@@ -2335,9 +2497,13 @@ check_readiness() {
     CHECK_NO_ADB=1
     # Best-effort: keep local SDK so final_advice can still warn on A12-13.
     CHECK_SDK="${ANDROID_SDK:-}"
-    warn_red "No ADB device connected. Cannot run checks."
-    warn "If already paired before: run --connect-only [PORT]."
-    warn "Otherwise: run --adb-only to pair+connect."
+    if [[ "${ANDROID_SDK:-}" =~ ^[0-9]+$ ]] && (( ANDROID_SDK >= 31 && ANDROID_SDK <= 33 )); then
+      warn_red "No ADB device connected. Cannot run checks."
+      warn "If already paired before: run --connect-only [PORT]."
+      warn "Otherwise: run --adb-only to pair+connect."
+    else
+      log "ADB not connected. Skipping ADB checks."
+    fi
     return 1
   fi
 
@@ -2431,7 +2597,9 @@ self_check_android_flags() {
 
   sdk="$(adb -s "$serial" shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"
   rel="$(adb -s "$serial" shell getprop ro.build.version.release 2>/dev/null | tr -d '\r' || true)"
-  log " Android flags (quick): release=${rel:-?} sdk=${sdk:-?} serial=$serial"
+  if [[ "${sdk:-}" =~ ^[0-9]+$ ]] && (( sdk >= 31 && sdk <= 33 )); then
+    log " Android flags (quick): release=${rel:-?} sdk=${sdk:-?} serial=$serial"
+  fi
 
   if [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 34 )); then
     mon="$(adb_get_monitor_phantom_procs "$serial")"
@@ -2635,7 +2803,8 @@ BOXYPROXY_MANAGED=0
 
 # Set backup / restore vars
 PULL_USE_META4=1
-PULL_AUTOCLEAN=0
+PULL_KEEP_TARBALL=0
+PULL_ARCH_MISMATCH_OK=0
 BACKUP_RESTORE_TARGET=""
 
 trap 'if [[ "${BOXYPROXY_MANAGED:-0}" -eq 1 ]]; then boxyproxy_stop >/dev/null 2>&1 || true; fi; power_mode_login_exit >/dev/null 2>&1 || true; adb_hint_notif_remove >/dev/null 2>&1 || true; cleanup_notif >/dev/null 2>&1 || true; release_wakelock >/dev/null 2>&1 || true' EXIT INT TERM
@@ -2678,35 +2847,54 @@ guard_no_iiab_termux_in_proot
 # Self-check
 # -------------------------
 self_check() {
-  log "Self-check summary:"
-  log " Android release=${ANDROID_REL:-?} sdk=${ANDROID_SDK:-?}"
+  local wlan_ip
+  wlan_ip="$(adb_local_ipv4s_csv 2>/dev/null)"
+  [[ -z "$wlan_ip" ]] && wlan_ip="Disconnected"
 
+  log "Self-check summary:"
+  log " iiab-termux version: $(get_iiab_termux_version "$0")"
+  log " Android system details:"
+  echo "        - Release: ${ANDROID_REL:-?}"
+  echo "        - SDK:     ${ANDROID_SDK:-?}"
+  echo "        - Arch:    $(get_android_arch)"
+  log " Wireless IP:  ${wlan_ip}"
   if have proot-distro; then
     log " proot-distro: present"
-    log " proot-distro list:"
-    proot-distro list 2>/dev/null | indent || true
-    if iiab_exists; then ok " IIAB Debian: present"; else warn " IIAB Debian: not present"; fi
+    if iiab_exists; then log " IIAB Debian: present"; else log_yel " IIAB Debian: not present"; fi
   else
     warn " proot-distro: not present"
   fi
 
   if have adb; then
-    log " adb: present"
-    adb devices -l 2>/dev/null | indent || true
-    local serial
-#    re-enable in need for verbose output.
-#    if serial="$(adb_pick_loopback_serial 2>/dev/null)"; then
-#      log " adb shell id (first device):"
-#      adb -s "$serial" shell id 2>/dev/null | indent || true
-#    fi
+    log " android-tools: present"
+    if adb_pick_loopback_serial >/dev/null 2>&1; then
+      adb devices -l 2>/dev/null | indent || true
+      #re-enable in need for verbose output.
+      #run_if_adb_connected log " adb shell id (first device):"
+      #run_if_adb_connected adb -s "$serial" shell id 2>/dev/null | indent || true
+    fi
   else
-    warn " adb: not present"
+    warn " android-tools: not present"
   fi
-  # Quick Android flags check (best-effort; no prompts)
-  self_check_android_flags || true
 
-  if have termux-wake-lock; then ok " Termux:API wakelock: available"; else warn " Termux:API wakelock: not available"; fi
-  if have termux-notification; then ok " Termux:API notifications: command present"; else warn " Termux:API notifications: missing"; fi
+# Network & Proxy tools
+  if python_has_zeroconf >/dev/null 2>&1; then
+    log " mDNS/Zeroconf: present"
+  else
+    warn " mDNS/Zeroconf: not present"
+  fi
+
+  if boxyproxy_is_installed >/dev/null 2>&1; then
+    log " Boxyproxy: present"
+  else
+    warn " Boxyproxy: not present"
+  fi
+
+  # Quick Android flags check
+  run_if_adb_connected self_check_android_flags || true
+
+  if have termux-wake-lock; then log " Termux:API wakelock: available"; else log_yel " Termux:API wakelock: not available"; fi
+  if have termux-notification; then log " Termux:API notifications: command present"; else log_yel " Termux:API notifications: missing"; fi
 }
 
 baseline_bail() {
@@ -2828,6 +3016,30 @@ final_advice() {
       ;;
   esac
 }
+
+cmd_install_self() {
+  local current_file="$1"
+  local target="${PREFIX}/bin/iiab-termux"
+  
+  if [[ -z "${PREFIX:-}" ]]; then
+    die "PREFIX is not defined. Are you running inside Termux?"
+  fi
+
+  # Get absolute path safely
+  local abs_current; abs_current="$(realpath "$current_file" 2>/dev/null || echo "$current_file")"
+
+  if [[ "$abs_current" == "$target" ]]; then
+    ok "Script is already installed at: $target"
+    return 0
+  fi
+
+  log "Installing script to: $target"
+  mkdir -p "${PREFIX}/bin" >/dev/null 2>&1 || true
+  cp -f "$abs_current" "$target" || die "Failed to copy script to $target"
+  chmod 700 "$target" || true
+  ok "Successfully installed! You can now run 'iiab-termux' from anywhere."
+}
+
 # -------------------------
 # Args
 # -------------------------
@@ -2889,6 +3101,8 @@ while [[ $# -gt 0 ]]; do
     --no-log) LOG_ENABLED=0; shift ;;
     --log-file) LOG_FILE="${2:-}"; shift 2 ;;
     --debug) DEBUG=1; shift ;;
+    --install-self) set_mode "install-self"; shift ;;
+    --welcome) set_mode "welcome"; shift ;;
     -h|--help) usage; exit 0 ;;
     --version)
       log "installed version: $(get_iiab_termux_version "$0")"
@@ -2927,8 +3141,12 @@ while [[ $# -gt 0 ]]; do
       PULL_USE_META4=0
       shift
       ;;
-    --autoclean)
-      PULL_AUTOCLEAN=1
+    --keep-tarball)
+      PULL_KEEP_TARBALL=1
+      shift
+      ;;
+    --arch-mismatch-ok)
+      PULL_ARCH_MISMATCH_OK=1
       shift
       ;;
     --*) die "Unknown option: $1. See --help." ;;
@@ -2989,6 +3207,13 @@ attempt_auto_apply_ppk() {
   fi
 }
 
+run_barebones_logic() {
+  power_mode_offer_battery_settings_once || true
+  repo_selector_ask_configure
+  step_termux_base || baseline_bail
+  boxyproxy_install_or_update || true
+}
+
 # -------------------------
 # Main flows
 # -------------------------
@@ -3002,29 +3227,43 @@ main() {
     update)
       update_iiab_termux "$0"
       ;;
+
+    install-self)
+      cmd_install_self "$0"
+      ;;
+
+    welcome)
+      welcome_interactive "Preview"
+      ;;
+
     login)
     iiab_login
       ;;
+
     backup-rootfs)
       cmd_backup_rootfs "$BACKUP_RESTORE_TARGET"
       ;;
+
     restore-rootfs)
       cmd_restore_rootfs "$BACKUP_RESTORE_TARGET"
       ;;
+
     pull-rootfs)
-      cmd_pull_rootfs "$BACKUP_RESTORE_TARGET" "$PULL_USE_META4" "$PULL_AUTOCLEAN"
+      cmd_pull_rootfs "$BACKUP_RESTORE_TARGET" "$PULL_USE_META4" "$PULL_KEEP_TARBALL" "$PULL_ARCH_MISMATCH_OK"
       ;;
     remove-iiab)
       cmd_remove_iiab
       ;;
+
     barebones)
-      power_mode_offer_battery_settings_once || true
-      repo_selector_ask_configure
-      step_termux_base || baseline_bail
-      boxyproxy_install_or_update || true
+      offer_welcome_once "Barebones"
+      check_preflight_requirements
+      run_barebones_logic
       self_check
       ;;
+
     baseline)
+      offer_welcome_once "Baseline"
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
@@ -3033,7 +3272,9 @@ main() {
       install_iiab_android_cmd || true
       self_check
       ;;
+
     with-adb)
+      offer_welcome_once "With ADB"
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
@@ -3067,13 +3308,14 @@ main() {
       ;;
 
     ppk-only)
-      # No baseline, no IIAB Debian. Requires adb already available + connected.
+      # No baseline. Only requires adb already available + connected.
       require_adb_connected || exit 1
       ppk_fix_via_adb || true
       self_check
       ;;
 
     iiab-android)
+      offer_welcome_once "IIAB Android"
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
@@ -3087,7 +3329,9 @@ main() {
       check_readiness || true
       self_check
       ;;
+
     all)
+      offer_welcome_once "All - Full Setup"
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
@@ -3120,25 +3364,30 @@ main() {
       fi
       self_check
       ;;
+
     proxy-start)
       termux_prepare_boxyproxy_deps || baseline_bail
       boxyproxy_start
       ;;
+
     proxy-stop)
       boxyproxy_stop
       ;;
+
     proxy-status)
       boxyproxy_status
       ;;
+
     *)
       die "Unknown MODE='$MODE'"
       ;;
   esac
 
-  ok "iiab-termux completed (mode=$MODE)."
-  log "Please check the complete mode list using:"
-  log "iiab-termux --help"
-  log "-------------------"
+  blank
+  ok "Setup tasks for mode '${MODE}' completed."
+  printf "${BLU}[iiab]${RST} You can see the iiab-termux mode list with:\n"
+  printf "  ${BOLD}iiab-termux --help${RST}\n"
+
   # Do not print generic "next steps" for certain modes.
   case "$MODE" in
     # Backup and system utilities
@@ -3148,7 +3397,7 @@ main() {
     proxy-start | proxy-stop | proxy-status)
       : ;;
     # Single commands with no final advice
-    login | update)
+    login | update | install-self | welcome)
       : ;;
     *) final_advice ;;
   esac

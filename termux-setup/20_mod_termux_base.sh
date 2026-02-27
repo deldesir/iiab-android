@@ -86,7 +86,7 @@ python_ensure_zeroconf() {
   fi
   [[ "${ADB_MDNS_PIP_INSTALL:-1}" -eq 1 ]] || { PY_ZEROCONF_OK=0; return 1; }
 
-  warn "Python module 'zeroconf' not found. Trying to install it: python -m pip install --upgrade zeroconf"
+  log_yel "Python module 'zeroconf' not found. Installing it..."
   if python_pip_install_zeroconf && python_has_zeroconf; then
     ok "Installed Python module 'zeroconf' (mDNS autodetect enabled)."
     PY_ZEROCONF_OK=1
@@ -120,7 +120,7 @@ termux_prepare_boxyproxy_deps() {
   have python || have python3 || return 0
   python_has_aiohttp && return 0
 
-  warn "Python module 'aiohttp' not found. Trying pip install..."
+  log_yel "Python module 'aiohttp' not found. Installing it ..."
   python_pip_install_aiohttp >/dev/null 2>&1 || true
   python_has_aiohttp && { ok "Installed 'aiohttp' via pip."; return 0; }
 
@@ -136,7 +136,6 @@ termux_prepare_mdns_deps() {
 
   # If we stamped success before and it's still present, do nothing.
   if [[ -f "$TERMUX_ZEROCONF_STAMP" ]] && python_has_zeroconf; then
-    ok "mDNS autodetect dependency already present (python: zeroconf)."
     return 0
   fi
   # If stamp exists but module disappeared, drop stamp and retry.
@@ -273,33 +272,11 @@ power_mode_battery_instructions() {
   local fd=1
   if { : >&3; } 2>/dev/null; then fd=3; fi
   {
-    # Print header in yellow. + bold
-    printf '%b' "${YEL}${BOLD}"
-    cat <<'EOF'
-[iiab] Power-mode needs one manual Android setting:
-EOF
-
-    # Print body in blue
-    printf '%b' "${RST}"
-    printf '%b' "${BOLD}"
-    cat <<'EOF'
-
-Some devices let Termux set "Battery usage" correctly by default, but not all do; please double-check:
-
- Settings -> Apps -> Termux -> Battery
-   - Set: Unrestricted
-     - or: Don't optimize / No restrictions
-   - Allow background activity = ON (if present)
-
- If you can't find Battery under App info, use Android's Battery optimization list and set Termux to "Don't optimize".
-
-> Note: Power-mode (wakelock + notification) helps keep the session alive, but it cannot override Android's battery restrictions.
-
-EOF
-
-    # Reset colors
-    printf '%b' "${RST}"
-  } >&"$fd"
+    printf '%b' "\n${YEL}${BOLD}[iiab] CRITICAL: Android Battery Restrictions${RST}\n"
+    printf '%b' "To prevent Android from killing the installation, apply:\n"
+    printf '%b' "  ${BLU}1.${RST} Battery -> ${BOLD}Unrestricted${RST} (or 'Don't optimize')\n"
+    printf '%b' "  ${BLU}2.${RST} Allow background activity -> ${BOLD}ON${RST}\n\n"
+   } >&"$fd"
 }
 
 power_mode_offer_battery_settings_once() {
@@ -311,28 +288,29 @@ power_mode_offer_battery_settings_once() {
 
   power_mode_battery_instructions
 
-  if tty_yesno_default_y "${YEL}[iiab] Open Termux App info to adjust Battery policy? [Y/n]: ${RST}"; then
-    if android_open_termux_app_info; then
-      local outfd
-      outfd="$(console_outfd)"
-      printf "[iiab] When done, return to Termux and press Enter to continue... " >&"$outfd"
-      if [[ -r /dev/tty ]]; then
-        read -r _ </dev/tty || true
-      else
-        local outfd
-        outfd="$(console_outfd)"
-        printf "\n" >&"$outfd"
-      fi
-      date > "$stamp" 2>/dev/null || true
+  local outfd; outfd="$(console_outfd)"
+  # Contador regresivo en la misma línea
+  if [[ -r /dev/tty ]]; then
+    for i in {5..1}; do
+      printf "\r${YEL}[iiab] Opening Battery Settings in %d seconds...${RST}" "$i" >&"$outfd"
+      sleep 1
+    done
+    printf "\r                                                              \r" >&"$outfd"
+  fi
+
+  if android_open_termux_app_info; then
+    printf "${YEL}[iiab] Adjust the settings. When done, return here.${RST}\n" >&"$outfd"
+    if [[ -r /dev/tty ]]; then
+      # -n 1 captura un solo caracter, -s lo hace silencioso
+      read -n 1 -s -r -p "Press any key to continue... " </dev/tty || true
+      printf "\n" >&"$outfd"
     else
-      warn "Unable to open Settings automatically. Open manually: Settings -> Apps -> Termux."
-      warn "Fallback: you may try opening the Battery optimization list from Android settings."
-      # Best-effort fallback (ignore errors)
-      android_open_battery_optimization_list || true
-      # Do not stamp here: user likely still needs to configure it.
+      printf "\n" >&"$outfd"
     fi
+    date > "$stamp" 2>/dev/null || true
   else
-    warn "Battery settings step skipped by user; you'll be asked again next time."
+    warn "Unable to open Settings automatically. Open manually: Settings -> Apps -> Termux."
+    android_open_battery_optimization_list || true
   fi
   return 0
 }

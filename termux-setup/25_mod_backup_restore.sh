@@ -50,9 +50,7 @@ cmd_restore_rootfs() {
   log "Restoring IIAB Debian from: $backup_file"
 
   if iiab_exists; then
-    log_yel "IIAB Debian already exists. Restoration will overwrite the current system."
-    # Seems natural that we move forward once the download finish, we keep this for now.
-    #tty_yesno_default_y "[iiab] Do you want to continue and overwrite IIAB Debian? [Y/n]: " || die "Restoration aborted by user."
+    log_yel "Restoration will overwrite the current system."
   fi
 
   if proot-distro restore "$backup_file"; then
@@ -64,12 +62,57 @@ cmd_restore_rootfs() {
   fi
 }
 
+check_url_architecture() {
+  local url="$1" dev_arch="$2" allow_mismatch="$3"
+  local url_lower; url_lower="$(printf '%s' "$url" | tr '[:upper:]' '[:lower:]')"
+
+  local count=0 detected=""
+
+  # Identification by keywords
+  if [[ "$url_lower" == *arm64* || "$url_lower" == *aarch64* || "$url_lower" == *v8a* ]]; then
+    detected="arm64-v8a"; count=$((count + 1))
+  fi
+  if [[ "$url_lower" == *armv7* || "$url_lower" == *v7a* || "$url_lower" == *armeabi* ]]; then
+    detected="armeabi-v7a"; count=$((count + 1))
+  fi
+  if [[ "$url_lower" == *x86_64* || "$url_lower" == *amd64* ]]; then
+    detected="x86_64"; count=$((count + 1))
+  elif [[ "$url_lower" == *x86* || "$url_lower" == *i686* || "$url_lower" == *i386* ]]; then
+    detected="x86"; count=$((count + 1)) # Excluded if x86_64 matched
+  fi
+
+  # Case B: None or a contradictory mixture
+  if (( count == 0 )); then
+    log_yel "Image architecture not clearly defined in URL, continuing..."
+    return 0
+  elif (( count > 1 )); then
+    log_yel "Image URL contains mixed/ambiguous architecture flags, continuing..."
+    return 0
+  fi
+
+  # Case A: Exact match (Silent to avoid screen clutter)
+  [[ "$detected" == "$dev_arch" ]] && return 0
+
+  # Case C: Clear mismatch
+  if [[ "$allow_mismatch" -eq 1 ]]; then
+    log_yel "Arch mismatch ($detected vs $dev_arch) ignored via --arch-mismatch-ok."
+    return 0
+  else
+    warn_red "The URL indicates an architecture ($detected) that doesn't match your device ($dev_arch)."
+    die "To proceed anyway, run again with: --arch-mismatch-ok"
+  fi
+}
+
 cmd_pull_rootfs() {
   local target_url="${1:-}"
   local use_meta4="${2:-1}"  # 1 = yes, 0 = no (--no-meta4)
-  local autoclean="${3:-0}"  # 1 = yes, 0 = no (--autoclean)
+  local keep_tarball="${3:-0}" # 1 = keep, 0 = delete (default)
+  local arch_mismatch_ok="${4:-0}" 
 
   [[ -z "$target_url" ]] && die "You must provide a URL to download the rootfs."
+
+  # Arch checkup
+  check_url_architecture "$target_url" "$(get_android_arch)" "$arch_mismatch_ok"
 
   # Ensure aria2c and curl are available
   have aria2c || { log "Installing aria2c..."; termux_apt update || true; termux_apt install aria2c || die "Failed to install aria2c."; }
@@ -85,9 +128,7 @@ cmd_pull_rootfs() {
     if [[ "$target_url" == *.meta4 ]]; then
       log "URL directly provides a .meta4 file."
     else
-      log "Checking for Metalink (.meta4) availability on the server..."
       if curl -Isf "${target_url}.meta4" > /dev/null 2>&1; then
-        ok "Found .meta4 file. Distributed download will be prioritized."
         download_url="${target_url}.meta4"
       else
         log_yel "No .meta4 file found. Falling back to direct download."
@@ -106,7 +147,6 @@ cmd_pull_rootfs() {
 
   # UX trick: "Preheat" DHT before execution.
   if [[ ! -f "$dht_file" ]]; then
-    log "Define P2P network cache..."
     aria2c --enable-dht=true \
            --dht-file-path="$dht_file" \
            --stop=1 \
@@ -114,11 +154,36 @@ cmd_pull_rootfs() {
            >/dev/null 2>&1 || true
   fi
 
-  # Smart Toggle: verufy integrity only if available.
+  # Smart Toggle: verify integrity only if available.
   local check_int="false"
   if [[ -f "$out_path" ]]; then
     log "Local file detected. Verifying integrity via P2P/Metalink..."
     check_int="true"
+  fi
+
+  # 1. Check size before downloading
+  local size_url="$target_url"
+  # Ensure we probe the .tar.gz even if using a .meta4 URL
+  [[ "$size_url" == *.meta4 ]] && size_url="${size_url%.meta4}"
+  local remote_bytes; remote_bytes=$(curl -sI "$size_url" | grep -i "^Content-Length" | awk '{print $2}' | tr -d '\r')
+  # Get free space in MB (Using block size 1024 for compatibility)
+  local free_mb; free_mb=$(df -k "$PREFIX" | awk 'END{print $4 / 1024}' | cut -d. -f1)
+
+  if [[ -n "$remote_bytes" ]]; then
+     local req_space=$(( remote_bytes * 25 / 10 / 1048576 )) # 2.5x in MB [cite: 128]
+     # Floor fallback: ensure at least 5GB for pull-rootfs
+     [[ "$req_space" -lt 5120 ]] && req_space=5120
+     log "Image size: $((remote_bytes / 1048576))MB. Safety threshold: ${req_space}MB."
+
+     if [[ "$free_mb" -lt "$req_space" ]]; then
+        die "Insufficient space! You need ${req_space}MB, but only ${free_mb}MB are free."
+     fi
+  else
+     # Fallback if server doesn't report size
+     log_yel "Could not determine remote size. Applying 5GB safety floor."
+     if [[ "$free_mb" -lt 5120 ]]; then
+        die "Risk of saturation! At least 5GB free required when size is unknown."
+     fi
   fi
 
   log "Downloading rootfs..."
@@ -169,28 +234,20 @@ cmd_pull_rootfs() {
   cmd_restore_rootfs "$out_path"
 
   # --- POST-RESTORE CLEANUP ---
-  if [[ "$autoclean" -eq 1 ]]; then
-    log "Cleaning up downloaded file to save space (--autoclean active)..."
-    rm -f "$out_path" >/dev/null 2>&1 || true
+  if [[ "$keep_tarball" -eq 1 ]]; then
+    ok "Flag '--keep-tarball' active. Keeping rootfs archive at: $out_path"
   else
-    # Get the disk amount used and ask about final cleaning
-    local count=0 total_bytes=0
-    for f in "$dest_dir"/*.tar.gz; do
-      [[ -f "$f" ]] || continue
-      count=$((count + 1))
-      total_bytes=$((total_bytes + $(stat -c %s "$f" 2>/dev/null || echo 0)))
-    done
+    # 1. Gather stats before deletion
+    local count; count=$(ls -1 "$dest_dir"/*.tar.gz 2>/dev/null | wc -l)
+    local folder_size; folder_size=$(du -sh "$dest_dir" 2>/dev/null | awk '{print $1}')
 
-    if (( count > 0 )); then
-      local size_gb
-      size_gb="$(awk "BEGIN {printf \"%.2f\", $total_bytes / 1073741824}")"
-      log_yel "You have $count image file(s) in .iiab-android/downloads, using ${size_gb}GB."
-      if tty_yesno_default_n "[iiab] Do you want to free up this space and delete them? [y/N]: "; then
-        rm -f "$dest_dir"/*.tar.gz >/dev/null 2>&1 || true
-        ok "Downloaded images deleted."
-      else
-        log "Keeping existing images."
-      fi
+    if rm -f "$dest_dir"/*.tar.gz >/dev/null 2>&1; then
+      local final_free; final_free=$(df -h "$PREFIX" | awk 'END{print $4}')
+      ok "Space freed: $folder_size out of $count tarball(s)."
+      log "Remaining free space: $final_free"
+      log "Tip: Use '--keep-tarball' next time to preserve the downloaded images."
+    else
+      warn "Cleanup failed. Please check permissions in $dest_dir"
     fi
   fi
 }
