@@ -34,7 +34,8 @@ BOXYPROXY_MANAGED=0
 
 # Set backup / restore vars
 PULL_USE_META4=1
-PULL_AUTOCLEAN=0
+PULL_KEEP_TARBALL=0
+PULL_ARCH_MISMATCH_OK=0
 BACKUP_RESTORE_TARGET=""
 
 trap 'if [[ "${BOXYPROXY_MANAGED:-0}" -eq 1 ]]; then boxyproxy_stop >/dev/null 2>&1 || true; fi; power_mode_login_exit >/dev/null 2>&1 || true; adb_hint_notif_remove >/dev/null 2>&1 || true; cleanup_notif >/dev/null 2>&1 || true; release_wakelock >/dev/null 2>&1 || true' EXIT INT TERM
@@ -77,35 +78,54 @@ guard_no_iiab_termux_in_proot
 # Self-check
 # -------------------------
 self_check() {
-  log "Self-check summary:"
-  log " Android release=${ANDROID_REL:-?} sdk=${ANDROID_SDK:-?}"
+  local wlan_ip
+  wlan_ip="$(adb_local_ipv4s_csv 2>/dev/null)"
+  [[ -z "$wlan_ip" ]] && wlan_ip="Disconnected"
 
+  log "Self-check summary:"
+  log " iiab-termux version: $(get_iiab_termux_version "$0")"
+  log " Android system details:"
+  echo "        - Release: ${ANDROID_REL:-?}"
+  echo "        - SDK:     ${ANDROID_SDK:-?}"
+  echo "        - Arch:    $(get_android_arch)"
+  log " Wireless IP:  ${wlan_ip}"
   if have proot-distro; then
     log " proot-distro: present"
-    log " proot-distro list:"
-    proot-distro list 2>/dev/null | indent || true
-    if iiab_exists; then ok " IIAB Debian: present"; else warn " IIAB Debian: not present"; fi
+    if iiab_exists; then log " IIAB Debian: present"; else log_yel " IIAB Debian: not present"; fi
   else
     warn " proot-distro: not present"
   fi
 
   if have adb; then
-    log " adb: present"
-    adb devices -l 2>/dev/null | indent || true
-    local serial
-#    re-enable in need for verbose output.
-#    if serial="$(adb_pick_loopback_serial 2>/dev/null)"; then
-#      log " adb shell id (first device):"
-#      adb -s "$serial" shell id 2>/dev/null | indent || true
-#    fi
+    log " android-tools: present"
+    if adb_pick_loopback_serial >/dev/null 2>&1; then
+      adb devices -l 2>/dev/null | indent || true
+      #re-enable in need for verbose output.
+      #run_if_adb_connected log " adb shell id (first device):"
+      #run_if_adb_connected adb -s "$serial" shell id 2>/dev/null | indent || true
+    fi
   else
-    warn " adb: not present"
+    warn " android-tools: not present"
   fi
-  # Quick Android flags check (best-effort; no prompts)
-  self_check_android_flags || true
 
-  if have termux-wake-lock; then ok " Termux:API wakelock: available"; else warn " Termux:API wakelock: not available"; fi
-  if have termux-notification; then ok " Termux:API notifications: command present"; else warn " Termux:API notifications: missing"; fi
+# Network & Proxy tools
+  if python_has_zeroconf >/dev/null 2>&1; then
+    log " mDNS/Zeroconf: present"
+  else
+    warn " mDNS/Zeroconf: not present"
+  fi
+
+  if boxyproxy_is_installed >/dev/null 2>&1; then
+    log " Boxyproxy: present"
+  else
+    warn " Boxyproxy: not present"
+  fi
+
+  # Quick Android flags check
+  run_if_adb_connected self_check_android_flags || true
+
+  if have termux-wake-lock; then log " Termux:API wakelock: available"; else log_yel " Termux:API wakelock: not available"; fi
+  if have termux-notification; then log " Termux:API notifications: command present"; else log_yel " Termux:API notifications: missing"; fi
 }
 
 baseline_bail() {
@@ -227,6 +247,30 @@ final_advice() {
       ;;
   esac
 }
+
+cmd_install_self() {
+  local current_file="$1"
+  local target="${PREFIX}/bin/iiab-termux"
+  
+  if [[ -z "${PREFIX:-}" ]]; then
+    die "PREFIX is not defined. Are you running inside Termux?"
+  fi
+
+  # Get absolute path safely
+  local abs_current; abs_current="$(realpath "$current_file" 2>/dev/null || echo "$current_file")"
+
+  if [[ "$abs_current" == "$target" ]]; then
+    ok "Script is already installed at: $target"
+    return 0
+  fi
+
+  log "Installing script to: $target"
+  mkdir -p "${PREFIX}/bin" >/dev/null 2>&1 || true
+  cp -f "$abs_current" "$target" || die "Failed to copy script to $target"
+  chmod 700 "$target" || true
+  ok "Successfully installed! You can now run 'iiab-termux' from anywhere."
+}
+
 # -------------------------
 # Args
 # -------------------------
@@ -288,6 +332,8 @@ while [[ $# -gt 0 ]]; do
     --no-log) LOG_ENABLED=0; shift ;;
     --log-file) LOG_FILE="${2:-}"; shift 2 ;;
     --debug) DEBUG=1; shift ;;
+    --install-self) set_mode "install-self"; shift ;;
+    --welcome) set_mode "welcome"; shift ;;
     -h|--help) usage; exit 0 ;;
     --version)
       log "installed version: $(get_iiab_termux_version "$0")"
@@ -326,8 +372,12 @@ while [[ $# -gt 0 ]]; do
       PULL_USE_META4=0
       shift
       ;;
-    --autoclean)
-      PULL_AUTOCLEAN=1
+    --keep-tarball)
+      PULL_KEEP_TARBALL=1
+      shift
+      ;;
+    --arch-mismatch-ok)
+      PULL_ARCH_MISMATCH_OK=1
       shift
       ;;
     --*) die "Unknown option: $1. See --help." ;;
@@ -388,6 +438,13 @@ attempt_auto_apply_ppk() {
   fi
 }
 
+run_barebones_logic() {
+  power_mode_offer_battery_settings_once || true
+  repo_selector_ask_configure
+  step_termux_base || baseline_bail
+  boxyproxy_install_or_update || true
+}
+
 # -------------------------
 # Main flows
 # -------------------------
@@ -401,29 +458,43 @@ main() {
     update)
       update_iiab_termux "$0"
       ;;
+
+    install-self)
+      cmd_install_self "$0"
+      ;;
+
+    welcome)
+      welcome_interactive "Preview"
+      ;;
+
     login)
     iiab_login
       ;;
+
     backup-rootfs)
       cmd_backup_rootfs "$BACKUP_RESTORE_TARGET"
       ;;
+
     restore-rootfs)
       cmd_restore_rootfs "$BACKUP_RESTORE_TARGET"
       ;;
+
     pull-rootfs)
-      cmd_pull_rootfs "$BACKUP_RESTORE_TARGET" "$PULL_USE_META4" "$PULL_AUTOCLEAN"
+      cmd_pull_rootfs "$BACKUP_RESTORE_TARGET" "$PULL_USE_META4" "$PULL_KEEP_TARBALL" "$PULL_ARCH_MISMATCH_OK"
       ;;
     remove-iiab)
       cmd_remove_iiab
       ;;
+
     barebones)
-      power_mode_offer_battery_settings_once || true
-      repo_selector_ask_configure
-      step_termux_base || baseline_bail
-      boxyproxy_install_or_update || true
+      offer_welcome_once "Barebones"
+      check_preflight_requirements
+      run_barebones_logic
       self_check
       ;;
+
     baseline)
+      offer_welcome_once "Baseline"
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
@@ -432,7 +503,9 @@ main() {
       install_iiab_android_cmd || true
       self_check
       ;;
+
     with-adb)
+      offer_welcome_once "With ADB"
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
@@ -466,13 +539,14 @@ main() {
       ;;
 
     ppk-only)
-      # No baseline, no IIAB Debian. Requires adb already available + connected.
+      # No baseline. Only requires adb already available + connected.
       require_adb_connected || exit 1
       ppk_fix_via_adb || true
       self_check
       ;;
 
     iiab-android)
+      offer_welcome_once "IIAB Android"
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
@@ -486,7 +560,9 @@ main() {
       check_readiness || true
       self_check
       ;;
+
     all)
+      offer_welcome_once "All - Full Setup"
       power_mode_offer_battery_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
@@ -519,25 +595,30 @@ main() {
       fi
       self_check
       ;;
+
     proxy-start)
       termux_prepare_boxyproxy_deps || baseline_bail
       boxyproxy_start
       ;;
+
     proxy-stop)
       boxyproxy_stop
       ;;
+
     proxy-status)
       boxyproxy_status
       ;;
+
     *)
       die "Unknown MODE='$MODE'"
       ;;
   esac
 
-  ok "iiab-termux completed (mode=$MODE)."
-  log "Please check the complete mode list using:"
-  log "iiab-termux --help"
-  log "-------------------"
+  blank
+  ok "Setup tasks for mode '${MODE}' completed."
+  printf "${BLU}[iiab]${RST} You can see the iiab-termux mode list with:\n"
+  printf "  ${BOLD}iiab-termux --help${RST}\n"
+
   # Do not print generic "next steps" for certain modes.
   case "$MODE" in
     # Backup and system utilities
@@ -547,7 +628,7 @@ main() {
     proxy-start | proxy-stop | proxy-status)
       : ;;
     # Single commands with no final advice
-    login | update)
+    login | update | install-self | welcome)
       : ;;
     *) final_advice ;;
   esac

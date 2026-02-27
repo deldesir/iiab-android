@@ -479,3 +479,10 @@ adb_loopback_serial_or_die() {
   s="$(adb_pick_loopback_serial 2>/dev/null)" || return 1
   echo "$s"
 }
+
+run_if_adb_connected() {
+  # run input command only if adb_pick_loopback_serial is connected 
+  if adb_pick_loopback_serial >/dev/null 2>&1; then
+    "$@"
+  fi
+}

@@ -190,9 +190,13 @@ check_readiness() {
     CHECK_NO_ADB=1
     # Best-effort: keep local SDK so final_advice can still warn on A12-13.
     CHECK_SDK="${ANDROID_SDK:-}"
-    warn_red "No ADB device connected. Cannot run checks."
-    warn "If already paired before: run --connect-only [PORT]."
-    warn "Otherwise: run --adb-only to pair+connect."
+    if [[ "${ANDROID_SDK:-}" =~ ^[0-9]+$ ]] && (( ANDROID_SDK >= 31 && ANDROID_SDK <= 33 )); then
+      warn_red "No ADB device connected. Cannot run checks."
+      warn "If already paired before: run --connect-only [PORT]."
+      warn "Otherwise: run --adb-only to pair+connect."
+    else
+      log "ADB not connected. Skipping ADB checks."
+    fi
     return 1
   fi
 
@@ -286,7 +290,9 @@ self_check_android_flags() {
 
   sdk="$(adb -s "$serial" shell getprop ro.build.version.sdk 2>/dev/null | tr -d '\r' || true)"
   rel="$(adb -s "$serial" shell getprop ro.build.version.release 2>/dev/null | tr -d '\r' || true)"
-  log " Android flags (quick): release=${rel:-?} sdk=${sdk:-?} serial=$serial"
+  if [[ "${sdk:-}" =~ ^[0-9]+$ ]] && (( sdk >= 31 && sdk <= 33 )); then
+    log " Android flags (quick): release=${rel:-?} sdk=${sdk:-?} serial=$serial"
+  fi
 
   if [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 34 )); then
     mon="$(adb_get_monitor_phantom_procs "$serial")"
