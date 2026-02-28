@@ -219,14 +219,14 @@ iiab-termux --login
 
 You will then be in a IIAB Debian shell with access to the IIAB CLI (command-line interface) tools.
 
-## What about 32bits?
+## What about 32-bit?
 
-IIAB on Andriod can run on phones with 32bit processor. Currently there are some restrictions as some apps like:
+IIAB on Android can run on phones with 32-bit processors. Currently there are some restrictions with some apps like:
 
 - Maps
 - Kiwix
 
-Which are not yet supported, [we are working on closing that gap](https://github.com/iiab/iiab-android/issues/30), please stay tuned for more updates on this architechture.
+These are not yet supported, [but we are working on closing that gap](https://github.com/iiab/iiab-android/issues/30); please stay tuned for more updates on this architecture.
 
 
 ## Removal
