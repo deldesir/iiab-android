@@ -468,7 +468,7 @@ main() {
       ;;
 
     login)
-    iiab_login
+      iiab_login
       ;;
 
     backup-rootfs)
@@ -558,6 +558,7 @@ main() {
     check)
       step_termux_base || baseline_bail
       check_readiness || true
+      check_preflight_requirements
       self_check
       ;;
 
