@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-02-27T10:29:15-06:00 - do not edit directly.
+# GENERATED FILE: 2026-03-02T01:20:27-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -316,7 +316,7 @@ check_preflight_requirements() {
 
   # 2. Disk Space Logic (Thresholds: 2.5GB and 5GB)
   local free_mb; free_mb=$(df -k "$PREFIX" | awk 'END{print $4 / 1024}' | cut -d. -f1)
-  local free_gb; free_gb=$(awk -v mb="$free_mb" 'BEGIN { printf "%.1f", mb / 1024 }')
+  local free_gb; free_gb=$(awk -v mb="$free_mb" 'BEGIN { printf "%.2f", mb / 1024 }')
   local disk_stat="${GRN}OK${RST}"
   if [[ "$free_mb" -lt 2500 ]]; then disk_stat="${RED}FAIL${RST}"; elif [[ "$free_mb" -lt 5000 ]]; then disk_stat="${YEL}WARN${RST}"; fi
   printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Free Space (${free_gb} GB)" "$disk_stat" >&"$outfd"
@@ -327,6 +327,24 @@ check_preflight_requirements() {
   local os_stat="${GRN}OK${RST}"
   [[ "$sdk" -ge 31 ]] && os_stat="${YEL}NOTE${RST}"
   printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Android OS (Rel $rel/SDK $sdk)" "$os_stat" >&"$outfd"
+
+  # 4. Network Latency Check (Inside Table)
+  local net_stat="${RED}FAIL${RST}"
+  local net_text="Network Latency (Offline)"
+  local start_t; start_t=$(date +%s%N 2>/dev/null || echo 0)
+  if curl -Isf --connect-timeout 5 google.com >/dev/null 2>&1; then
+    local end_t; end_t=$(date +%s%N 2>/dev/null || echo 0)
+    if [[ "$start_t" != "0" && "$end_t" != "0" ]]; then
+      local delta=$(( (end_t - start_t) / 1000000 ))
+      net_text="Network Latency (${delta}ms)"
+      if [[ "$delta" -le 50 ]]; then net_stat="${BOLD}${BLU}EXCEL${RST}"
+      elif [[ "$delta" -le 150 ]]; then net_stat="${GRN}GOOD${RST}"
+      elif [[ "$delta" -le 250 ]]; then net_stat="${YEL}FAIR${RST}"
+      else net_stat="${RED}SLOW${RST}"
+      fi
+    fi
+  fi
+  printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "$net_text" "$net_stat" >&"$outfd"
 
   printf "${BLU}[iiab] --------------------------------------${RST}\n" >&"$outfd"
 
@@ -354,15 +372,10 @@ check_preflight_requirements() {
     ok "No known process restrictions for Android $rel."
   fi
 
-  # 4. Network Latency Check
-  log "Testing network latency..."
-  local start_t; start_t=$(date +%s%N)
-  if curl -Isf --connect-timeout 5 google.com >/dev/null 2>&1; then
-    local end_t; end_t=$(date +%s%N)
-    local delta=$(( (end_t - start_t) / 1000000 ))
-    log "Network check: Latency ${delta}ms. (Speed estimation will be calculated during download)."
-  else
-    warn "Network unreachable or slow. Downloads may fail."
+  if [[ "$net_stat" == *FAIL* ]]; then
+    warn "Network unreachable or timeout. Downloads may fail."
+  elif [[ "$net_stat" == *SLOW* ]]; then
+    log_yel "Warning: High network latency detected. Downloads might be slow."
   fi
   
   ok "Pre-flight checks completed."
@@ -370,6 +383,9 @@ check_preflight_requirements() {
 
 welcome_interactive() {
   local mode_label="${1:-Installation}"
+  local prompt_text="Press [ENTER] to start system validation... "
+  [[ "$mode_label" == "Preview" ]] && prompt_text="Press [ENTER] to exit welcome message... "
+
   local outfd; outfd="$(console_outfd)"
   {
     clear
@@ -379,18 +395,24 @@ welcome_interactive() {
     printf "${BLU}====================================================${RST}\n"
     printf "\n${BOLD}Internet-in-a-Box (IIAB) on Android${RST} will allow\n"
     printf "millions of people worldwide to build their own \n"
-    printf "family libraries, inside their own phones!\n\n"
+    printf "family libraries, inside their own phones!\n"
+    blank
     printf "This script prepares your Android device as an\n"
-    printf "Offline Learning Environment (Internet-in-a-Box).\n\n"
-    printf " ${YEL}*${RST} Website: https://internet-in-a-box.org/\n"
-    printf " ${YEL}*${RST} Issues:  https://github.com/iiab/iiab-android\n"
-    printf "%s\n" "----------------------------------------------------"
-    printf " Tip: Keep the charger connected and ensure Termux\n"
+    printf "Offline Learning Environment (Internet-in-a-Box).\n"
+    blank
+    printf "Please follow the installation guide at:\n"
+    printf "${YEL}*${RST} ${BLU}https://github.com/iiab/iiab-android${RST}\n"
+    blank
+    printf "Other online resources:\n"
+    printf "${YEL}*${RST} 🔗: ${BOLD}https://internet-in-a-box.org${RST}\n"
+    printf "${YEL}*${RST} 🐛: ${BOLD}https://github.com/iiab/iiab-android/issues${RST}\n"
+    blank
+    printf " TIP: Keep the charger around and ensure Termux\n"
     printf " battery settings are set to 'Unrestricted'.\n"
     printf "${BLU}====================================================${RST}\n"
     
     if [[ -r /dev/tty ]]; then
-      printf "Press [ENTER] to start system validation... "
+      printf "%s" "$prompt_text"
     fi
   } >&"$outfd"
 
@@ -457,7 +479,7 @@ ${BOLD}Options:${RST}
   --connect-port [P]  Skip CONNECT PORT prompt
   --timeout [SECS]    Wait time per prompt (default 180)
   --no-meta4          Disable Metalink/P2P for --pull-rootfs
-  --autoclean         Delete archive after --pull-rootfs
+  --keep-tarball      Keep the downloaded archive after --pull-rootfs
   --reset-iiab        Reinstall IIAB Debian
   --install-self      Install the current script to Termux bin path
   --welcome           Show the welcome screen
@@ -3237,7 +3259,7 @@ main() {
       ;;
 
     login)
-    iiab_login
+      iiab_login
       ;;
 
     backup-rootfs)
@@ -3327,6 +3349,7 @@ main() {
     check)
       step_termux_base || baseline_bail
       check_readiness || true
+      check_preflight_requirements
       self_check
       ;;
 
