@@ -183,8 +183,8 @@ final_advice() {
       if [[ "${CHECK_PPK:-}" != "" && "${CHECK_PPK:-}" =~ ^[0-9]+$ ]]; then
         : # PPK determined -> ok to continue with normal advice below
       else
-        warn "Android 12-13: PPK value hasn't been verified (max_phantom_processes may be low, e.g. 32)."
-        warn "Before starting the IIAB install, run the complete setup so it can apply/check PPK=256; otherwise the installation may fail:"
+        warn "Android 12-13: PPK fix hasn't been verified (max_phantom_processes may be low, e.g. 32)."
+        warn "Before starting the IIAB install, run the complete setup so it can apply/check PPK fix; otherwise the installation may fail:"
         ok   "  iiab-termux --all"
         return 0
       fi
@@ -216,7 +216,7 @@ final_advice() {
   if [[ "${CHECK_NO_ADB:-0}" -eq 1 ]]; then
     # If we could not check, still warn on A12-13 because PPK is critical there
     if [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 31 && sdk <= 33 )); then
-      warn "A12-13: verify PPK=256 before installing IIAB."
+      warn "A12-13: verify PPK fix before installing IIAB."
     fi
   else
     # A14+ child restrictions proxy (only if readable)

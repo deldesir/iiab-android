@@ -191,9 +191,8 @@ check_readiness() {
     # Best-effort: keep local SDK so final_advice can still warn on A12-13.
     CHECK_SDK="${ANDROID_SDK:-}"
     if [[ "${ANDROID_SDK:-}" =~ ^[0-9]+$ ]] && (( ANDROID_SDK >= 31 && ANDROID_SDK <= 33 )); then
-      warn_red "No ADB device connected. Cannot run checks."
-      warn "If already paired before: run --connect-only [PORT]."
-      warn "Otherwise: run --adb-only to pair+connect."
+      warn_red "No ADB device connected. Cannot check for PPK fix."
+      warn "If already paired before: run --connect-only [PORT]. Otherwise: run --adb-only to pair+connect."
     else
       log "ADB not connected. Skipping ADB checks."
     fi
