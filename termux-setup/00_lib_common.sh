@@ -4,6 +4,7 @@
 RED="\033[31m"; YEL="\033[33m"; GRN="\033[32m"; BLU="\033[34m"; RST="\033[0m"; BOLD="\033[1m"
 
 log()       { printf "${BLU}[iiab]${RST} %s\n" "$*"; }
+log_red()   { printf "${RED}[iiab]${RST} %s\n" "$*"; }
 log_yel()   { printf "${YEL}[iiab]${RST} %s\n" "$*"; }
 ok()        { printf "${GRN}[iiab]${RST} %s\n" "$*"; }
 warn()      { printf "${YEL}[iiab] WARNING:${RST} %s\n" "$*" >&2; }
@@ -20,6 +21,11 @@ blank() {
   [[ "$n" =~ ^[0-9]+$ ]] || n=1
   if { : >&3; } 2>/dev/null; then fd=3; fi
   while (( n-- > 0 )); do printf '\n' >&"$fd"; done
+}
+
+clear_line() {
+  local outfd; outfd="$(console_outfd)"
+  printf "\r%-80s\r" " " >&"$outfd"
 }
 
 # Choose warning level depending on context.
@@ -182,6 +188,24 @@ tty_yesno_default_n() {
   return 1
 }
 
+countdown_timer() {
+  # $1 = Seconds (e.g., 5)
+  # $2 = Format string with %d (e.g., "\r${YEL}Waiting %d secs...${RST}")
+  local secs="${1:-5}"
+  local msg="$2"
+  local outfd; outfd="$(console_outfd)"
+
+  if [[ -r /dev/tty ]]; then
+    for (( i=secs; i>=1; i-- )); do
+      printf "$msg" "$i" >&"$outfd"
+      sleep 1
+    done
+    clear_line
+  else
+    sleep "$secs"
+  fi
+}
+
 iiab_login() {
   local stamp="$STATE_DIR/stamp.termux_base"
 
@@ -234,12 +258,12 @@ iiab_login() {
       if adb_pick_loopback_serial >/dev/null 2>&1; then
         check_readiness || true
       else
-        warn_red "Android 12-13: ADB is not connected, so PPK=256 cannot be verified/applied."
+        warn_red "Android 12-13: ADB is not connected, so PPK fix cannot be verified/applied."
         warn "Before running the IIAB installer inside proot, run:"
         ok   "  iiab-termux --all"
       fi
     else
-      warn_red "Android 12-13: adb is missing, so PPK=256 cannot be verified/applied."
+      warn_red "Android 12-13: adb is missing, so PPK fix cannot be verified/applied."
       warn "Install adb (android-tools) and run:"
       ok   "  iiab-termux --all"
     fi
@@ -310,14 +334,7 @@ check_preflight_requirements() {
   if [[ "$free_mb" -lt 2500 ]]; then disk_stat="${RED}FAIL${RST}"; elif [[ "$free_mb" -lt 5000 ]]; then disk_stat="${YEL}WARN${RST}"; fi
   printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Free Space (${free_gb} GB)" "$disk_stat" >&"$outfd"
 
-  # 3. Android Version Context
-  local sdk="${ANDROID_SDK:-0}"
-  local rel="${ANDROID_REL:-?}"
-  local os_stat="${GRN}OK${RST}"
-  [[ "$sdk" -ge 31 ]] && os_stat="${YEL}NOTE${RST}"
-  printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Android OS (Rel $rel/SDK $sdk)" "$os_stat" >&"$outfd"
-
-  # 4. Network Latency Check (Inside Table)
+  # 3. Network Latency Check (Inside Table)
   local net_stat="${RED}FAIL${RST}"
   local net_text="Network Latency (Offline)"
   local start_t; start_t=$(date +%s%N 2>/dev/null || echo 0)
@@ -335,6 +352,17 @@ check_preflight_requirements() {
   fi
   printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "$net_text" "$net_stat" >&"$outfd"
 
+  # 4. Developer Options Contextual Reminder
+  local sdk="${ANDROID_SDK:-0}"
+  local dev_stat="${YEL}NOTE${RST}"
+  if [[ "$sdk" -ge 34 ]]; then
+    printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Dev. Options (Child Process)" "$dev_stat" >&"$outfd"
+  elif [[ "$sdk" -ge 31 ]]; then
+    printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Dev. Options (Phantom Process)" "$dev_stat" >&"$outfd"
+   else
+    printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Dev. Options (Not Required)" "${GRN}N/A${RST}" >&"$outfd"
+  fi
+
   printf "${BLU}[iiab] --------------------------------------${RST}\n" >&"$outfd"
 
   # --- Checks and warnings (summary) ---
@@ -348,26 +376,26 @@ check_preflight_requirements() {
     warn "You may face limitations when adding additional content later."
     tty_yesno_default_n "[iiab] Do you want to continue with a tight installation? [y/N]: " || die "Aborted by user."
   else
-    ok "Sufficient disk space for installation (${free_gb} GB)."
+    ok "Sufficient disk space for installation (${free_gb} GB)"
     log "Note: Space for multimedia content depends on the specific modules you add later."
   fi
 
-  local sdk="${ANDROID_SDK:-0}"
+  if [[ "$net_stat" == *FAIL* ]]; then
+    warn_red "Network unreachable or timeout. Downloads may fail."
+  elif [[ "$net_stat" == *SLOW* ]]; then
+    warn "High network latency detected."
+  fi
+
   if [[ "$sdk" -ge 34 ]]; then
-    log_yel "Note: 'Child Process' restrictions might apply for Android $rel."
+    log_yel "Reminder: Developer Options must be enabled to toggle 'Disable child process restrictions'."
   elif [[ "$sdk" -ge 31 ]]; then
-    log_yel "Note: 'Phantom Processes' restrictions might apply for Android $rel."
+    log_yel "Reminder: Developer Options must be enabled to pair ADB and fix 'Phantom Process Killer'."
   elif [[ "$sdk" -gt 0 && "$sdk" -le 30 ]]; then
     ok "No known process restrictions for Android $rel."
   fi
 
-  if [[ "$net_stat" == *FAIL* ]]; then
-    warn "Network unreachable or timeout. Downloads may fail."
-  elif [[ "$net_stat" == *SLOW* ]]; then
-    log_yel "Warning: High network latency detected. Downloads might be slow."
-  fi
-  
   ok "Pre-flight checks completed."
+  countdown_timer 7 "\r${BLU}[iiab]${RST} Proceeding in %d seconds... "
 }
 
 welcome_interactive() {
@@ -378,10 +406,10 @@ welcome_interactive() {
   local outfd; outfd="$(console_outfd)"
   {
     clear
-    printf "${BLU}====================================================${RST}\n"
+    printf "${BLU}==================================================${RST}\n"
     printf " 🌐 WELCOME TO IIAB on Android 🌐\n"
     printf "     Starting mode: ${mode_label}\n"
-    printf "${BLU}====================================================${RST}\n"
+    printf "${BLU}==================================================${RST}\n"
     printf "\n${BOLD}Internet-in-a-Box (IIAB) on Android${RST} will allow\n"
     printf "millions of people worldwide to build their own \n"
     printf "family libraries, inside their own phones!\n"
@@ -390,7 +418,7 @@ welcome_interactive() {
     printf "Offline Learning Environment (Internet-in-a-Box).\n"
     blank
     printf "Please follow the installation guide at:\n"
-    printf "${YEL}*${RST} ${BLU}https://github.com/iiab/iiab-android${RST}\n"
+    printf "${YEL}*${RST} 📄: ${BLU}https://github.com/iiab/iiab-android${RST}\n"
     blank
     printf "Other online resources:\n"
     printf "${YEL}*${RST} 🔗: ${BOLD}https://internet-in-a-box.org${RST}\n"
@@ -398,7 +426,7 @@ welcome_interactive() {
     blank
     printf " TIP: Keep the charger around and ensure Termux\n"
     printf " battery settings are set to 'Unrestricted'.\n"
-    printf "${BLU}====================================================${RST}\n"
+    printf "${BLU}==================================================${RST}\n"
     
     if [[ -r /dev/tty ]]; then
       printf "%s" "$prompt_text"

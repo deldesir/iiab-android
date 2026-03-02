@@ -286,22 +286,14 @@ power_mode_offer_battery_settings_once() {
   local stamp="$POWER_MODE_BATTERY_STAMP"
   [[ -f "$stamp" ]] && return 0
 
-  power_mode_battery_instructions
-
   local outfd; outfd="$(console_outfd)"
-  # Contador regresivo en la misma línea
-  if [[ -r /dev/tty ]]; then
-    for i in {5..1}; do
-      printf "\r${YEL}[iiab] Opening Battery Settings in %d seconds...${RST}" "$i" >&"$outfd"
-      sleep 1
-    done
-    printf "\r                                                              \r" >&"$outfd"
-  fi
+  power_mode_battery_instructions
+  countdown_timer 5 "\r${YEL}[iiab] Opening Battery Settings in %d seconds...${RST}"
 
   if android_open_termux_app_info; then
     printf "${YEL}[iiab] Adjust the settings. When done, return here.${RST}\n" >&"$outfd"
     if [[ -r /dev/tty ]]; then
-      # -n 1 captura un solo caracter, -s lo hace silencioso
+      # -n 1 captures a single character, -s makes it silent
       read -n 1 -s -r -p "Press any key to continue... " </dev/tty || true
       printf "\n" >&"$outfd"
     else
