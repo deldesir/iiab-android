@@ -189,14 +189,6 @@ baseline_bail_details() {
 TERMUX_APT_OPTS=( "-y" "-o" "Dpkg::Options::=--force-confdef" "-o" "Dpkg::Options::=--force-confold" )
 termux_apt() { apt-get "${TERMUX_APT_OPTS[@]}" "$@"; }
 
-# -------------------------
-# Android info
-# -------------------------
-get_android_sdk()     { getprop ro.build.version.sdk 2>/dev/null || true; }
-get_android_release() { getprop ro.build.version.release 2>/dev/null || true; }
-ANDROID_SDK="$(get_android_sdk)"
-ANDROID_REL="$(get_android_release)"
-
 # Default: enable mDNS autodetect only on Android 11+ (SDK 30+).
 if [[ -z "${ADB_MDNS+x}" ]]; then
   if [[ "${ANDROID_SDK:-}" =~ ^[0-9]+$ ]] && (( ANDROID_SDK >= 30 )); then

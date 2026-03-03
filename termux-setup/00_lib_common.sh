@@ -62,6 +62,12 @@ TERMUX_PACKAGE="${TERMUX_PACKAGE:-com.termux}"
 # Version and Update logic
 IIAB_TERMUX_RAW_URL="${IIAB_TERMUX_RAW_URL:-https://raw.githubusercontent.com/iiab/iiab-android/main/iiab-termux}"
 
+# Android info
+get_android_sdk()     { getprop ro.build.version.sdk 2>/dev/null || true; }
+get_android_release() { getprop ro.build.version.release 2>/dev/null || true; }
+ANDROID_SDK="$(get_android_sdk)"
+ANDROID_REL="$(get_android_release)"
+
 get_iiab_termux_version() {
   local file="${1:-$0}"
   local raw_ts=""
@@ -354,6 +360,7 @@ check_preflight_requirements() {
 
   # 4. Developer Options Contextual Reminder
   local sdk="${ANDROID_SDK:-0}"
+  local rel="${ANDROID_REL:-0}"
   local dev_stat="${YEL}NOTE${RST}"
   if [[ "$sdk" -ge 34 ]]; then
     printf "${BLU}[iiab]${RST}  * %-30s [%b]\n" "Dev. Options (Child Process)" "$dev_stat" >&"$outfd"
