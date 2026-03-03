@@ -114,8 +114,8 @@ cmd_pull_rootfs() {
   # Arch checkup
   check_url_architecture "$target_url" "$(get_android_arch)" "$arch_mismatch_ok"
 
-  # Ensure aria2c and curl are available
-  have aria2c || { log "Installing aria2c..."; termux_apt update || true; termux_apt install aria2c || die "Failed to install aria2c."; }
+  # Ensure aria2 and curl are available
+  have aria2c || { log "Installing aria2..."; termux_apt update || true; termux_apt install aria2 || die "Failed to install aria2."; }
   have curl || { log "Installing curl..."; termux_apt install curl || die "Failed to install curl."; }
 
   local dest_dir="${STATE_DIR}/downloads"
@@ -221,11 +221,11 @@ cmd_pull_rootfs() {
     "$download_url"
   )
 
-  # Run aria2c bypassing the log to maintain the interactive bar
+  # Run aria2 bypassing the log to maintain the interactive bar
   if : >&3 2>/dev/null && : >&4 2>/dev/null; then
-    aria2c "${aria_args[@]}" >&3 2>&4 || die "aria2c download failed."
+    aria2c "${aria_args[@]}" >&3 2>&4 || die "aria2 download failed."
   else
-    aria2c "${aria_args[@]}" || die "aria2c download failed."
+    aria2c "${aria_args[@]}" || die "aria2 download failed."
   fi
 
   ok "Download finished: $out_path"
