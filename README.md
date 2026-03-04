@@ -63,36 +63,36 @@ Before installing, you need to set up your Android device. These initial steps a
 
 ### Part 2: Choose your installation path
 
-There are two main ways to install IIAB on Android. Choose the one that fits your needs:
+There are two main ways to install IIAB on Android. If you are unsure, we recommend the **Pre-built** method.
 
-#### Option A: Pre-built (Fast & Simple)
-*The quickest way to get IIAB running with a pre-configured system.*
+**Pre-built - Fast & simple**  
+This is the recommended path for most users. Instead of compiling the software on your phone, it downloads a ready-to-use, pre-configured IIAB system. It saves a lot of time, minimizes potential errors, and gets you up and running quickly.
+
+**DIY build - From scratch**  
+This is the foundational build path with no shortcuts. Your device will download and configure every component one by one. While it takes significantly longer and uses more battery than the pre-built option, it provides complete control for developers or those needing a deeply customized setup.
+
+---
+
+#### Option A: Pre-built
 
 1. Open Termux and run the following command to install the base tools:
 
-   ```bash
-   curl iiab.io/termux.txt | bash -s barebones
-   ```
+    ```bash
+    curl iiab.io/termux.txt | bash -s barebones
+    ```
 
-2. Download and extract the pre-built IIAB system. Choose the command that matches your device architecture:
+2. Download and extract the pre-built IIAB system:
 
-   **For modern 64-bit devices (Most common):**
+    **For most common modern devices (64-bit):**
 
-   ```bash
-   iiab-termux --pull-rootfs https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_arm64-v8a.tar.gz.meta4
-   ```
-
-   **For older 32-bit devices:**
-
-   ```bash
-   iiab-termux --pull-rootfs https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_armeabi-v7a.tar.gz.meta4
-   ```
+    ```bash
+    iiab-termux --pull-rootfs https://si-n.cc/latest_arm64-v8a.meta4
+    ```
 
 3. Once the process finishes successfully, your installation is complete! 
 4. **Please proceed directly to the [Test your IIAB install](#test-your-iiab-install) section below.**
 
-#### Option B: Custom Build (From scratch)
-*A fresh build from the ground up. It takes longer but allows for deeper customization.*
+#### Option B: DIY build
 
 1. Open Termux and prepare the full environment:
 
@@ -267,7 +267,17 @@ IIAB on Android can run on older phones with 32-bit processors. However, there a
 * Maps
 * Kiwix
 
-These are not yet supported, [but we are working on closing that gap](https://github.com/iiab/iiab-android/issues/30). Please stay tuned for more updates on this architecture!
+These are not yet supported, [but we are working on closing that gap](https://github.com/iiab/iiab-android/issues/35). Please stay tuned for more updates on this architecture!
+
+In the meantime, you can try the current state of our pre-built rootfs:
+
+**For older 32-bit devices:**
+
+```bash
+iiab-termux --pull-rootfs https://si-n.cc/latest_armeabi-v7a.meta4
+```
+
+Alternatively, you can follow the full build-from-scratch steps noted in the [Choose your installation path](#part-2-choose-your-installation-path) section above.
 
 ## Removal
 
@@ -279,7 +289,8 @@ If you want to remove the IIAB installation and all associated apps, follow thes
     iiab-termux --remove-rootfs
     ```
 
-    > **Note:** All content in your IIAB installation will be deleted when executing this command. Back up your library content first if you plan to reinstall later!
+    > **Note:** All content in your IIAB installation will be deleted when executing this command.  
+    Back up your library content first if you plan to reinstall later!
 
 2. Uninstall both Android apps, **Termux** and **Termux:API**, if you no longer need them.
 
