@@ -44,14 +44,14 @@ Before installing, you need to set up your Android device. These initial steps a
      * [**Termux:API**](https://f-droid.org/packages/com.termux.api)
      * *(Alternatively, you can just search for them directly inside the F-Droid app).*
 
-   > **Note:** You might see a *"This app was built for an older version of Android..."* label. Ignore this; it only affects auto-updates. Manual updates will continue to work.
+   > **Note:** You might see a *"This app was built for an older version of Android..."* label. Ignore this; it only affects auto-updates. Manual updates will continue to work. [You can learn more on the subject here.](https://github.com/termux/termux-packages/wiki/Termux-and-Android-10/3e8102ecd05c4954d67971ff2b508f32900265f7)
 
 2. **Configure Battery Settings (Important)**
    To run the installation or keep IIAB services alive in the background, you must allow Termux to run without battery restrictions. 
    * Go to your Android **Settings -> Apps -> Termux -> Battery**.
    * Set it to **Unrestricted**, **Don't optimize**, or **Allow background activity** (the exact label varies by vendor). If you leave this restricted, Android may kill the process when your screen turns off!
 
-   > **Note:** Because this policy is improtant for a successful setup, our installation script will assist you to double-check this for you later. Thank you for paying attention to the manual! 😉
+   > **Note:** Because this policy is important for a successful setup, our installation script will prompt you to verify this later. Thank you for paying attention to the manual! 😉
 
 3. **Enable Developer Options & Process Limits**
    * Go to **Settings > About phone** (or About tablet) and tap **Build number** seven times rapidly to enable Developer Options.
@@ -79,13 +79,13 @@ There are two main ways to install IIAB on Android. Choose the one that fits you
    **For modern 64-bit devices (Most common):**
 
    ```bash
-   iiab-termux --pull-rootfs https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_arm64-v8a.tar.gz.meta4
+   iiab-termux --pull-rootfs [https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_arm64-v8a.tar.gz.meta4](https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_arm64-v8a.tar.gz.meta4)
    ```
 
    **For older 32-bit devices:**
 
    ```bash
-   iiab-termux --pull-rootfs https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_armeabi-v7a.tar.gz.meta4
+   iiab-termux --pull-rootfs [https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_armeabi-v7a.tar.gz.meta4](https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_armeabi-v7a.tar.gz.meta4)
    ```
 
 3. Once the process finishes successfully, your installation is complete! 
@@ -106,7 +106,7 @@ There are two main ways to install IIAB on Android. Choose the one that fits you
     iiab-termux --login
     ```
 
-3. Run the installer script. This will set up `local_vars_android.yml` and launch the core IIAB installer:
+3. Run the installer script. This will set up [`local_vars_android.yml`](https://wiki.iiab.io/go/FAQ#What_is_local_vars.yml_and_how_do_I_customize_it?) and launch the core IIAB installer:
 
     ```bash
     iiab-android
@@ -122,7 +122,7 @@ There are two main ways to install IIAB on Android. Choose the one that fits you
 
 ### ⚠️ Special Notes for Android 12 & 13 users
 
-Android 12 and 13 introduced a strict system limitation called the "Phantom Process Killer" (PPK). If left unaddressed, it can aggressively kill background tasks or corrupt your installation midway through (especially during long downloads or heavy extractions).
+Android 12 and 13 introduced a strict system limitation called the ["Phantom Process Killer" (PPK)](https://github.com/agnostic-apollo/Android-Docs/blob/master/en/docs/apps/processes/phantom-cached-and-empty-processes.md). If left unaddressed, it can aggressively kill background tasks or corrupt your installation midway through (especially during long downloads or heavy extractions).
 
 To fix this safely, we use a built-in ADB workaround. Before choosing your installation path above, please do the following:
 
@@ -262,29 +262,28 @@ You will then be in a IIAB Debian shell with access to the IIAB CLI (command-lin
 
 ## What about 32-bit?
 
-IIAB on Android can run on phones with 32-bit processors. Currently there are some restrictions with some apps like:
+IIAB on Android can run on older phones with 32-bit processors. However, there are currently a few restrictions with certain apps:
 
-- Maps
-- Kiwix
+* Maps
+* Kiwix
 
-These are not yet supported, [but we are working on closing that gap](https://github.com/iiab/iiab-android/issues/30); please stay tuned for more updates on this architecture.
-
+These are not yet supported, [but we are working on closing that gap](https://github.com/iiab/iiab-android/issues/30). Please stay tuned for more updates on this architecture!
 
 ## Removal
 
 If you want to remove the IIAB installation and all associated apps, follow these steps:
 
-1. Remove the IIAB installation running in PRoot Distro:
+1. Remove the IIAB installation and data:
 
-   ```
-   proot-distro remove iiab
-   ```
+    ```bash
+    iiab-termux --remove-rootfs
+    ```
 
-   **Note:** All content in that IIAB installation will be deleted when executing this command. Back up your content first if you plan to reinstall later.
+    > **Note:** All content in your IIAB installation will be deleted when executing this command. Back up your library content first if you plan to reinstall later!
 
-2. Uninstall both apps, Termux and Termux-API, if you no longer need them.
+2. Uninstall both Android apps, **Termux** and **Termux:API**, if you no longer need them.
 
-3. Disable Developer Options.
+3. Disable Developer Options in your Android settings, especially if you only enabled it for this installation.
 
 ## Advanced Usage (`iiab-termux`)
 
