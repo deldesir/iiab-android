@@ -178,14 +178,14 @@ cmd_pull_rootfs() {
 
     if [[ "$size_url" == *.meta4 ]]; then
       # Magic trick: Follow the short URL redirect and grab the FINAL destination URL
-      local final_meta_url; final_meta_url=$(curl -sLI -o /dev/null -w "%{url_effective}" "$size_url")
+      local final_meta_url; final_meta_url=$(curl -sLI -o /dev/null -w "%{url_effective}" "$size_url" || true)
 
-      # Now safely strip .meta4 from the long resolved URL (e.g. iiab.switnet.org/.../file.tar.gz)
+      # Now safely strip .meta4 from the long resolved URL
       size_url="${final_meta_url%.meta4}"
     fi
 
-    # Follow redirects (-L) on the true tarball URL and grab the last Content-Length
-    remote_bytes=$(curl -sIL "$size_url" | grep -i "^Content-Length" | tail -n 1 | awk '{print $2}' | tr -d '\r')
+    # Follow redirects (-L) and safely parse with awk to survive 'set -e pipefail'
+    remote_bytes=$(curl -sIL "$size_url" | awk 'tolower($1) ~ /^content-length/ {print $2}' | tail -n 1 | tr -d '\r' || true)
   fi
 
   if [[ -n "$remote_bytes" ]]; then
