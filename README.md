@@ -32,65 +32,106 @@ http://localhost:8085/maps
 
 ## :clipboard: Installation guide
 
-1. Start with an Android 9-or-higher phone or tablet:
+Before installing, you need to set up your Android device. These initial steps apply to all users:
 
-   * Install **F-Droid**. It will be our main source for required apps and app updates. As a bonus, there is no need to open an account.
-     * [https://f-droid.org/F-Droid.apk](https://f-droid.org/F-Droid.apk)
-     * You will have to Allow installation from unknown sources (or Install unknown apps) from Chrome
+### Part 1: Prerequisites & Device Setup
 
-   * Update the **F-Droid repos**.
-     * Open the F-Droid app and click "Updates".
-   * Search for **Termux** and install:
-     * [**Termux**](https://f-droid.org/packages/com.termux) Terminal emulator with packages ([com.termux](https://f-droid.org/packages/com.termux))
-     * [**Termux:API**](https://f-droid.org/packages/com.termux.api) Access Android functions from Termux ([com.termux.api](https://f-droid.org/packages/com.termux.api))
-     * You will have to Allow installation from unknown sources (or Install unknown apps) from F-Droid
+1. **Install F-Droid & Termux**
+   * Download and install **F-Droid** ([https://f-droid.org/F-Droid.apk](https://f-droid.org/F-Droid.apk)). You will need to allow installation from unknown sources from your default web browser.
+   * Open F-Droid and wait a moment for the repositories to update automatically in the background.
+   * Install **Termux** and **Termux:API**. Most browsers will recognize these direct links after installing F-Droid: 
+     * [**Termux**](https://f-droid.org/packages/com.termux)
+     * [**Termux:API**](https://f-droid.org/packages/com.termux.api)
+     * *(Alternatively, you can just search for them directly inside the F-Droid app).*
 
-   **Note**: You might see a "*This app was built for an older version of Android and cannot be updated automatically*" label on both apps. You can ignore this as it only refers for the [*auto-update* feature](https://f-droid.org/en/2024/02/01/twif.html). Manual updates will continue to work. [Read more here](https://github.com/termux/termux-packages/wiki/Termux-and-Android-10/3e8102ecd05c4954d67971ff2b508f32900265f7).
+   > **Note:** You might see a *"This app was built for an older version of Android..."* label. Ignore this; it only affects auto-updates. Manual updates will continue to work.
 
-2. Enable **Developer Options** on Android:
+2. **Configure Battery Settings (Important)**
+   To run the installation or keep IIAB services alive in the background, you must allow Termux to run without battery restrictions. 
+   * Go to your Android **Settings -> Apps -> Termux -> Battery**.
+   * Set it to **Unrestricted**, **Don't optimize**, or **Allow background activity** (the exact label varies by vendor). If you leave this restricted, Android may kill the process when your screen turns off!
 
-   * In **Settings > About phone** (or **About tablet**, or **Software information**), find the **Build number** (or **Software version**), and tap it seven times rapidly!
+   > **Note:** Because this policy is improtant for a successful setup, our installation script will assist you to double-check this for you later. Thank you for paying attention to the manual! 😉
 
-3. Prepare the Termux environment. Android 12 and later versions have a feature called ["Phantom Process Killer" (PPK)](https://github.com/agnostic-apollo/Android-Docs/blob/master/en/docs/apps/processes/phantom-cached-and-empty-processes.md), which limits child processes. We need to disable this restriction to run IIAB successfully. In Android 12 and 13, you will disable PPK as part of the Termux environment set up as there is no UI option. For Android 14+, you can disable the restriction using Android Settings (see below). 
+3. **Enable Developer Options & Process Limits**
+   * Go to **Settings > About phone** (or About tablet) and tap **Build number** seven times rapidly to enable Developer Options.
+   * **For Android 14 and newer:** Go back to **Settings -> Developer Options** and turn on `Disable child process restrictions`. 
+   * **For Android 8 to 11:** No special process restrictions apply. You are good to go!
+   * **For Android 12 and 13:** *Please see the special section at the bottom of this guide regarding the "Phantom Process Killer" (PPK) before proceeding, as it might interrupt your installation.*
 
-   On all Android versions, run the following:
+---
 
-   ```
-   curl iiab.io/termux.txt | bash
-   ```
+### Part 2: Choose your installation path
 
-   * In Android 12 and 13, make sure to opt in to the ADB Pair/Connect steps when prompted. Enable **Wireless debugging**, and select **Pair device with pairing code**, you will be asked for the **Pair Code**. Please check this (WIP) [video tutorial](https://iiab.switnet.org/android/vids/A15_mDNS_hb.mp4) for a more interactive explanation. Once connected to ADB the `iiab-termux` script will handle the PPK workaround setup.
+There are two main ways to install IIAB on Android. Choose the one that fits your needs:
 
-   * On Android 14 and later, ADB pairing is optional (but recommended). Also, make sure to disable this restriction using Android Settings, in **Developer Options**:
+#### Option A: Pre-built (Fast & Simple)
+*The quickest way to get IIAB running with a pre-configured system.*
 
-     * `Disable child process restrictions`
+1. Open Termux and run the following command to install the base tools:
 
-   * **Battery usage**: To run the IIAB on Android installer, or keep IIAB services running in the background (screen off), you must allow Termux to run without battery restrictions. Depending on your device and Android version, this setting may appear as one of the following:
-
-     * Unrestricted
-     * Not optimized / Don't optimize
-     * Allow background activity/usage
-
-     The exact label varies by vendor and Android version. Make sure this is enabled for unattended, screen-off installs; otherwise Android may doze, pause, or even kill the process when screen turns off.
-
-     Leaving this enabled is the most reliable way to keep the app and services running and ready. Please note that battery drain will increase, so it's best to keep a charger nearby.
-
-
-5. Enter [PRoot Distro](https://wiki.termux.com/wiki/PRoot)'s IIAB Debian environment to continue the installation:
-
-   ```
-   iiab-termux --login
+   ```bash
+   curl iiab.io/termux.txt | bash -s barebones
    ```
 
-6. Run `iiab-android` which (a) installs `local_vars_android.yml` to [`/etc/iiab/local_vars.yml`](https://wiki.iiab.io/go/FAQ#What_is_local_vars.yml_and_how_do_I_customize_it?) and then (b) runs the IIAB installer:
+2. Download and extract the pre-built IIAB system. Choose the command that matches your device architecture:
 
+   **For modern 64-bit devices (Most common):**
+
+   ```bash
+   iiab-termux --pull-rootfs https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_arm64-v8a.tar.gz.meta4
    ```
-   iiab-android
+
+   **For older 32-bit devices:**
+
+   ```bash
+   iiab-termux --pull-rootfs https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_armeabi-v7a.tar.gz.meta4
    ```
 
-   If the installer completes successfully, you'll see a text box reading:
+3. Once the process finishes successfully, your installation is complete! 
+4. **Please proceed directly to the [Test your IIAB install](#test-your-iiab-install) section below.**
 
-   > INTERNET-IN-A-BOX (IIAB) SOFTWARE INSTALL IS COMPLETE
+#### Option B: Custom Build (From scratch)
+*A fresh build from the ground up. It takes longer but allows for deeper customization.*
+
+1. Open Termux and prepare the full environment:
+
+    ```bash
+    curl iiab.io/termux.txt | bash
+    ```
+
+2. Enter PRoot Distro's IIAB Debian environment:
+
+    ```bash
+    iiab-termux --login
+    ```
+
+3. Run the installer script. This will set up `local_vars_android.yml` and launch the core IIAB installer:
+
+    ```bash
+    iiab-android
+    ```
+
+    *Tip: As with any custom IIAB installation, if the installer fails or gets interrupted, you can always resume from where it left off by running `iiab -f`.*
+
+4. If the installer completes successfully, you'll see a text box reading:
+
+    > INTERNET-IN-A-BOX (IIAB) SOFTWARE INSTALL IS COMPLETE
+
+---
+
+### ⚠️ Special Notes for Android 12 & 13 users
+
+Android 12 and 13 introduced a strict system limitation called the "Phantom Process Killer" (PPK). If left unaddressed, it can aggressively kill background tasks or corrupt your installation midway through (especially during long downloads or heavy extractions).
+
+To fix this safely, we use a built-in ADB workaround. Before choosing your installation path above, please do the following:
+
+1. Run `iiab-termux --all` in Termux.
+2. Make sure to opt-in to the ADB Pair/Connect steps when prompted.
+3. In your Android **Developer Options**, enable **Wireless debugging**, select **Pair device with pairing code**, and enter the Pair Code back in Termux. 
+4. *Need help?* Check this [video tutorial](https://iiab.switnet.org/android/vids/A15_mDNS_hb.mp4) for a visual guide. Once connected to ADB, our script will handle the PPK workaround automatically so your installation runs smoothly!
+
+---
 
 ## Test your IIAB install
 
@@ -244,3 +285,53 @@ If you want to remove the IIAB installation and all associated apps, follow thes
 2. Uninstall both apps, Termux and Termux-API, if you no longer need them.
 
 3. Disable Developer Options.
+
+## Advanced Usage (`iiab-termux`)
+
+For power users, debugging, or specific system tuning, `iiab-termux` includes several built-in tools for backup, restore, ADB pairing, and some other neat features.
+
+> **Tip:** Don't forget to run `iiab-termux --update` occasionally to pull the latest version of the script. Keep an eye on our repo history to check for new features or changes.
+
+Below is the output of `iiab-termux --help`:
+
+```text
+Usage: iiab-termux [MODE] [OPTIONS]
+
+=== CORE & INSTALL ===
+  (no args)       Baseline + IIAB Debian bootstrap
+  --all           Full setup: baseline, Debian, ADB, PPK, & checks
+  --barebones     Minimal installation: Termux base + proxy (no rootfs)
+  --login         Login into IIAB Debian
+  --iiab-android  Install/update 'iiab-android' tool inside proot
+
+=== ADB & SYSTEM TUNING ===
+  --with-adb      Baseline + Debian + ADB wireless pair/connect
+  --adb-only      Only ADB pair/connect (skips Debian)
+  --connect-only  Connect to an already-paired device
+  --ppk-only      Set max_phantom_processes=256 via ADB
+  --check         Check Android readiness (Process restrictions, PPK)
+
+=== BACKUP & RESTORE ===
+  --backup-rootfs Backup IIAB Debian to .tar.gz
+  --restore-rootfs Restore IIAB Debian from local .tar.gz
+  --pull-rootfs   Download & restore rootfs from URL (P2P enabled)
+  --remove-rootfs Delete IIAB Debian rootfs and all data
+
+=== PROXY (BOXYPROXY) ===
+  --proxy-start   Start background proxy
+  --proxy-stop    Stop background proxy
+  --proxy-status  Show proxy status
+
+Options:
+  --connect-port [P]  Skip CONNECT PORT prompt
+  --timeout [SECS]    Wait time per prompt (default 180)
+  --no-meta4          Disable Metalink/P2P for --pull-rootfs
+  --keep-tarball      Keep the downloaded archive after --pull-rootfs
+  --reset-iiab        Reinstall IIAB Debian
+  --install-self      Install the current script to Termux bin path
+  --welcome           Show the welcome screen
+  --debug             Enable extra logs
+  --help, --version   Show this help or version
+
+Notes: Setup on Android 12 & 13 requires ADB due to OS design. 14+ simplifies this with system UI toggles
+```
