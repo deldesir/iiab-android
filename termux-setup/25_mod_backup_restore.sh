@@ -128,7 +128,7 @@ cmd_pull_rootfs() {
     if [[ "$target_url" == *.meta4 ]]; then
       log "URL directly provides a .meta4 file."
     else
-      if curl -Isf "${target_url}.meta4" > /dev/null 2>&1; then
+      if curl -IsLf "${target_url}.meta4" > /dev/null 2>&1; then
         download_url="${target_url}.meta4"
       else
         log_yel "No .meta4 file found. Falling back to direct download."
@@ -162,12 +162,31 @@ cmd_pull_rootfs() {
   fi
 
   # 1. Check size before downloading
-  local size_url="$target_url"
-  # Ensure we probe the .tar.gz even if using a .meta4 URL
-  [[ "$size_url" == *.meta4 ]] && size_url="${size_url%.meta4}"
-  local remote_bytes; remote_bytes=$(curl -sI "$size_url" | grep -i "^Content-Length" | awk '{print $2}' | tr -d '\r')
-  # Get free space in MB (Using block size 1024 for compatibility)
-  local free_mb; free_mb=$(df -k "$PREFIX" | awk 'END{print $4 / 1024}' | cut -d. -f1)
+  local remote_bytes=""
+
+  # Priority 1: Get exact size directly from the Metalink XML file
+  if [[ "$use_meta4" -eq 1 && "$download_url" == *.meta4 ]]; then
+    log "Fetching image size from Metalink file..."
+    # Downloads the XML, finds the <size> tag, extracts the number, and cleans any carriage returns
+    remote_bytes=$(curl -sL "$download_url" | awk -F'[<>]' '/<size>/ {print $3; exit}' | tr -d '\r ')
+  fi
+
+  # Priority 2: Fallback to HTTP headers (if meta4 parsing fails, or --no-meta4 is used)
+  if [[ -z "$remote_bytes" ]]; then
+    log "Checking image size via HTTP headers..."
+    local size_url="$download_url"
+
+    if [[ "$size_url" == *.meta4 ]]; then
+      # Magic trick: Follow the short URL redirect and grab the FINAL destination URL
+      local final_meta_url; final_meta_url=$(curl -sLI -o /dev/null -w "%{url_effective}" "$size_url")
+
+      # Now safely strip .meta4 from the long resolved URL (e.g. iiab.switnet.org/.../file.tar.gz)
+      size_url="${final_meta_url%.meta4}"
+    fi
+
+    # Follow redirects (-L) on the true tarball URL and grab the last Content-Length
+    remote_bytes=$(curl -sIL "$size_url" | grep -i "^Content-Length" | tail -n 1 | awk '{print $2}' | tr -d '\r')
+  fi
 
   if [[ -n "$remote_bytes" ]]; then
      local req_space=$(( remote_bytes * 25 / 10 / 1048576 )) # 2.5x in MB
