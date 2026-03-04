@@ -79,13 +79,13 @@ There are two main ways to install IIAB on Android. Choose the one that fits you
    **For modern 64-bit devices (Most common):**
 
    ```bash
-   iiab-termux --pull-rootfs [https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_arm64-v8a.tar.gz.meta4](https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_arm64-v8a.tar.gz.meta4)
+   iiab-termux --pull-rootfs https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_arm64-v8a.tar.gz.meta4
    ```
 
    **For older 32-bit devices:**
 
    ```bash
-   iiab-termux --pull-rootfs [https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_armeabi-v7a.tar.gz.meta4](https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_armeabi-v7a.tar.gz.meta4)
+   iiab-termux --pull-rootfs https://iiab.switnet.org/android/rootfs/iiab-android_rootfs_2026.057_5a24e44_armeabi-v7a.tar.gz.meta4
    ```
 
 3. Once the process finishes successfully, your installation is complete! 
