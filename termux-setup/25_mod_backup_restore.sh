@@ -170,19 +170,23 @@ cmd_pull_rootfs() {
   local free_mb; free_mb=$(df -k "$PREFIX" | awk 'END{print $4 / 1024}' | cut -d. -f1)
 
   if [[ -n "$remote_bytes" ]]; then
-     local req_space=$(( remote_bytes * 25 / 10 / 1048576 )) # 2.5x in MB [cite: 128]
+     local req_space=$(( remote_bytes * 25 / 10 / 1048576 )) # 2.5x in MB
      # Floor fallback: ensure at least 5GB for pull-rootfs
      [[ "$req_space" -lt 5120 ]] && req_space=5120
-     log "Image size: $((remote_bytes / 1048576))MB. Safety threshold: ${req_space}MB."
+     local img_gb; img_gb=$(awk -v bytes="$remote_bytes" 'BEGIN { printf "%.2f", bytes / 1073741824 }')
+     local req_gb; req_gb=$(awk -v mb="$req_space" 'BEGIN { printf "%.2f", mb / 1024 }')
+     local free_gb_disp; free_gb_disp=$(awk -v mb="$free_mb" 'BEGIN { printf "%.2f", mb / 1024 }')
+     log "Image size: ${img_gb} GB. Safety threshold: ${req_gb} GB."
 
      if [[ "$free_mb" -lt "$req_space" ]]; then
-        die "Insufficient space! You need ${req_space}MB, but only ${free_mb}MB are free."
+        die "Insufficient space! You need ${req_gb} GB, but only ${free_gb_disp} GB are free."
      fi
   else
      # Fallback if server doesn't report size
-     log_yel "Could not determine remote size. Applying 5GB safety floor."
+     log_yel "Could not determine remote size. Applying 5.00 GB safety floor."
      if [[ "$free_mb" -lt 5120 ]]; then
-        die "Risk of saturation! At least 5GB free required when size is unknown."
+        local free_gb_disp; free_gb_disp=$(awk -v mb="$free_mb" 'BEGIN { printf "%.2f", mb / 1024 }')
+        die "Risk of saturation! At least 5.00 GB free required when size is unknown (You have ${free_gb_disp} GB)."
      fi
   fi
 
@@ -239,8 +243,7 @@ cmd_pull_rootfs() {
   else
     # 1. Gather stats before deletion
     local count; count=$(ls -1 "$dest_dir"/*.tar.gz 2>/dev/null | wc -l)
-    local folder_size; folder_size=$(du -sh "$dest_dir" 2>/dev/null | awk '{print $1}')
-
+    local folder_size; folder_size=$(du -sm "$dest_dir" 2>/dev/null | awk '{printf "%.2f GB", $1 / 1024}')
     if rm -f "$dest_dir"/*.tar.gz >/dev/null 2>&1; then
       local final_free; final_free=$(df -h "$PREFIX" | awk 'END{print $4}')
       ok "Space freed: $folder_size out of $count tarball(s)."

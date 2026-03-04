@@ -112,7 +112,11 @@ self_check() {
   if python_has_zeroconf >/dev/null 2>&1; then
     log " mDNS/Zeroconf: present"
   else
-    warn " mDNS/Zeroconf: not present"
+    if sdk_le 29; then
+      log " mDNS/Zeroconf: no wireless debugging"
+    else
+      warn " mDNS/Zeroconf: not present"
+    fi
   fi
 
   if boxyproxy_is_installed >/dev/null 2>&1; then
