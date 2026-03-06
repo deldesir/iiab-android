@@ -31,6 +31,33 @@ python_cmd() {
   command -v python 2>/dev/null || command -v python3 2>/dev/null || true
 }
 
+python_patch_sysconfig_armv8l() {
+  # Dynamically find the Python sysconfig file in Termux
+  local py_lib_dir="${PREFIX:-/data/data/com.termux/files/usr}/lib"
+  local sysconfig_file=""
+
+  # Glob to find the __init__.py of the current Python version (e.g., python3.13)
+  for f in "$py_lib_dir"/python3.*/sysconfig/__init__.py; do
+    if [[ -f "$f" ]]; then
+      sysconfig_file="$f"
+      break
+    fi
+  done
+
+  [[ -z "$sysconfig_file" ]] && return 0 # Python not found, skip gracefully
+
+  # If already patched, exit silently to avoid duplication
+  if grep -q '"armv8l": "armeabi_v7a"' "$sysconfig_file"; then
+    return 0
+  fi
+
+  # If we find the armv7l dictionary entry, inject the armv8l mapping
+  if grep -q '"armv7l": "armeabi_v7a"' "$sysconfig_file"; then
+    log_yel "Patching Python sysconfig to resolve armv8l architecture bug..."
+    sed -i 's/"armv7l": "armeabi_v7a",/"armv7l": "armeabi_v7a",\n        "armv8l": "armeabi_v7a",/g' "$sysconfig_file"
+  fi
+}
+
 python_has_zeroconf() {
   local py=""
   py="$(python_cmd)"
@@ -465,6 +492,8 @@ step_termux_base() {
     if baseline_prereqs_ok; then
       BASELINE_OK=1
       ok "Termux baseline already prepared (stamp found)."
+      # Patch for armv8l compilation bug
+      python_patch_sysconfig_armv8l || true
       # Ensure optional mDNS deps are ready from the start (does not affect stamp).
       termux_prepare_mdns_deps || true
       # Ensure boxyproxy deps are ready from the start (does not affect stamp).
