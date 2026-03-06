@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-03-05T21:00:32-06:00 - do not edit directly.
+# GENERATED FILE: 2026-03-06T00:11:56-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -608,6 +608,44 @@ setup_logging() {
 # ---- END 10_mod_logging.sh ----
 
 
+# ---- BEGIN 15_mod_prepatch_env.sh ----
+# shellcheck shell=bash
+# Module file (no shebang). Bundled by build_bundle.sh
+
+# -------------------------
+# Environment Pre-patches & Hacks (15_mod_prepatch_env.sh)
+# -------------------------
+# This module acts as a registry for upstream bugs, weird Android
+# edge cases, and environment quirks.
+#
+# ALL functions must be idempotent and fail silently if not needed.
+
+python_patch_sysconfig_armv8l() {
+  # Fixes a bug in Termux Python 3.13 where 'armv8l' architecture throws a KeyError
+  # during pip C-extensions compilation (like aiohttp or zeroconf).
+
+  local py=""
+  py="$(command -v python 2>/dev/null || command -v python3 2>/dev/null || true)"
+  [[ -n "$py" ]] || return 0 # no python; end.
+
+  local sysconfig_file=""
+  sysconfig_file="$("$py" -c "import sysconfig; print(sysconfig.__file__)" 2>/dev/null || true)"
+
+  [[ -z "$sysconfig_file" ]] || [[ ! -f "$sysconfig_file" ]] && return 0
+
+  if grep -q '"armv8l": "armeabi_v7a"' "$sysconfig_file"; then
+    return 0 # already fixed; end.
+  fi
+
+  if grep -q '"armv7l": "armeabi_v7a"' "$sysconfig_file"; then
+    log_yel "Patching Python sysconfig to resolve armv8l architecture bug..."
+    sed -i 's/"armv7l": "armeabi_v7a",/"armv7l": "armeabi_v7a",\n        "armv8l": "armeabi_v7a",/g' "$sysconfig_file"
+  fi
+}
+
+# ---- END 15_mod_prepatch_env.sh ----
+
+
 # ---- BEGIN 20_mod_termux_base.sh ----
 # shellcheck shell=bash
 # Module file (no shebang). Bundled by build_bundle.sh
@@ -640,33 +678,6 @@ BOXYPROXY_DEPS_PIP_INSTALL="${BOXYPROXY_DEPS_PIP_INSTALL:-1}"
 
 python_cmd() {
   command -v python 2>/dev/null || command -v python3 2>/dev/null || true
-}
-
-python_patch_sysconfig_armv8l() {
-  # Dynamically find the Python sysconfig file in Termux
-  local py_lib_dir="${PREFIX:-/data/data/com.termux/files/usr}/lib"
-  local sysconfig_file=""
-  
-  # Glob to find the __init__.py of the current Python version (e.g., python3.13)
-  for f in "$py_lib_dir"/python3.*/sysconfig/__init__.py; do
-    if [[ -f "$f" ]]; then
-      sysconfig_file="$f"
-      break
-    fi
-  done
-
-  [[ -z "$sysconfig_file" ]] && return 0 # Python not found, skip gracefully
-  
-  # If already patched, exit silently to avoid duplication
-  if grep -q '"armv8l": "armeabi_v7a"' "$sysconfig_file"; then
-    return 0
-  fi
-
-  # If we find the armv7l dictionary entry, inject the armv8l mapping
-  if grep -q '"armv7l": "armeabi_v7a"' "$sysconfig_file"; then
-    log_yel "Patching Python sysconfig to resolve armv8l architecture bug..."
-    sed -i 's/"armv7l": "armeabi_v7a",/"armv7l": "armeabi_v7a",\n        "armv8l": "armeabi_v7a",/g' "$sysconfig_file"
-  fi
 }
 
 python_has_zeroconf() {
@@ -1103,8 +1114,10 @@ step_termux_base() {
     if baseline_prereqs_ok; then
       BASELINE_OK=1
       ok "Termux baseline already prepared (stamp found)."
-      # Patch for armv8l compilation bug
-      python_patch_sysconfig_armv8l || true
+      if declare -f python_patch_sysconfig_armv8l > /dev/null; then
+        # Safe call: check if declared at 15_mod_prepatch_env.sh
+        python_patch_sysconfig_armv8l
+      fi
       # Ensure optional mDNS deps are ready from the start (does not affect stamp).
       termux_prepare_mdns_deps || true
       # Ensure boxyproxy deps are ready from the start (does not affect stamp).
@@ -1153,6 +1166,11 @@ step_termux_base() {
     BASELINE_ERR="termux_apt install (baseline deps)"
     baseline_bail_details
     return 1
+  fi
+
+  if declare -f python_patch_sysconfig_armv8l > /dev/null; then
+    # Safe call: check if declared at 15_mod_prepatch_env.sh
+    python_patch_sysconfig_armv8l
   fi
 
   if baseline_prereqs_ok; then

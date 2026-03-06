@@ -4,6 +4,7 @@
 MODULES=(
   "00_lib_common.sh"
   "10_mod_logging.sh"
+  "15_mod_prepatch_env.sh"
   "20_mod_termux_base.sh"
   "25_mod_backup_restore.sh"
   "30_mod_iiab-debian.sh"
