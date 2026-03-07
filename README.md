@@ -89,7 +89,8 @@ This is the foundational build path with no shortcuts. Your device will download
     iiab-termux --pull-rootfs https://si-n.cc/latest_arm64-v8a.meta4
     ```
 
-3. Once the process finishes successfully, your installation is complete! 
+3. Once the process finishes successfully, your installation is complete!  
+    In order to start it run: `iiab-termux --login`
 4. **Please proceed directly to the [Test your IIAB install](#test-your-iiab-install) section below.**
 
 #### Option B: DIY build
