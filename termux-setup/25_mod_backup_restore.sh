@@ -122,10 +122,10 @@ cmd_pull_rootfs() {
     elif [[ "$arch" == "armeabi-v7a" ]]; then
       target_url="$IIAB_ROOTFS_URL_ARM32"
     else
-      die "Arquitectura no soportada para descarga automática: $arch. Especifica una URL manualmente."
+      die "Architecture not supported for automatic download: $arch. Specify a URL manually."
     fi
 
-    log "Seleccionando automáticamente imagen base para $arch:"
+    log "Automatically selecting base image for $arch:"
     log "> $target_url"
   fi
 
