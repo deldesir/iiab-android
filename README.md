@@ -294,7 +294,7 @@ In the meantime, you can try the current state of our pre-built rootfs:
 **For older 32-bit devices:**
 
 ```bash
-iiab-termux --pull-rootfs https://si-n.cc/latest_armeabi-v7a.meta4
+curl iiab.io/termux.txt | bash -s pull-rootfs
 ```
 
 Alternatively, you can follow the full build-from-scratch steps noted in the [Choose your installation path](#part-2-choose-your-installation-path) section above.
