@@ -1,9 +1,10 @@
 window.i18n = {
     "title": "Elige el Contenido",
-    "maps": "Mapas",
-    "kolibri": "Kolibri",
-    "kiwix": "Kiwix",
     "books": "Libros",
+    "code": "Code on the Go",
+    "kiwix": "Kiwix",
+    "kolibri": "Kolibri",
+    "maps": "Mapas",
     "matomo": "Matomo",
     "backend_error": "El servidor backend no responde. Por favor, verifique que está iniciado."
 };
