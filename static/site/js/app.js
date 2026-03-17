@@ -2,7 +2,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 1. Start language system
     let userLang = (navigator.language || navigator.userLanguage).substring(0, 2).toLowerCase();
-    
+
+    // Function to apply the translations to the HTML
+    const applyTranslations = () => {
+        if (!window.i18n) return;
+
+        const elements = document.querySelectorAll('[data-i18n]');
+        elements.forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (window.i18n[key]) {
+                el.innerText = window.i18n[key];
+            }
+        });
+    };
+
+    // Function to load the language file dynamically
+    const loadScript = (lang) => {
+        const script = document.createElement('script');
+        // Fallback to 'en' if the user's language file doesn't exist
+        const supportedLangs = ['es', 'en'];
+        const finalLang = supportedLangs.includes(lang) ? lang : 'en';
+
+        script.src = `lang/${finalLang}.js`;
+        script.onload = applyTranslations;
+        document.head.appendChild(script);
+    };
+
+    // Execute the language loader
+    loadScript(userLang);
+
     // ==========================================
     // MONITORING AND DISCOVERY LOGIC
     // ==========================================
