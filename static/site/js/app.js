@@ -36,11 +36,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================
 
     const services = {
+        'books': '/books/',
+        'code': '/code/',
         'kiwix': '/kiwix/',
         'kolibri': '/kolibri/',
-        'books': '/books/',
-        'matomo': '/matomo/',
-        'maps': '/maps/'
+        'maps': '/maps/',
+        'matomo': '/matomo/'
     };
 
     const statusBanner = document.getElementById("backend-status");
