@@ -64,7 +64,7 @@ guard_no_iiab_termux_in_proot() {
     ok   "  iiab-android"
     blank
     warn "To resume or continue an installation in progress, use the usual IIAB command:"
-    ok   "  iiab"
+    ok   "  iiab -f"
     blank
     warn "If you meant to prepare Termux, exit proot and run:"
     ok   "  iiab-termux --all"
@@ -240,7 +240,7 @@ final_advice() {
   case "$MODE" in
     baseline|with-adb|pull-rootfs|all)
       if iiab_exists; then
-        ok "Next: iiab-termux --login"
+        ok "Next: iiab-termux --login or iiab-termux --start"
       else
         warn "IIAB Debian not present. Run:"
         warn "Preferred: iiab-termux --all"
@@ -291,7 +291,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --with-adb) set_mode "with-adb"; shift ;;
     --adb-only) set_mode "adb-only"; shift ;;
-    --login) set_mode "login"; shift ;;
+    --login|--start) set_mode "login"; shift ;;
     --connect-only)
       set_mode "connect-only"
       ONLY_CONNECT=1
