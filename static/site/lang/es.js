@@ -4,5 +4,6 @@ window.i18n = {
     "kolibri": "Kolibri",
     "kiwix": "Kiwix",
     "books": "Libros",
-    "backend_error": "⚠️ El servidor backend no responde. Por favor, verifique que está iniciado."
+    "matomo": "Matomo",
+    "backend_error": "El servidor backend no responde. Por favor, verifique que está iniciado."
 };
