@@ -88,17 +88,17 @@ This is the foundational build path with no shortcuts. Your device will download
     In order to start it run:
 
     ```bash
-    iiab-termux --login
+    iiab-termux --start
     ```
 
     And watch it start:
 
     ```bash
-    ~ $ iiab-termux --login
+    ~ $ iiab-termux --start
     [iiab] Logging to: ~/.iiab-android/logs/iiab-termux.20260313.log
     [iiab] Wakelock acquired (termux-wake-lock).
     [iiab] Baseline stamp found: /data/data/com.termux/files/home/.iiab-android/stamp.termux_base
-    [iiab] Entering IIAB Debian (via: iiab-termux --login)
+    [iiab] Entering IIAB Debian (via: iiab-termux --start)
     [iiab] Power-mode: enabled for this login session (persistent notification active).
     [pdsm:calibre-web] running
     [pdsm:kiwix] running
@@ -122,7 +122,7 @@ This is the foundational build path with no shortcuts. Your device will download
 2. Enter PRoot Distro's IIAB Debian environment:
 
     ```bash
-    iiab-termux --login
+    iiab-termux --start
     ```
 
 3. Run the installer script. This will set up [`local_vars_android.yml`](https://wiki.iiab.io/go/FAQ#What_is_local_vars.yml_and_how_do_I_customize_it?) and launch the core IIAB installer:
@@ -180,7 +180,7 @@ A copy of Wikipedia (in almost any language) can now be put on your Android phon
 3. Open Android's Termux app, and then run:
 
    ```
-   iiab-termux --login
+   iiab-termux --start
    ```
 
    EXPLANATION: Starting from Termux's high-level CLI (Command-Line Interface), you've "shelled into" [PRoot Distro](https://wiki.termux.com/wiki/PRoot)'s low-level IIAB Debian CLI:
@@ -194,7 +194,7 @@ A copy of Wikipedia (in almost any language) can now be put on your Android phon
                             v
               +-------------+------------+
               |   Termux (Android CLI)   |
-              | $ iiab-termux --login    |
+              | $ iiab-termux --start    |
               +-------------+------------+
                             |
            "shell into" the | low-level environment
@@ -235,7 +235,7 @@ Before you begin, obtain your Android phone or tablet’s IP address by running 
 
 To log in to IIAB on Android from your computer, follow these SSH command-line interface (CLI) instructions:
 
-1. On your Android phone or tablet, find your way to Termux's CLI. **If you earlier ran `iiab-termux --login` to get to PRoot Distro's low-level IIAB Debian CLI — you MUST step back up to Termux's high-level CLI — e.g. by running:**
+1. On your Android phone or tablet, find your way to Termux's CLI. **If you earlier ran `iiab-termux --start` to get to PRoot Distro's low-level IIAB Debian CLI — you MUST step back up to Termux's high-level CLI — e.g. by running:**
 
    ```
    exit
@@ -274,7 +274,7 @@ To log in to IIAB on Android from your computer, follow these SSH command-line i
 Once you have an SSH session on your remote device, log into PRoot Distro to access and run the IIAB applications, just as during installation:
 
 ```
-iiab-termux --login
+iiab-termux --start
 ```
 
 You will then be in a IIAB Debian shell with access to the IIAB CLI (command-line interface) tools.
@@ -331,7 +331,7 @@ Usage: iiab-termux [MODE] [OPTIONS]
   (no args)       Baseline + IIAB Debian bootstrap
   --all           Full setup: baseline, Debian, ADB, PPK, & checks
   --barebones     Minimal installation: Termux base + proxy (no rootfs)
-  --login         Login into IIAB Debian
+  --start, --login Start / Login IIAB Debian
   --iiab-android  Install/update 'iiab-android' tool inside proot
 
 === ADB & SYSTEM TUNING ===
