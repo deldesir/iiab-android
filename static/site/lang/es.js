@@ -6,5 +6,5 @@ window.i18n = {
     "kolibri": "Kolibri",
     "maps": "Mapas",
     "matomo": "Matomo",
-    "backend_error": "El servidor backend no responde. Por favor, verifique que está iniciado."
+    "backend_error": "El servidor backend no responde. Por favor, verifique que está iniciado. Vaya a la app Termux y ejecute"
 };
