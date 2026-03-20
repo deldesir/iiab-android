@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-03-17T00:36:43-06:00 - do not edit directly.
+# GENERATED FILE: 2026-03-19T21:28:57-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -290,7 +290,7 @@ iiab_login() {
     fi
   fi
 
-  ok "Entering IIAB Debian (via: iiab-termux --login)"
+  ok "Starting IIAB Debian (via: iiab-termux --start)"
   power_mode_login_enter || true
 
   # Auto-start boxyproxy for the duration of this proot session.
@@ -493,7 +493,7 @@ ${BLU}=== CORE & INSTALL ===${RST}
   ${GRN}(no args)${RST}       Baseline + IIAB Debian bootstrap
   ${GRN}--all${RST}           Full setup: baseline, Debian, ADB, PPK, & checks
   ${GRN}--barebones${RST}     Minimal installation: Termux base + proxy (no rootfs)
-  ${GRN}--login, --start${RST} Login / start IIAB Debian
+  ${GRN}--start, --login${RST} Start / Login IIAB Debian
   ${GRN}--iiab-android${RST}  Install/update 'iiab-android' tool inside proot
 
 ${BLU}=== ADB & SYSTEM TUNING ===${RST}
@@ -3191,7 +3191,7 @@ final_advice() {
   case "$MODE" in
     baseline|with-adb|pull-rootfs|all)
       if iiab_exists; then
-        ok "Next: iiab-termux --login or iiab-termux --start"
+        ok "Next: iiab-termux --start"
       else
         warn "IIAB Debian not present. Run:"
         warn "Preferred: iiab-termux --all"

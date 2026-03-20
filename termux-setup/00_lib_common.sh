@@ -279,7 +279,7 @@ iiab_login() {
     fi
   fi
 
-  ok "Entering IIAB Debian (via: iiab-termux --login)"
+  ok "Starting IIAB Debian (via: iiab-termux --start)"
   power_mode_login_enter || true
 
   # Auto-start boxyproxy for the duration of this proot session.
@@ -482,7 +482,7 @@ ${BLU}=== CORE & INSTALL ===${RST}
   ${GRN}(no args)${RST}       Baseline + IIAB Debian bootstrap
   ${GRN}--all${RST}           Full setup: baseline, Debian, ADB, PPK, & checks
   ${GRN}--barebones${RST}     Minimal installation: Termux base + proxy (no rootfs)
-  ${GRN}--login, --start${RST} Login / start IIAB Debian
+  ${GRN}--start, --login${RST} Start / Login IIAB Debian
   ${GRN}--iiab-android${RST}  Install/update 'iiab-android' tool inside proot
 
 ${BLU}=== ADB & SYSTEM TUNING ===${RST}

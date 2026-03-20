@@ -240,7 +240,7 @@ final_advice() {
   case "$MODE" in
     baseline|with-adb|pull-rootfs|all)
       if iiab_exists; then
-        ok "Next: iiab-termux --login or iiab-termux --start"
+        ok "Next: iiab-termux --start"
       else
         warn "IIAB Debian not present. Run:"
         warn "Preferred: iiab-termux --all"
