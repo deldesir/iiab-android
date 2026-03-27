@@ -41,7 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
         'kiwix': '/kiwix/',
         'kolibri': '/kolibri/',
         'maps': '/maps/',
-        'matomo': '/matomo/'
+        'matomo': '/matomo/',
+        'dashboard': '/dashboard/'
     };
 
     const statusBanner = document.getElementById("backend-status");
