@@ -282,6 +282,10 @@ iiab_login() {
   ok "Starting IIAB Debian (via: iiab-termux --start)"
   local wlan_ip; wlan_ip="$(adb_local_ipv4s_csv 2>/dev/null | cut -d, -f1)"
   if [[ -n "$wlan_ip" && "$wlan_ip" != "Disconnected" && "$wlan_ip" != "0.0.0.0" ]]; then
+    if ! have qrencode; then
+      log "Installing missing dependency: libqrencode..."
+      termux_apt install libqrencode >/dev/null 2>&1 || true
+    fi
     blank
     log "To use your IIAB on Android over the network, please scan the following QR Code:"
     qrencode -t UTF8 "http://${wlan_ip}:8085/"
