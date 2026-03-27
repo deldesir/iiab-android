@@ -330,7 +330,7 @@ install_iiaboa_dashboard() {
 
   # Setup pdsm service
   log "Configuring dash-node PDSM service..."
-  cp "${dash_src}/pdsm/dash-node" "/usr/local/pdsm/services-available/dash-node"
+  cp "${IIABOA_OPT_DIR}/static/pdsm/dash-node" "/usr/local/pdsm/services-available/dash-node"
   chmod +x "/usr/local/pdsm/services-available/dash-node"
   /usr/local/bin/pdsm enable dash-node
   /usr/local/bin/pdsm restart dash-node
