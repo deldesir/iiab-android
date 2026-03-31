@@ -53,6 +53,7 @@ h1, h2, h3, h4, h5, h6 {
     background-color: var(--surface-bg);
     border: 1px solid var(--border-color);
     transition: all var(--transition-speed) ease;
+    padding-top: 20px;
 }
 
 /* Add depth/shadows only in Dark Mode */
@@ -206,6 +207,7 @@ h1, h2, h3, h4, h5, h6 {
     .floating-filter { bottom: 80px !important; }
 
     .app-panel {
+        padding-top: 20px !important;
         padding-left: 15px !important;
         padding-right: 15px !important;
     }
