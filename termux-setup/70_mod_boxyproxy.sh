@@ -83,13 +83,21 @@ boxyproxy_start() {
   if [[ "${BOXYPROXY_NO_EXTERNAL:-0}" -eq 1 ]]; then
     args+=( "--no-external" )
   fi
-  "$BOXYPROXY_BIN" -d \
-    --pidfile "$BOXYPROXY_PIDFILE" \
-    --logfile "$BOXYPROXY_LOG" \
-    "${args[@]}" >/dev/null 2>&1
+
+  # On headless we force python3 instead of depending on shebang env
+  if [[ "${INTENT_MODE:-}" == "headless" ]]; then
+    boxyp_log "Iniciando boxyproxy (headless)..."
+    python3 "$BOXYPROXY_BIN" "${args[@]}" >> "$BOXYPROXY_LOG" 2>&1 &
+    echo $! > "$BOXYPROXY_PIDFILE"
+  else
+    python3 "$BOXYPROXY_BIN" -d \
+      --pidfile "$BOXYPROXY_PIDFILE" \
+      --logfile "$BOXYPROXY_LOG" \
+      "${args[@]}" >/dev/null 2>&1
+  fi
   sleep 0.2
 
-  "$BOXYPROXY_BIN" --status --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null | indent || true
+  python3 "$BOXYPROXY_BIN" --status --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null | indent || true
   boxyproxy_is_running || { warn_red "boxyproxy failed to start (see $BOXYPROXY_LOG)"; return 1; }
   ok "boxyproxy started."
   return 0
@@ -98,14 +106,14 @@ boxyproxy_start() {
 boxyproxy_stop() {
   boxyproxy_state_init
   boxyproxy_is_installed || return 0
-  "$BOXYPROXY_BIN" --stop --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null | indent || true
+  python3 "$BOXYPROXY_BIN" --stop --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null | indent || true
   return 0
 }
 
 boxyproxy_status() {
   boxyproxy_state_init
   boxyproxy_is_installed || { warn "installed=no"; return 0; }
-  "$BOXYPROXY_BIN" --status --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null || true
+  python3 "$BOXYPROXY_BIN" --status --pidfile "$BOXYPROXY_PIDFILE" 2>/dev/null || true
 
   # Check if the process is actually running with the --no-external flag
   local running_no_ext="no"
