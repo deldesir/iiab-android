@@ -264,7 +264,7 @@ power_mode_battery_instructions() {
   local fd=1
   if { : >&3; } 2>/dev/null; then fd=3; fi
   {
-    printf '%b' "\n${YEL}${BOLD}[iiab] CRITICAL: Android Battery Restrictions${RST}\n"
+    printf '%b' "\n${YEL}${BOLD}[iiab] IMPORTANT: Android Battery Restrictions${RST}\n"
     printf '%b' "To prevent Android from killing the installation, apply:\n"
     printf '%b' "  ${BLU}1.${RST} Battery -> ${BOLD}Unrestricted${RST} (or 'Don't optimize')\n"
     printf '%b' "  ${BLU}2.${RST} Allow background activity -> ${BOLD}ON${RST}\n\n"
@@ -296,6 +296,79 @@ power_mode_offer_battery_settings_once() {
     warn "Unable to open Settings automatically. Open manually: Settings -> Apps -> Termux."
     android_open_battery_optimization_list || true
   fi
+  return 0
+}
+
+# -------------------------
+# Set Display Over Other Apps (Overlay) step.
+# -------------------------
+POWER_MODE_OVERLAY_STAMP="${STATE_DIR}/stamp.termux_overlay_settings"
+
+power_mode_offer_overlay_settings_once() {
+  [[ "${POWER_MODE_OVERLAY_PROMPT:-1}" -eq 1 ]] || return 0
+  mkdir -p "$STATE_DIR" >/dev/null 2>&1 || true
+
+  local stamp="$POWER_MODE_OVERLAY_STAMP"
+  [[ -f "$stamp" ]] && return 0
+
+  local outfd; outfd="$(console_outfd)"
+  local sdk="${ANDROID_SDK:-}"
+
+  # Stage 1 (Android 13+ only): The One-Step Restricted Settings & Overlay bypass
+  if [[ "$sdk" =~ ^[0-9]+$ ]] && (( sdk >= 33 )); then
+    {
+      printf '%b' "\n${YEL}${BOLD}[iiab] Android 13+ Security Requirement${RST}\n"
+      printf '%b' "Android restricts background permissions for sideloaded apps.\n"
+      printf '%b' "For this to work, follow these 5 steps:\n\n"
+      printf '%b' "  ${BLU}1.${RST} Tap on ${BOLD}'Display over other apps'${RST}\n     and toggle the switch.\n"
+      printf '%b' "  ${BLU}2.${RST} A security warning will pop up. Tap ${BOLD}'OK'${RST}.\n"
+      printf '%b' "  ${BLU}3.${RST} Go ${BOLD}BACK${RST} to the main screen (App info).\n"
+      printf '%b' "  ${BLU}4.${RST} Now, on the top right you'll see ${BOLD}3 dots (⋮)${RST}\n     tap them and select ${BOLD}'Allow restricted settings'${RST}.\n"
+      printf '%b' "  ${BLU}5.${RST} Finally you can go and enable\n     ${BOLD}'Display over other apps'${RST}.\n\n"
+    } >&"$outfd"
+
+    printf "\r${YEL}[iiab] Press Enter to open App Info when ready...${RST}\n"
+    if [[ -r /dev/tty ]]; then
+      # We use normal read (with Enter) to give the user time to read and return
+      read -r _ </dev/tty || true
+    fi
+
+    if android_open_termux_app_info; then
+      printf "${YEL}[iiab] When done, return here and press Enter to continue...${RST}\n" >&"$outfd"
+      if [[ -r /dev/tty ]]; then
+        # We use normal read (with Enter) to give the user time to read and return
+        read -r _ </dev/tty || true
+      fi
+      printf "\n" >&"$outfd"
+      date > "$stamp" 2>/dev/null || true
+    else
+      warn "Unable to open Settings automatically."
+    fi
+
+  # Stage 2 (Android 12 and below): Direct Overlay Permission
+  else
+    {
+      printf '%b' "\n${YEL}${BOLD}[iiab] UX REQUIREMENT: Bring to Foreground${RST}\n"
+      printf '%b' "To allow the IIAB Controller App to open Termux automatically:\n"
+      printf '%b' "  Please grant the ${BOLD}'Display over other apps'${RST} permission.\n\n"
+    } >&"$outfd"
+
+    countdown_timer 5 "\r${YEL}[iiab] Opening Overlay Settings in %d seconds...${RST}"
+
+    if android_open_overlay_settings; then
+      printf "${YEL}[iiab] Enable the switch. When done, return here.${RST}\n" >&"$outfd"
+      if [[ -r /dev/tty ]]; then
+        read -n 1 -s -r -p "Press any key to continue... " </dev/tty || true
+        printf "\n" >&"$outfd"
+      else
+        printf "\n" >&"$outfd"
+      fi
+      date > "$stamp" 2>/dev/null || true
+    else
+      warn "Unable to open Settings automatically."
+    fi
+  fi
+
   return 0
 }
 
@@ -479,9 +552,7 @@ step_termux_base() {
     rm -f "$stamp"
   fi
 
-# -------------------------
 # Enable communication with Controller APK
-# -------------------------
   local props="${HOME}/.termux/termux.properties"
   mkdir -p "${HOME}/.termux"
   touch "$props"

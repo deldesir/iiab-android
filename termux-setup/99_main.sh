@@ -311,7 +311,7 @@ while [[ $# -gt 0 ]]; do
       fi
       shift
       ;;
-    --barebones) set_mode "barebones"; shift ;;
+    --bb|--barebones) set_mode "barebones"; shift ;;
     --ppk-only) set_mode "ppk-only"; shift ;;
     --iiab-android) set_mode "iiab-android"; shift ;;
     --check) set_mode "check"; shift ;;
@@ -446,6 +446,7 @@ attempt_auto_apply_ppk() {
 
 run_barebones_logic() {
   power_mode_offer_battery_settings_once || true
+  power_mode_offer_overlay_settings_once || true
   repo_selector_ask_configure
   step_termux_base || baseline_bail
   boxyproxy_install_or_update || true
@@ -509,6 +510,7 @@ main() {
     baseline)
       offer_welcome_once "Baseline"
       power_mode_offer_battery_settings_once || true
+      power_mode_offer_overlay_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
       boxyproxy_install_or_update || true
@@ -520,6 +522,7 @@ main() {
     with-adb)
       offer_welcome_once "With ADB"
       power_mode_offer_battery_settings_once || true
+      power_mode_offer_overlay_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
       boxyproxy_install_or_update || true
@@ -561,6 +564,7 @@ main() {
     iiab-android)
       offer_welcome_once "IIAB Android"
       power_mode_offer_battery_settings_once || true
+      power_mode_offer_overlay_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
       step_iiab_bootstrap_default
@@ -578,6 +582,7 @@ main() {
     all)
       offer_welcome_once "All - Full Setup"
       power_mode_offer_battery_settings_once || true
+      power_mode_offer_overlay_settings_once || true
       repo_selector_ask_configure
       step_termux_base || baseline_bail
       step_iiab_bootstrap_default
