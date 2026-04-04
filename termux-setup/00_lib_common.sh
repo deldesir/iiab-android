@@ -129,7 +129,7 @@ update_iiab_termux() {
     fi
   fi
 
-  log "updating iiab-termux $new_v over $old_v"
+  log "updating $new_v over $old_v"
 
   backup_dir="${STATE_DIR}/termux"
   mkdir -p "$backup_dir"
