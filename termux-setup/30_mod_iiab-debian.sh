@@ -25,6 +25,7 @@ cmd_remove_iiab() {
 
     # Sync state to Android App: System is gone
     clear_android_state_flag "flag_system_installed"
+    clear_android_state_flag "flag_iiab_ready"
   else
     log "Removal aborted by user."
   fi
@@ -71,11 +72,16 @@ step_iiab_bootstrap_default() {
 
       # Sync state to Android App: Old system wiped
       clear_android_state_flag "flag_system_installed"
+      clear_android_state_flag "flag_iiab_ready"
 
       # If reset was requested but iiab wasn't installed yet (or reset failed), ensure it's present.
       iiab_exists || proot_install_iiab_safe || true
     else
-      if iiab_exists; then proot-distro remove iiab || true; fi
+      if iiab_exists; then
+        proot-distro remove iiab || true
+        clear_android_state_flag "flag_system_installed"
+        clear_android_state_flag "flag_iiab_ready"
+      fi
       proot_install_iiab_safe || true
     fi
   else
