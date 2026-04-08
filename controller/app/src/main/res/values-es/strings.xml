@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">IIAB-oA Controller</string>
+    <string name="default_version">v0.1.x</string>
+
+    <string name="cancel">Cancelar</string>
+    <string name="copy_all">Copiar Todo</string>
+    <string name="fix_action">CORREGIR</string>
+    <string name="save">Guardar</string>
+
+    <string name="advanced_settings_label">Ajustes del Túnel</string>
+    <string name="configuration_label">Configuración</string>
+    <string name="connection_log_label">Log de Conexión</string>
+    <string name="label_separator_down">▼ %s</string>
+    <string name="label_separator_up">▶ %s</string>
+    <string name="settings_label">AJUSTES</string>
+
+    <string name="tab_deploy">Instalación</string>
+    <string name="tab_status">Estado</string>
+    <string name="tab_usage">Uso</string>
+
+
+    <string name="setup_title">Configuración Inicial</string>
+    <string name="setup_welcome">Bienvenido al asistente de configuración de %1$s.\n\nPara funcionar correctamente, necesitamos los siguientes permisos:</string>
+    <string name="setup_continue">Continuar</string>
+
+    <string name="setup_perm_battery">Desactivar Optimización de Batería</string>
+    <string name="setup_perm_notifications">Notificaciones Push</string>
+    <string name="setup_perm_storage">Acceso al almacenamiento local</string>
+    <string name="setup_perm_termux">Ejecución de Termux</string>
+    <string name="setup_perm_vpn">Safe Pocket Web (VPN)</string>
+    <string name="setup_manage_all_permissions">Administrar todos los permisos</string>
+    <string name="setup_display_over_other_apps">Mostrar sobre otras aplicaciones</string>
+    <string name="setup_manage_termux_permissions">Administrar permisos de Termux</string>
+
+    <string name="setup_termux_storage_btn">Archivos y medios (Almacenamiento)</string>
+    <string name="termux_not_installed">Termux no está instalado.</string>
+    <string name="termux_not_installed_error">Termux no está instalado o el dispositivo no es compatible.</string>
+
+    <string name="notif_perm_denied">Permiso de notificaciones denegado</string>
+    <string name="notif_perm_granted">Permiso de notificaciones concedido</string>
+    <string name="revoke_permission_warning">Para revocar permisos, debe hacerlo desde los ajustes del sistema.</string>
+    <string name="termux_perm_denied">Permiso de Termux denegado</string>
+    <string name="termux_perm_granted">Permiso de Termux concedido</string>
+
+
+    <string name="dash_title">IIAB-oA Controller</string>
+    <string name="dash_subtitle_localhost">localhost</string>
+
+    <string name="dash_device">Cargando el dispositivo...</string>
+    <string name="dash_ip">IP: %1$s</string>
+    <string name="dash_uptime">Activo: %1$s</string>
+    <string name="dash_battery_format"><b>Batería:</b> %1$d%%</string>
+    <string name="dash_battery_no_value"><b>Batería:</b> --%%</string>
+    <string name="dash_hotspot_format"><b>Hotspot:</b> %1$s</string>
+    <string name="dash_uptime_format"><b>Activo:</b> %1$s</string>
+    <string name="dash_wifi_format"><b>Wi-Fi:</b> %1$s</string>
+    <string name="dash_main_storage">Almacenamiento principal</string>
+    <string name="dash_ram_memory">Memoria RAM</string>
+    <string name="dash_swap_virtual">Swap (Virtual)</string>
+
+    <string name="dash_server_status">Estado del Servidor:</string>
+    <string name="dash_offline">Desconectado</string>
+    <string name="dash_online">En línea</string>
+    <string name="dash_system_state">Estado del Sistema</string>
+    <string name="dash_iiab_system">Sistema IIAB-oA</string>
+
+    <string name="dash_state_debian_only">OS base instalado. Proceda a instalar IIAB.</string>
+    <string name="dash_state_installer">Instalador encontrado, abra la pestaña de instalación para más información.</string>
+    <string name="dash_state_none">No se identificó ningún componente, ni siquiera Termux.</string>
+    <string name="dash_state_offline">IIAB-oA parece estar desconectado, intente lanzarlo.</string>
+    <string name="dash_state_online">IIAB-oA esta en línea.</string>
+    <string name="dash_state_termux_only">Termux encontrado, vaya a la pestaña de Instalación para operarlo.</string>
+    <string name="dash_termux_searching">Buscando instalación...</string>
+
+    <string name="dash_installed_modules">Módulos Instalados</string>
+    <string name="dash_books">Libros</string>
+    <string name="dash_kiwix">Kiwix</string>
+    <string name="dash_kolibri">Kolibri</string>
+    <string name="dash_maps">Mapas</string>
+    <string name="dash_matomo">Matomo</string>
+    <string name="dash_system">Sistema</string>
+
+
+    <string name="apps">Aplicaciones</string>
+    <string name="browse_content">🚀 Explorar Contenido</string>
+    <string name="launch_server">🚀 Iniciar Servidor</string>
+    <string name="stop_server">🛑 Detener Servidor</string>
+
+    <string name="server_not_installed_warning">El sistema IIAB-oA no parece estar (completamente) instalado. Por favor, verifique la pestaña de Estado o Instalación para más información.</string>
+    <string name="server_booting">Iniciando...</string>
+    <string name="server_shutting_down">Apagando...</string>
+    <string name="server_timeout_warning">Advertencia: Tiempo de espera agotado en la transición de estado del servidor.</string>
+    <string name="system_ready">Sistema listo...\n</string>
+
+    <string name="hotspot">Hotspot</string>
+    <string name="tunnel">Túnel</string>
+    <string name="wifi">Wi-Fi</string>
+
+    <string name="qr_error_no_network">Active Wi-Fi o Hotspot para compartir contenido a través de la red.</string>
+    <string name="qr_error_no_server">Inicie el servidor para compartir contenido a través de la red.</string>
+    <string name="qr_flip_network">Cambiar Red</string>
+    <string name="qr_title_hotspot">Red Hotspot</string>
+    <string name="qr_title_wifi">Red Wi-Fi</string>
+
+
+    <string name="control_disable">Desactivar Safe Pocket Web</string>
+    <string name="control_enable">Activar Safe Pocket Web</string>
+
+    <string name="dns_ipv4">DNS IPv4:</string>
+    <string name="dns_ipv6">DNS IPv6:</string>
+    <string name="global">Global</string>
+    <string name="ipv4">IPv4</string>
+    <string name="ipv6">IPv6</string>
+    <string name="maintenance_mode">Modo Mantenimiento</string>
+    <string name="maintenance_warning_msg">Desactive Safe Pocket Web para poder modificar</string>
+    <string name="remote_dns">DNS Remoto</string>
+    <string name="socks_addr">Dirección Socks:</string>
+    <string name="socks_pass">Contraseña Socks:</string>
+    <string name="socks_port">Puerto Socks:</string>
+    <string name="socks_udp_addr">Dirección UDP Socks:</string>
+    <string name="socks_user">Usuario Socks:</string>
+    <string name="udp_in_tcp">Relé UDP sobre TCP</string>
+
+    <string name="recovery_channel_name">Recuperación VPN</string>
+    <string name="recovery_notif_text">Toque para restaurar el entorno seguro inmediatamente.</string>
+    <string name="recovery_notif_title">Safe Pocket Web Interrumpido</string>
+    <string name="tproxy_channel_name">socks5</string>
+    <string name="user_initiated_conn">Conexión iniciada por el usuario</string>
+    <string name="vpn_description">Habilite URLs amigables. Bloquee las amenazas.</string>
+    <string name="vpn_permission_granted">Permiso de VPN concedido. Conectando...</string>
+    <string name="vpn_starting">Iniciando VPN...</string>
+    <string name="vpn_stopping">Deteniendo VPN...</string>
+
+
+    <string name="watchdog_disable">Desactivar\nWatchdog Maestro</string>
+    <string name="watchdog_enable">Activar\nWatchdog Maestro</string>
+    <string name="watchdog_description">Protege Termux del Doze y mantiene el Wi-Fi activo.</string>
+
+    <string name="watchdog_channel_desc">Asegura que los servicios permanezcan activos cuando la pantalla está apagada.</string>
+    <string name="watchdog_channel_name">Servicio IIAB Watchdog</string>
+    <string name="watchdog_notif_text">Protegiendo el entorno Termux...</string>
+    <string name="watchdog_notif_title">IIAB Watchdog Activo</string>
+
+    <string name="cpu_wakelock_acquired">CPU WakeLock adquirido bajo protección VPN</string>
+    <string name="cpu_wakelock_released">CPU WakeLock liberado</string>
+    <string name="error_acquiring_locks">Error al adquirir bloqueos</string>
+    <string name="syncing_watchdog">Sincronizando estado del Watchdog. Activado: %b</string>
+    <string name="watchdog_started">Watchdog Iniciado</string>
+    <string name="watchdog_stopped">Watchdog Detenido</string>
+    <string name="watchdog_thread_ended">Watchdog Thread: Bucle finalizado</string>
+    <string name="watchdog_thread_error">Watchdog Thread: Error en el bucle</string>
+    <string name="watchdog_thread_interrupted">Watchdog Thread: Interrumpido, deteniéndose...</string>
+    <string name="watchdog_thread_started">Watchdog Thread: Bucle iniciado</string>
+    <string name="wifi_lock_acquired">Wi-Fi Lock adquirido bajo protección VPN</string>
+    <string name="wifi_lock_released">Wi-Fi Lock liberado</string>
+
+    <string name="critical_os_blocked">CRÍTICO: El SO bloqueó el estímulo a Termux (SecurityException).</string>
+    <string name="failed_termux_intent">CRÍTICO: Fallo en el Intent de Termux: %s</string>
+    <string name="force_termux_foreground">Forzar a Termux a pasar a primer plano...</string>
+    <string name="maintenance_mode_enabled">Modo de mantenimiento activado: Termux tiene acceso directo a Internet</string>
+    <string name="maintenance_write_failed">Fallo en la escritura de mantenimiento</string>
+    <string name="permission_denied_log">Permiso denegado: Asegúrese de que el manifiesto tiene RUN_COMMAND y la app no está restringida.</string>
+    <string name="ping_fail">PING 8085: FALLO (%s)</string>
+    <string name="ping_ok">PING 8085: OK</string>
+    <string name="pulse_error_log">Error de Pulso: %s</string>
+    <string name="pulse_stimulating">Pulso: Estimulando Termux...</string>
+    <string name="recovery_pulse_received">Pulso de recuperación recibido del sistema. Forzando VPN...</string>
+    <string name="sent_to_termux">Enviado a Termux: %s</string>
+    <string name="session_started">SESIÓN DE LATIDO INICIADA</string>
+    <string name="session_stopped">SESIÓN DE LATIDO DETENIDA</string>
+    <string name="termux_invocation_error">Error al invocar Termux: %1$s</string>
+    <string name="termux_pulse_error">[Termux] Error de pulso (exit %1$d): %2$s</string>
+    <string name="termux_stimulus_ok">[Termux] Estímulo OK (exit 0)</string>
+    <string name="termux_stuck_warning">¿Termux no abre? Habilite Watchdog Maestro para forzar que obtenga el foco.</string>
+    <string name="unexpected_error_termux">Error inesperado enviando intent a Termux</string>
+
+
+    <string name="end_of_history">--- Fin del Historial ---</string>
+    <string name="error_reading_history">Error al leer el historial: %s</string>
+    <string name="failed_write_blackbox">Fallo al escribir en BlackBox</string>
+    <string name="loading_history">--- Cargando Historial ---</string>
+    <string name="log_cleared_toast">Log borrado</string>
+    <string name="log_copied_toast">Log copiado al portapapeles</string>
+    <string name="log_reset_confirm_msg">Esto borrará permanentemente todos los logs de conexión guardados. Esta acción no se puede deshacer.</string>
+    <string name="log_reset_confirm_title">¿Reiniciar historial de log?</string>
+    <string name="failed_reset_log">Fallo al reiniciar el log: %s</string>
+    <string name="log_reset_log">Log reiniciado</string>
+    <string name="log_reset_user">Log reiniciado por el usuario</string>
+    <string name="log_size_bytes">%d B</string>
+    <string name="log_size_format">Tamaño: %1$s / 10MB</string>
+    <string name="log_size_kb">%.1f KB</string>
+    <string name="log_size_mb">%.2f MB</string>
+    <string name="log_warning_rapid_growth">El archivo de log está creciendo demasiado rápido, verifique si algo está fallando</string>
+    <string name="no_blackbox_found">--- No se encontró el archivo BlackBox ---</string>
+
+
+    <string name="auth_required_subtitle">Autentíquese para desactivar el entorno seguro</string>
+    <string name="auth_required_title">Autenticación requerida</string>
+    <string name="auth_success_disconnect">Autenticación exitosa. Desconectando...</string>
+    <string name="security_required_msg">Debe configurar un PIN, Patrón o Huella digital en su dispositivo antes de activar el entorno seguro.</string>
+    <string name="security_required_title">Seguridad Requerida</string>
+    <string name="unlock_watchdog_subtitle">Se requiere autenticación para detener la protección de Termux</string>
+    <string name="unlock_watchdog_title">Desbloquear Watchdog Maestro</string>
+
+
+    <string name="battery_opt_denied">Para que la app funcione al 100%, desactive la optimización de batería.</string>
+    <string name="battery_opt_msg">Para que el Watchdog funcione de manera confiable, desactive las optimizaciones de batería para esta aplicación.</string>
+    <string name="battery_opt_oppo_extra">\n\nOPPO/Realme detectado: Asegúrese de activar \'Permitir actividad en segundo plano\' en los ajustes de esta aplicación.</string>
+    <string name="battery_opt_title">Optimización de Batería</string>
+    <string name="battery_opt_xiaomi_extra">\n\nXiaomi detectado: Establezca el ahorro de batería a \'Sin restricciones\' en los ajustes.</string>
+    <string name="go_to_settings">Ir a Ajustes</string>
+
+
+    <string name="app_started">Aplicación Iniciada</string>
+    <string name="deploy_wip_desc">El módulo Termux y el instalador de entorno estarán disponibles aquí pronto.</string>
+    <string name="deploy_wip_title">WIP - En construcción</string>
+
+    <string name="battery_custom">"Batería: "</string>
+    <string name="battery_no_value">Batería: --%</string>
+    <string name="hotspot_fdash">Hotspot: --</string>
+    <string name="pref_file_internal">IIAB_Internal</string>
+    <string name="pref_key_setup_complete">setup_complete</string>
+    <string name="saved_toast">Guardado</string>
+    <string name="settings_saved">Ajustes Guardados</string>
+    <string name="uptime_no_value">Tiempo de actividad: --</string>
+    <string name="version_footer_fallback">IIAB-oA · 2026 · Controller v0.1.xbeta</string>
+    <string name="version_footer_format">IIAB-oA · 2026 · Controller %1$s</string>
+    <string name="wi_fi_fdash">Wi-Fi: --</string>
+    <string name="setup_termux_custom_permissions">Ajuste de permisos Termux</string>
+
+
+</resources>

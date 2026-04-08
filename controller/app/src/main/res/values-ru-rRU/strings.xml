@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">IIAB-oA Controller</string>
+    <string name="default_version">v0.1.x</string>
+
+    <string name="cancel">Отмена</string>
+    <string name="copy_all">Скопировать все</string>
+    <string name="fix_action">ИСПРАВИТЬ</string>
+    <string name="save">Сохранить</string>
+
+    <string name="advanced_settings_label">Настройки туннеля</string>
+    <string name="configuration_label">Конфигурация</string>
+    <string name="connection_log_label">Журнал подключений</string>
+    <string name="label_separator_down">▼ %s</string>
+    <string name="label_separator_up">▶ %s</string>
+    <string name="settings_label">НАСТРОЙКИ</string>
+
+    <string name="tab_deploy">Установка</string>
+    <string name="tab_status">Статус</string>
+    <string name="tab_usage">Использование</string>
+
+
+    <string name="setup_title">Начальная настройка</string>
+    <string name="setup_welcome">Добро пожаловать в мастер настройки %1$s.\n\nДля правильной работы нам нужны следующие разрешения:</string>
+    <string name="setup_continue">Продолжить</string>
+
+    <string name="setup_perm_battery">Отключить оптимизацию батареи</string>
+    <string name="setup_perm_notifications">Push-уведомления</string>
+    <string name="setup_perm_storage">Доступ к локальному хранилищу</string>
+    <string name="setup_perm_termux">Выполнение Termux</string>
+    <string name="setup_perm_vpn">Safe Pocket Web (VPN)</string>
+
+    <string name="setup_termux_storage_btn">Файлы и медиа (Хранилище)</string>
+    <string name="termux_not_installed">Termux не установлен.</string>
+    <string name="termux_not_installed_error">Termux не установлен или устройство не поддерживается.</string>
+
+    <string name="notif_perm_denied">Разрешение на уведомления отклонено</string>
+    <string name="notif_perm_granted">Разрешение на уведомления предоставлено</string>
+    <string name="revoke_permission_warning">Чтобы отозвать разрешения, это нужно сделать в настройках системы.</string>
+    <string name="termux_perm_denied">Разрешение Termux отклонено</string>
+    <string name="termux_perm_granted">Разрешение Termux предоставлено</string>
+
+
+    <string name="dash_title">IIAB-oA Controller</string>
+    <string name="dash_subtitle_localhost">localhost</string>
+
+    <string name="dash_device">Загрузка устройства...</string>
+    <string name="dash_ip">IP: %1$s</string>
+    <string name="dash_uptime">Время работы: %1$s</string>
+    <string name="dash_battery_format"><b>Батарея:</b> %1$d%%</string>
+    <string name="dash_battery_no_value"><b>Батарея:</b> --%%</string>
+    <string name="dash_hotspot_format"><b>Точка доступа:</b> %1$s</string>
+    <string name="dash_uptime_format"><b>Время работы:</b> %1$s</string>
+    <string name="dash_wifi_format"><b>Wi-Fi:</b> %1$s</string>
+    <string name="dash_main_storage">Основная память</string>
+    <string name="dash_ram_memory">ОЗУ</string>
+    <string name="dash_swap_virtual">Swap (Виртуальная)</string>
+
+    <string name="dash_server_status">Статус сервера:</string>
+    <string name="dash_offline">Оффлайн</string>
+    <string name="dash_online">В сети</string>
+    <string name="dash_system_state">Состояние системы</string>
+    <string name="dash_iiab_system">Система IIAB-oA</string>
+
+    <string name="dash_state_debian_only">ОС установлена. Перейдите к установке IIAB.</string>
+    <string name="dash_state_installer">Установщик найден, откройте вкладку установки для получения подробной информации.</string>
+    <string name="dash_state_none">Компоненты не найдены, даже Termux.</string>
+    <string name="dash_state_offline">IIAB-oA оффлайн, попробуйте запустить его.</string>
+    <string name="dash_state_online">IIAB-oA доступен онлайн.</string>
+    <string name="dash_state_termux_only">Termux найден, перейдите на вкладку Установка, чтобы управлять им.</string>
+    <string name="dash_termux_searching">Поиск установки...</string>
+
+    <string name="dash_installed_modules">Установленные модули</string>
+    <string name="dash_books">Книги</string>
+    <string name="dash_kiwix">Kiwix</string>
+    <string name="dash_kolibri">Kolibri</string>
+    <string name="dash_maps">Карты</string>
+    <string name="dash_matomo">Matomo</string>
+    <string name="dash_system">Система</string>
+
+
+    <string name="apps">Приложения</string>
+    <string name="browse_content">🚀 Исследовать контент</string>
+    <string name="launch_server">🚀 Запустить сервер</string>
+    <string name="stop_server">🛑 Остановить сервер</string>
+
+    <string name="server_not_installed_warning">Система IIAB-oA (полностью) не установлена. Проверьте вкладку Статус или Установка для получения подробной информации.</string>
+    <string name="server_booting">Загрузка...</string>
+    <string name="server_shutting_down">Выключение...</string>
+    <string name="server_timeout_warning">Предупреждение: Время ожидания перехода состояния сервера истекло.</string>
+    <string name="system_ready">Система готова...\n</string>
+
+    <string name="hotspot">Точка доступа</string>
+    <string name="tunnel">Туннель</string>
+    <string name="wifi">Wi-Fi</string>
+
+    <string name="qr_error_no_network">Включите Wi-Fi или точку доступа, чтобы поделиться контентом по сети.</string>
+    <string name="qr_error_no_server">Запустите сервер, чтобы поделиться контентом по сети.</string>
+    <string name="qr_flip_network">Переключить сеть</string>
+    <string name="qr_title_hotspot">Сеть точки доступа</string>
+    <string name="qr_title_wifi">Сеть Wi-Fi</string>
+
+
+    <string name="control_disable">Выключить Safe Pocket Web</string>
+    <string name="control_enable">Включить Safe Pocket Web</string>
+
+    <string name="dns_ipv4">DNS IPv4:</string>
+    <string name="dns_ipv6">DNS IPv6:</string>
+    <string name="global">Глобально</string>
+    <string name="ipv4">IPv4</string>
+    <string name="ipv6">IPv6</string>
+    <string name="maintenance_mode">Режим обслуживания</string>
+    <string name="maintenance_warning_msg">Отключите Safe Pocket Web для внесения изменений</string>
+    <string name="remote_dns">Удаленный DNS</string>
+    <string name="socks_addr">Адрес Socks:</string>
+    <string name="socks_pass">Пароль Socks:</string>
+    <string name="socks_port">Порт Socks:</string>
+    <string name="socks_udp_addr">UDP адрес Socks:</string>
+    <string name="socks_user">Имя пользователя Socks:</string>
+    <string name="udp_in_tcp">UDP ретрансляция через TCP</string>
+
+    <string name="recovery_channel_name">Восстановление VPN</string>
+    <string name="recovery_notif_text">Нажмите, чтобы немедленно восстановить безопасное окружение.</string>
+    <string name="recovery_notif_title">Safe Pocket Web прерван</string>
+    <string name="tproxy_channel_name">socks5</string>
+    <string name="user_initiated_conn">Соединение инициировано пользователем</string>
+    <string name="vpn_description">Включить дружественные URL. Блокировать угрозы.</string>
+    <string name="vpn_permission_granted">Разрешение VPN получено. Подключение...</string>
+    <string name="vpn_starting">Запуск VPN...</string>
+    <string name="vpn_stopping">Остановка VPN...</string>
+
+
+    <string name="watchdog_disable">Выключить\nМастер Watchdog</string>
+    <string name="watchdog_enable">Включить\nМастер Watchdog</string>
+    <string name="watchdog_description">Защищает Termux от режима Doze и поддерживает Wi-Fi активным.</string>
+
+    <string name="watchdog_channel_desc">Гарантирует, что службы остаются активными при выключенном экране.</string>
+    <string name="watchdog_channel_name">Служба IIAB Watchdog</string>
+    <string name="watchdog_notif_text">Защита окружения Termux...</string>
+    <string name="watchdog_notif_title">IIAB Watchdog активен</string>
+
+    <string name="cpu_wakelock_acquired">CPU WakeLock получен под защитой VPN</string>
+    <string name="cpu_wakelock_released">CPU WakeLock освобожден</string>
+    <string name="error_acquiring_locks">Ошибка получения блокировок</string>
+    <string name="syncing_watchdog">Синхронизация состояния Watchdog. Включено: %b</string>
+    <string name="watchdog_started">Watchdog запущен</string>
+    <string name="watchdog_stopped">Watchdog остановлен</string>
+    <string name="watchdog_thread_ended">Watchdog Thread: Цикл завершен</string>
+    <string name="watchdog_thread_error">Watchdog Thread: Ошибка в цикле</string>
+    <string name="watchdog_thread_interrupted">Watchdog Thread: Прервано, остановка...</string>
+    <string name="watchdog_thread_started">Watchdog Thread: Цикл запущен</string>
+    <string name="wifi_lock_acquired">Wi-Fi Lock получен под защитой VPN</string>
+    <string name="wifi_lock_released">Wi-Fi Lock освобожден</string>
+
+    <string name="critical_os_blocked">КРИТИЧЕСКАЯ ОШИБКА: ОС заблокировала стимуляцию Termux (SecurityException).</string>
+    <string name="failed_termux_intent">КРИТИЧЕСКАЯ ОШИБКА: Ошибка Intent Termux: %s</string>
+    <string name="force_termux_foreground">Принудительно перевести Termux на передний план...</string>
+    <string name="maintenance_mode_enabled">Режим обслуживания включен: Termux имеет прямой доступ в Интернет</string>
+    <string name="maintenance_write_failed">Ошибка записи обслуживания</string>
+    <string name="permission_denied_log">В доступе отказано: убедитесь, что в манифесте есть RUN_COMMAND и приложение не ограничено.</string>
+    <string name="ping_fail">PING 8085: ОШИБКА (%s)</string>
+    <string name="ping_ok">PING 8085: OK</string>
+    <string name="pulse_error_log">Ошибка пульса: %s</string>
+    <string name="pulse_stimulating">Пульс: Стимуляция Termux...</string>
+    <string name="recovery_pulse_received">Пульс восстановления получен от системы. Принудительный VPN...</string>
+    <string name="sent_to_termux">Отправлено в Termux: %s</string>
+    <string name="session_started">СЕАНС СЕРДЦЕБИЕНИЯ ЗАПУЩЕН</string>
+    <string name="session_stopped">СЕАНС СЕРДЦЕБИЕНИЯ ОСТАНОВЛЕН</string>
+    <string name="termux_invocation_error">Ошибка вызова Termux: %1$s</string>
+    <string name="termux_pulse_error">[Termux] Ошибка пульса (exit %1$d): %2$s</string>
+    <string name="termux_stimulus_ok">[Termux] Стимул OK (exit 0)</string>
+    <string name="termux_stuck_warning">Termux не открывается? Включите Мастер Watchdog, чтобы принудительно вывести его на передний план.</string>
+    <string name="unexpected_error_termux">Непредвиденная ошибка при отправке intent в Termux</string>
+
+
+    <string name="end_of_history">--- Конец истории ---</string>
+    <string name="error_reading_history">Ошибка чтения истории: %s</string>
+    <string name="failed_write_blackbox">Ошибка записи в BlackBox</string>
+    <string name="loading_history">--- Загрузка истории ---</string>
+    <string name="log_cleared_toast">Журнал очищен</string>
+    <string name="log_copied_toast">Журнал скопирован в буфер обмена</string>
+    <string name="log_reset_confirm_msg">Это безвозвратно удалит все сохраненные журналы подключений. Это действие нельзя отменить.</string>
+    <string name="log_reset_confirm_title">Сбросить историю журнала?</string>
+    <string name="failed_reset_log">Ошибка сброса журнала: %s</string>
+    <string name="log_reset_log">Журнал сброшен</string>
+    <string name="log_reset_user">Журнал сброшен пользователем</string>
+    <string name="log_size_bytes">%d B</string>
+    <string name="log_size_format">Размер: %1$s / 10MB</string>
+    <string name="log_size_kb">%.1f KB</string>
+    <string name="log_size_mb">%.2f MB</string>
+    <string name="log_warning_rapid_growth">Файл журнала растет слишком быстро, возможно, стоит проверить, нет ли ошибки</string>
+    <string name="no_blackbox_found">--- Файл BlackBox не найден ---</string>
+
+
+    <string name="auth_required_subtitle">Пройдите аутентификацию, чтобы отключить безопасное окружение</string>
+    <string name="auth_required_title">Требуется аутентификация</string>
+    <string name="auth_success_disconnect">Аутентификация успешна. Отключение...</string>
+    <string name="security_required_msg">Перед активацией безопасного окружения необходимо установить PIN-код, графический ключ или отпечаток пальца на устройстве.</string>
+    <string name="security_required_title">Требуется безопасность</string>
+    <string name="unlock_watchdog_subtitle">Требуется аутентификация для остановки защиты Termux</string>
+    <string name="unlock_watchdog_title">Разблокировать Мастер Watchdog</string>
+
+
+    <string name="battery_opt_denied">Для 100% работы приложения, пожалуйста, отключите оптимизацию батареи.</string>
+    <string name="battery_opt_msg">Для надежной работы Watchdog, пожалуйста, отключите оптимизацию батареи для этого приложения.</string>
+    <string name="battery_opt_oppo_extra">\n\nOPPO/Realme обнаружен: Пожалуйста, убедитесь, что вы включили "Разрешить фоновую активность" в настройках этого приложения.</string>
+    <string name="battery_opt_title">Оптимизация батареи</string>
+    <string name="battery_opt_xiaomi_extra">\n\nXiaomi обнаружен: Пожалуйста, установите экономию заряда батареи на "Без ограничений" в настройках.</string>
+    <string name="go_to_settings">Перейти к настройкам</string>
+
+
+    <string name="app_started">Приложение запущено</string>
+    <string name="deploy_wip_desc">Модуль Termux и установщик окружения скоро будут доступны здесь.</string>
+    <string name="deploy_wip_title">WIP - В разработке</string>
+
+    <string name="battery_custom">"Батарея: "</string>
+    <string name="battery_no_value">Батарея: --%</string>
+    <string name="hotspot_fdash">Точка доступа: --</string>
+    <string name="pref_file_internal">IIAB_Internal</string>
+    <string name="pref_key_setup_complete">setup_complete</string>
+    <string name="saved_toast">Сохранено</string>
+    <string name="settings_saved">Настройки сохранены</string>
+    <string name="uptime_no_value">Время работы: --</string>
+    <string name="version_footer_fallback">IIAB-oA · 2026 · Controller v0.1.xbeta</string>
+    <string name="version_footer_format">IIAB-oA · 2026 · Controller %1$s</string>
+    <string name="wi_fi_fdash">Wi-Fi: --</string>
+    <string name="setup_display_over_other_apps">Display over other apps</string>
+    <string name="setup_manage_all_permissions">Manage All Permissions</string>
+    <string name="setup_manage_termux_permissions">Manage Termux permissions</string>
+    <string name="setup_termux_custom_permissions">Termux custom permissions</string>
+</resources>

@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/dash_bg_main">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/dash_text_device_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dash_device"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/dash_text_primary"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/rounded_button"
+            android:backgroundTint="@color/dash_module_bg"
+            android:padding="16dp"
+            android:layout_marginBottom="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/dash_text_wifi_ip"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/dash_text_primary" />
+
+                <TextView
+                    android:id="@+id/dash_text_hotspot_ip"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/dash_text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/dash_text_uptime"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/dash_text_primary" />
+
+                <TextView
+                    android:id="@+id/dash_text_battery"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/dash_text_primary" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dash_divider"
+                android:layout_marginBottom="16dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/dash_main_storage"
+                    android:textStyle="bold"
+                    android:textColor="@color/dash_text_primary" />
+                <TextView
+                    android:id="@+id/dash_text_storage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-- GB / -- GB"
+                    android:textColor="@color/dash_text_secondary"
+                    android:textSize="12sp"/>
+            </LinearLayout>
+            <ProgressBar
+                android:id="@+id/dash_progress_storage"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="12dp"
+                android:progressDrawable="@drawable/rounded_progress_bar"
+                android:progressTint="@color/dash_bar_storage"
+                android:progressBackgroundTint="@color/dash_bar_bg"
+                android:progress="0"
+                android:layout_marginBottom="16dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:baselineAligned="false">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="8dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/dash_ram_memory"
+                        android:textColor="@color/dash_text_primary"
+                        android:textStyle="bold"
+                        android:maxLines="1" />
+
+                    <TextView
+                        android:id="@+id/dash_text_ram"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="-- / --"
+                        android:textColor="@color/dash_text_secondary"
+                        android:textSize="12sp"
+                        android:gravity="end"
+                        android:layout_marginTop="2dp" />
+
+                    <ProgressBar
+                        android:id="@+id/dash_progress_ram"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="4dp"
+                        android:progressDrawable="@drawable/rounded_progress_bar"
+                        android:progressTint="@color/dash_bar_ram"
+                        android:progressBackgroundTint="@color/dash_bar_bg"
+                        android:progress="0"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="8dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/dash_swap_virtual"
+                        android:textColor="@color/dash_text_primary"
+                        android:textStyle="bold"
+                        android:maxLines="1" />
+
+                    <TextView
+                        android:id="@+id/dash_text_swap"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="-- / --"
+                        android:textColor="@color/dash_text_secondary"
+                        android:textSize="12sp"
+                        android:gravity="end"
+                        android:layout_marginTop="2dp" />
+
+                    <ProgressBar
+                        android:id="@+id/dash_progress_swap"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="4dp"
+                        android:progressDrawable="@drawable/rounded_progress_bar"
+                        android:progressTint="@color/dash_bar_swap"
+                        android:progressBackgroundTint="@color/dash_bar_bg"
+                        android:progress="0"/>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dash_iiab_system"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/dash_text_primary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/rounded_button"
+            android:backgroundTint="@color/dash_module_bg"
+            android:padding="16dp"
+            android:layout_marginBottom="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="12dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/dash_server_status"
+                    android:textColor="@color/dash_text_primary" />
+
+                <TextView
+                    android:id="@+id/dash_badge_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dash_offline"
+                    android:background="@drawable/rounded_button"
+                    android:backgroundTint="#555555"
+                    android:textColor="@color/dash_text_primary"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/dash_divider"
+                android:layout_marginBottom="12dp"/>
+
+            <LinearLayout
+                android:id="@+id/dash_card_termux_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <View
+                    android:id="@+id/led_termux_state"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:background="@drawable/led_off"
+                    android:layout_marginEnd="12dp"/>
+
+                <TextView
+                    android:id="@+id/text_termux_state"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dash_termux_searching"
+                    android:textColor="@color/dash_text_primary" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/dash_modules_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/dash_installed_modules"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp"
+            android:paddingVertical="8dp"
+            android:paddingHorizontal="0dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <LinearLayout
+            android:id="@+id/modules_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="24dp" />
+
+    </LinearLayout>
+</ScrollView>
