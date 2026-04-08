@@ -56,6 +56,9 @@ cmd_restore_rootfs() {
   if proot-distro restore "$backup_file"; then
     ok "Restoration completed successfully."
     BASELINE_OK=1
+
+    # Sync state to Android App: System restored and ready!
+    set_android_state_flag "flag_system_installed"
   else
     warn_red "Failed to restore backup."
     return 1

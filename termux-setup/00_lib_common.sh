@@ -51,6 +51,27 @@ HOST="${HOST:-127.0.0.1}"
 CONNECT_PORT="${CONNECT_PORT:-}"
 TIMEOUT_SECS="${TIMEOUT_SECS:-180}"
 
+# -------------------------
+# Android App State Sync (Controller Communication)
+# -------------------------
+ANDROID_SHARED_STATE_DIR="/sdcard/.iiab_state"
+
+set_android_state_flag() {
+  local flag_name="$1"
+  # Only attempt if /sdcard is accessible
+  if [[ -d "/sdcard" ]]; then
+    mkdir -p "$ANDROID_SHARED_STATE_DIR" 2>/dev/null || true
+    touch "${ANDROID_SHARED_STATE_DIR}/${flag_name}" 2>/dev/null || true
+  fi
+}
+
+clear_android_state_flag() {
+  local flag_name="$1"
+  if [[ -d "/sdcard" ]]; then
+    rm -f "${ANDROID_SHARED_STATE_DIR}/${flag_name}" 2>/dev/null || true
+  fi
+}
+
 # Defaults used by ADB flows / logging / misc
 CLEANUP_OFFLINE="${CLEANUP_OFFLINE:-1}"
 DEBUG="${DEBUG:-0}"

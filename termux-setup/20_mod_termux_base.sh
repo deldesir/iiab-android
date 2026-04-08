@@ -568,6 +568,17 @@ step_termux_base() {
     have termux-reload-settings && termux-reload-settings || true
   fi
 
+  if [[ ! -d "${HOME}/storage/shared" ]]; then
+    log_yel "Termux needs storage access to communicate with the IIAB Controller App."
+    warn "An Android permission dialog will appear."
+    warn "Please tap 'Allow' (or 'All files access')."
+    termux-setup-storage
+    # termux-setup-storage is asynchronous, so we must pause to let the user tap 'Allow'
+    countdown_timer 10 "\r${BLU}[iiab]${RST} Waiting for user to grant storage permission... %d secs "
+  else
+    ok "Storage access already granted."
+  fi
+
   log "Updating Termux packages (noninteractive) and installing baseline dependencies..."
   export DEBIAN_FRONTEND=noninteractive
 

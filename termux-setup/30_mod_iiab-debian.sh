@@ -22,6 +22,9 @@ cmd_remove_iiab() {
     log "Removing IIAB Debian..."
     proot-distro remove iiab || { warn_red "Failed to remove IIAB Debian."; return 1; }
     ok "IIAB Debian successfully removed."
+
+    # Sync state to Android App: System is gone
+    clear_android_state_flag "flag_system_installed"
   else
     log "Removal aborted by user."
   fi
@@ -65,6 +68,10 @@ step_iiab_bootstrap_default() {
     log_yel "Reset requested: reinstalling IIAB Debian (clean environment)..."
     if proot-distro help 2>/dev/null | grep -qE '\breset\b'; then
       proot-distro reset iiab || true
+
+      # Sync state to Android App: Old system wiped
+      clear_android_state_flag "flag_system_installed"
+
       # If reset was requested but iiab wasn't installed yet (or reset failed), ensure it's present.
       iiab_exists || proot_install_iiab_safe || true
     else
@@ -104,6 +111,9 @@ step_iiab_bootstrap_default() {
   set -e
   if [[ $rc -eq 0 ]]; then
     ok "IIAB Debian bootstrap complete."
+
+    # Sync state to Android App: System is ready!
+    set_android_state_flag "flag_system_installed"
   else
     warn_red "IIAB Debian bootstrap incomplete (inner apt-get failed, rc=$rc)."
     warn "You can retry later with: iiab-termux --login"
