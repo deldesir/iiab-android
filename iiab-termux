@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-04-04T00:15:48-06:00 - do not edit directly.
+# GENERATED FILE: 2026-04-07T19:59:16-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -61,6 +61,27 @@ LOG_DIR="${LOG_DIR:-${STATE_DIR}/logs}"
 HOST="${HOST:-127.0.0.1}"
 CONNECT_PORT="${CONNECT_PORT:-}"
 TIMEOUT_SECS="${TIMEOUT_SECS:-180}"
+
+# -------------------------
+# Android App State Sync (Controller Communication)
+# -------------------------
+ANDROID_SHARED_STATE_DIR="/sdcard/.iiab_state"
+
+set_android_state_flag() {
+  local flag_name="$1"
+  # Only attempt if /sdcard is accessible
+  if [[ -d "/sdcard" ]]; then
+    mkdir -p "$ANDROID_SHARED_STATE_DIR" 2>/dev/null || true
+    touch "${ANDROID_SHARED_STATE_DIR}/${flag_name}" 2>/dev/null || true
+  fi
+}
+
+clear_android_state_flag() {
+  local flag_name="$1"
+  if [[ -d "/sdcard" ]]; then
+    rm -f "${ANDROID_SHARED_STATE_DIR}/${flag_name}" 2>/dev/null || true
+  fi
+}
 
 # Defaults used by ADB flows / logging / misc
 CLEANUP_OFFLINE="${CLEANUP_OFFLINE:-1}"
@@ -1268,6 +1289,17 @@ step_termux_base() {
     have termux-reload-settings && termux-reload-settings || true
   fi
 
+  if [[ ! -d "${HOME}/storage/shared" ]]; then
+    log_yel "Termux needs storage access to communicate with the IIAB Controller App."
+    warn "An Android permission dialog will appear."
+    warn "Please tap 'Allow' (or 'All files access')."
+    termux-setup-storage
+    # termux-setup-storage is asynchronous, so we must pause to let the user tap 'Allow'
+    countdown_timer 10 "\r${BLU}[iiab]${RST} Waiting for user to grant storage permission... %d secs "
+  else
+    ok "Storage access already granted."
+  fi
+
   log "Updating Termux packages (noninteractive) and installing baseline dependencies..."
   export DEBIAN_FRONTEND=noninteractive
 
@@ -1413,6 +1445,9 @@ cmd_restore_rootfs() {
   if proot-distro restore "$backup_file"; then
     ok "Restoration completed successfully."
     BASELINE_OK=1
+
+    # Sync state to Android App: System restored and ready!
+    set_android_state_flag "flag_system_installed"
   else
     warn_red "Failed to restore backup."
     return 1
@@ -1727,6 +1762,9 @@ cmd_remove_iiab() {
     log "Removing IIAB Debian..."
     proot-distro remove iiab || { warn_red "Failed to remove IIAB Debian."; return 1; }
     ok "IIAB Debian successfully removed."
+
+    # Sync state to Android App: System is gone
+    clear_android_state_flag "flag_system_installed"
   else
     log "Removal aborted by user."
   fi
@@ -1770,6 +1808,10 @@ step_iiab_bootstrap_default() {
     log_yel "Reset requested: reinstalling IIAB Debian (clean environment)..."
     if proot-distro help 2>/dev/null | grep -qE '\breset\b'; then
       proot-distro reset iiab || true
+
+      # Sync state to Android App: Old system wiped
+      clear_android_state_flag "flag_system_installed"
+
       # If reset was requested but iiab wasn't installed yet (or reset failed), ensure it's present.
       iiab_exists || proot_install_iiab_safe || true
     else
@@ -1809,6 +1851,9 @@ step_iiab_bootstrap_default() {
   set -e
   if [[ $rc -eq 0 ]]; then
     ok "IIAB Debian bootstrap complete."
+
+    # Sync state to Android App: System is ready!
+    set_android_state_flag "flag_system_installed"
   else
     warn_red "IIAB Debian bootstrap incomplete (inner apt-get failed, rc=$rc)."
     warn "You can retry later with: iiab-termux --login"
@@ -3557,6 +3602,9 @@ main() {
   validate_args
   sanitize_timeout
   acquire_wakelock
+
+  # Sync state to Android App: Installer is actively running/present
+  set_android_state_flag "flag_installer_present"
 
   case "$MODE" in
     update)

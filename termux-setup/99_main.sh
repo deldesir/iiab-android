@@ -461,6 +461,9 @@ main() {
   sanitize_timeout
   acquire_wakelock
 
+  # Sync state to Android App: Installer is actively running/present
+  set_android_state_flag "flag_installer_present"
+
   case "$MODE" in
     update)
       update_iiab_termux "$0"
