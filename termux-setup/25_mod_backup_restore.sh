@@ -59,6 +59,7 @@ cmd_restore_rootfs() {
 
     # Sync state to Android App: System restored and ready!
     set_android_state_flag "flag_system_installed"
+    set_android_state_flag "flag_iiab_ready"
   else
     warn_red "Failed to restore backup."
     return 1

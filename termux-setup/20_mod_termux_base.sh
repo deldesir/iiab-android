@@ -273,6 +273,10 @@ power_mode_battery_instructions() {
 
 power_mode_offer_battery_settings_once() {
   [[ "${POWER_MODE_BATTERY_PROMPT:-1}" -eq 1 ]] || return 0
+  if [[ -f "${ANDROID_SHARED_STATE_DIR}/flag_perm_battery" ]]; then
+    return 0
+  fi
+
   mkdir -p "$STATE_DIR" >/dev/null 2>&1 || true
 
   local stamp="$POWER_MODE_BATTERY_STAMP"
@@ -306,6 +310,10 @@ POWER_MODE_OVERLAY_STAMP="${STATE_DIR}/stamp.termux_overlay_settings"
 
 power_mode_offer_overlay_settings_once() {
   [[ "${POWER_MODE_OVERLAY_PROMPT:-1}" -eq 1 ]] || return 0
+  if [[ -f "${ANDROID_SHARED_STATE_DIR}/flag_perm_overlay" ]]; then
+    return 0
+  fi
+
   mkdir -p "$STATE_DIR" >/dev/null 2>&1 || true
 
   local stamp="$POWER_MODE_OVERLAY_STAMP"

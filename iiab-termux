@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-04-07T19:59:16-06:00 - do not edit directly.
+# GENERATED FILE: 2026-04-08T00:55:56-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -994,6 +994,10 @@ power_mode_battery_instructions() {
 
 power_mode_offer_battery_settings_once() {
   [[ "${POWER_MODE_BATTERY_PROMPT:-1}" -eq 1 ]] || return 0
+  if [[ -f "${ANDROID_SHARED_STATE_DIR}/flag_perm_battery" ]]; then
+    return 0
+  fi
+
   mkdir -p "$STATE_DIR" >/dev/null 2>&1 || true
 
   local stamp="$POWER_MODE_BATTERY_STAMP"
@@ -1027,6 +1031,10 @@ POWER_MODE_OVERLAY_STAMP="${STATE_DIR}/stamp.termux_overlay_settings"
 
 power_mode_offer_overlay_settings_once() {
   [[ "${POWER_MODE_OVERLAY_PROMPT:-1}" -eq 1 ]] || return 0
+  if [[ -f "${ANDROID_SHARED_STATE_DIR}/flag_perm_overlay" ]]; then
+    return 0
+  fi
+
   mkdir -p "$STATE_DIR" >/dev/null 2>&1 || true
 
   local stamp="$POWER_MODE_OVERLAY_STAMP"
@@ -1448,6 +1456,7 @@ cmd_restore_rootfs() {
 
     # Sync state to Android App: System restored and ready!
     set_android_state_flag "flag_system_installed"
+    set_android_state_flag "flag_iiab_ready"
   else
     warn_red "Failed to restore backup."
     return 1
@@ -1765,6 +1774,7 @@ cmd_remove_iiab() {
 
     # Sync state to Android App: System is gone
     clear_android_state_flag "flag_system_installed"
+    clear_android_state_flag "flag_iiab_ready"
   else
     log "Removal aborted by user."
   fi
@@ -1811,11 +1821,16 @@ step_iiab_bootstrap_default() {
 
       # Sync state to Android App: Old system wiped
       clear_android_state_flag "flag_system_installed"
+      clear_android_state_flag "flag_iiab_ready"
 
       # If reset was requested but iiab wasn't installed yet (or reset failed), ensure it's present.
       iiab_exists || proot_install_iiab_safe || true
     else
-      if iiab_exists; then proot-distro remove iiab || true; fi
+      if iiab_exists; then
+        proot-distro remove iiab || true
+        clear_android_state_flag "flag_system_installed"
+        clear_android_state_flag "flag_iiab_ready"
+      fi
       proot_install_iiab_safe || true
     fi
   else
