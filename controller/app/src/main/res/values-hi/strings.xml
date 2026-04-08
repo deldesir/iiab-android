@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">IIAB-oA Controller</string>
+    <string name="default_version">v0.1.x</string>
+
+    <string name="cancel">रद्द करें</string>
+    <string name="copy_all">सभी कॉपी करें</string>
+    <string name="fix_action">ठीक करें</string>
+    <string name="save">सहेजें</string>
+
+    <string name="advanced_settings_label">टनल सेटिंग्स</string>
+    <string name="configuration_label">कॉन्फ़िगरेशन</string>
+    <string name="connection_log_label">कनेक्शन लॉग</string>
+    <string name="label_separator_down">▼ %s</string>
+    <string name="label_separator_up">▶ %s</string>
+    <string name="settings_label">सेटिंग्स</string>
+
+    <string name="tab_deploy">इंस्टालेशन</string>
+    <string name="tab_status">स्थिति</string>
+    <string name="tab_usage">उपयोग</string>
+
+
+    <string name="setup_title">प्रारंभिक सेटअप</string>
+    <string name="setup_welcome">%1$s सेटअप विज़ार्ड में आपका स्वागत है।\n\nठीक से काम करने के लिए, हमें निम्नलिखित अनुमतियों की आवश्यकता है:</string>
+    <string name="setup_continue">जारी रखें</string>
+
+    <string name="setup_perm_battery">बैटरी अनुकूलन अक्षम करें</string>
+    <string name="setup_perm_notifications">पुश सूचनाएं</string>
+    <string name="setup_perm_storage">स्थानीय स्टोरेज एक्सेस</string>
+    <string name="setup_perm_termux">Termux निष्पादन</string>
+    <string name="setup_perm_vpn">Safe Pocket Web (VPN)</string>
+
+    <string name="setup_termux_storage_btn">फ़ाइलें और मीडिया (स्टोरेज)</string>
+    <string name="termux_not_installed">Termux इंस्टॉल नहीं है।</string>
+    <string name="termux_not_installed_error">Termux इंस्टॉल नहीं है या डिवाइस समर्थित नहीं है।</string>
+
+    <string name="notif_perm_denied">सूचना अनुमति अस्वीकार</string>
+    <string name="notif_perm_granted">सूचना अनुमति दी गई</string>
+    <string name="revoke_permission_warning">अनुमतियां रद्द करने के लिए, आपको सिस्टम सेटिंग्स में जाना होगा।</string>
+    <string name="termux_perm_denied">Termux अनुमति अस्वीकार</string>
+    <string name="termux_perm_granted">Termux अनुमति दी गई</string>
+
+
+    <string name="dash_title">IIAB-oA Controller</string>
+    <string name="dash_subtitle_localhost">localhost</string>
+
+    <string name="dash_device">डिवाइस लोड हो रहा है...</string>
+    <string name="dash_ip">IP: %1$s</string>
+    <string name="dash_uptime">अपटाइम: %1$s</string>
+    <string name="dash_battery_format"><b>बैटरी:</b> %1$d%%</string>
+    <string name="dash_battery_no_value"><b>बैटरी:</b> --%%</string>
+    <string name="dash_hotspot_format"><b>हॉटस्पॉट:</b> %1$s</string>
+    <string name="dash_uptime_format"><b>अपटाइम:</b> %1$s</string>
+    <string name="dash_wifi_format"><b>Wi-Fi:</b> %1$s</string>
+    <string name="dash_main_storage">मुख्य स्टोरेज</string>
+    <string name="dash_ram_memory">RAM मेमोरी</string>
+    <string name="dash_swap_virtual">स्वैप (वर्चुअल)</string>
+
+    <string name="dash_server_status">सर्वर स्थिति:</string>
+    <string name="dash_offline">ऑफ़लाइन</string>
+    <string name="dash_online">ऑनलाइन</string>
+    <string name="dash_system_state">सिस्टम स्थिति</string>
+    <string name="dash_iiab_system">सिस्टम IIAB-oA</string>
+
+    <string name="dash_state_debian_only">बेस OS इंस्टॉल है। IIAB इंस्टॉल करना जारी रखें।</string>
+    <string name="dash_state_installer">इंस्टॉलर मिला, अधिक जानकारी के लिए इंस्टालेशन टैब खोलें।</string>
+    <string name="dash_state_none">कोई घटक नहीं मिला, यहाँ तक कि Termux भी नहीं।</string>
+    <string name="dash_state_offline">IIAB-oA ऑफ़लाइन लग रहा है, इसे लॉन्च करने का प्रयास करें।</string>
+    <string name="dash_state_online">IIAB-oA ऑनलाइन है।</string>
+    <string name="dash_state_termux_only">Termux मिला, इसे प्रबंधित करने के लिए इंस्टालेशन टैब पर जाएं।</string>
+    <string name="dash_termux_searching">इंस्टालेशन खोज रहा है...</string>
+
+    <string name="dash_installed_modules">इंस्टॉल किए गए मॉड्यूल</string>
+    <string name="dash_books">पुस्तकें</string>
+    <string name="dash_kiwix">Kiwix</string>
+    <string name="dash_kolibri">Kolibri</string>
+    <string name="dash_maps">मानचित्र</string>
+    <string name="dash_matomo">Matomo</string>
+    <string name="dash_system">सिस्टम</string>
+
+
+    <string name="apps">ऐप्स</string>
+    <string name="browse_content">🚀 सामग्री देखें</string>
+    <string name="launch_server">🚀 सर्वर लॉन्च करें</string>
+    <string name="stop_server">🛑 सर्वर बंद करें</string>
+
+    <string name="server_not_installed_warning">IIAB-oA सिस्टम (पूरी तरह से) इंस्टॉल नहीं लग रहा है। कृपया अधिक जानकारी के लिए स्थिति या इंस्टालेशन टैब देखें।</string>
+    <string name="server_booting">बूट हो रहा है...</string>
+    <string name="server_shutting_down">बंद हो रहा है...</string>
+    <string name="server_timeout_warning">चेतावनी: सर्वर स्थिति परिवर्तन का समय समाप्त हो गया।</string>
+    <string name="system_ready">सिस्टम तैयार...\n</string>
+
+    <string name="hotspot">हॉटस्पॉट</string>
+    <string name="tunnel">टनल</string>
+    <string name="wifi">Wi-Fi</string>
+
+    <string name="qr_error_no_network">नेटवर्क पर सामग्री साझा करने के लिए Wi-Fi या हॉटस्पॉट सक्षम करें।</string>
+    <string name="qr_error_no_server">नेटवर्क पर सामग्री साझा करने के लिए सर्वर लॉन्च करें।</string>
+    <string name="qr_flip_network">नेटवर्क स्विच करें</string>
+    <string name="qr_title_hotspot">हॉटस्पॉट नेटवर्क</string>
+    <string name="qr_title_wifi">Wi-Fi नेटवर्क</string>
+
+
+    <string name="control_disable">Safe Pocket Web अक्षम करें</string>
+    <string name="control_enable">Safe Pocket Web सक्षम करें</string>
+
+    <string name="dns_ipv4">DNS IPv4:</string>
+    <string name="dns_ipv6">DNS IPv6:</string>
+    <string name="global">ग्लोबल</string>
+    <string name="ipv4">IPv4</string>
+    <string name="ipv6">IPv6</string>
+    <string name="maintenance_mode">रखरखाव मोड</string>
+    <string name="maintenance_warning_msg">संशोधन करने के लिए Safe Pocket Web अक्षम करें</string>
+    <string name="remote_dns">रिमोट DNS</string>
+    <string name="socks_addr">Socks पता:</string>
+    <string name="socks_pass">Socks पासवर्ड:</string>
+    <string name="socks_port">Socks पोर्ट:</string>
+    <string name="socks_udp_addr">Socks UDP पता:</string>
+    <string name="socks_user">Socks उपयोगकर्ता नाम:</string>
+    <string name="udp_in_tcp">TCP पर UDP रिले</string>
+
+    <string name="recovery_channel_name">VPN रिकवरी</string>
+    <string name="recovery_notif_text">सुरक्षित वातावरण को तुरंत बहाल करने के लिए टैप करें।</string>
+    <string name="recovery_notif_title">Safe Pocket Web बाधित</string>
+    <string name="tproxy_channel_name">socks5</string>
+    <string name="user_initiated_conn">उपयोगकर्ता द्वारा शुरू किया गया कनेक्शन</string>
+    <string name="vpn_description">अनुकूल URL सक्षम करें। खतरों को ब्लॉक करें।</string>
+    <string name="vpn_permission_granted">VPN अनुमति दी गई। कनेक्ट हो रहा है...</string>
+    <string name="vpn_starting">VPN शुरू हो रहा है...</string>
+    <string name="vpn_stopping">VPN बंद हो रहा है...</string>
+
+
+    <string name="watchdog_disable">मास्टर वॉचडॉग\nअक्षम करें</string>
+    <string name="watchdog_enable">मास्टर वॉचडॉग\nसक्षम करें</string>
+    <string name="watchdog_description">Termux को Doze मोड से बचाता है और Wi-Fi को सक्रिय रखता है।</string>
+
+    <string name="watchdog_channel_desc">यह सुनिश्चित करता है कि स्क्रीन बंद होने पर भी सेवाएं सक्रिय रहें।</string>
+    <string name="watchdog_channel_name">IIAB वॉचडॉग सेवा</string>
+    <string name="watchdog_notif_text">Termux वातावरण की सुरक्षा...</string>
+    <string name="watchdog_notif_title">IIAB वॉचडॉग सक्रिय</string>
+
+    <string name="cpu_wakelock_acquired">VPN सुरक्षा के तहत CPU WakeLock प्राप्त</string>
+    <string name="cpu_wakelock_released">CPU WakeLock जारी</string>
+    <string name="error_acquiring_locks">लॉक प्राप्त करने में त्रुटि</string>
+    <string name="syncing_watchdog">वॉचडॉग स्थिति सिंक हो रही है। सक्षम: %b</string>
+    <string name="watchdog_started">वॉचडॉग शुरू</string>
+    <string name="watchdog_stopped">वॉचडॉग बंद</string>
+    <string name="watchdog_thread_ended">वॉचडॉग थ्रेड: लूप समाप्त</string>
+    <string name="watchdog_thread_error">वॉचडॉग थ्रेड: लूप में त्रुटि</string>
+    <string name="watchdog_thread_interrupted">वॉचडॉग थ्रेड: बाधित, बंद हो रहा है...</string>
+    <string name="watchdog_thread_started">वॉचडॉग थ्रेड: लूप शुरू हुआ</string>
+    <string name="wifi_lock_acquired">VPN सुरक्षा के तहत Wi-Fi Lock प्राप्त</string>
+    <string name="wifi_lock_released">Wi-Fi Lock जारी</string>
+
+    <string name="critical_os_blocked">क्रिटिकल: OS ने Termux उत्तेजना को ब्लॉक कर दिया (SecurityException)।</string>
+    <string name="failed_termux_intent">क्रिटिकल: Termux इंटेंट विफल: %s</string>
+    <string name="force_termux_foreground">Termux को फॉरग्राउंड में मजबूर किया जा रहा है...</string>
+    <string name="maintenance_mode_enabled">रखरखाव मोड सक्षम: Termux के पास सीधा इंटरनेट एक्सेस है</string>
+    <string name="maintenance_write_failed">रखरखाव लेखन विफल</string>
+    <string name="permission_denied_log">अनुमति अस्वीकार: सुनिश्चित करें कि मैनिफ़ेस्ट में RUN_COMMAND है और ऐप प्रतिबंधित नहीं है।</string>
+    <string name="ping_fail">PING 8085: विफल (%s)</string>
+    <string name="ping_ok">PING 8085: OK</string>
+    <string name="pulse_error_log">पल्स त्रुटि: %s</string>
+    <string name="pulse_stimulating">पल्स: Termux को उत्तेजित करना...</string>
+    <string name="recovery_pulse_received">सिस्टम से रिकवरी पल्स प्राप्त। VPN लागू किया जा रहा है...</string>
+    <string name="sent_to_termux">Termux को भेजा गया: %s</string>
+    <string name="session_started">हार्टबीट सत्र शुरू हुआ</string>
+    <string name="session_stopped">हार्टबीट सत्र बंद हुआ</string>
+    <string name="termux_invocation_error">Termux को बुलाने में त्रुटि: %1$s</string>
+    <string name="termux_pulse_error">[Termux] पल्स त्रुटि (exit %1$d): %2$s</string>
+    <string name="termux_stimulus_ok">[Termux] स्टिमुलस OK (exit 0)</string>
+    <string name="termux_stuck_warning">Termux नहीं खुल रहा है? फोकस पाने के लिए मास्टर वॉचडॉग सक्षम करें।</string>
+    <string name="unexpected_error_termux">Termux पर इंटेंट भेजने में अनपेक्षित त्रुटि</string>
+
+
+    <string name="end_of_history">--- इतिहास का अंत ---</string>
+    <string name="error_reading_history">इतिहास पढ़ने में त्रुटि: %s</string>
+    <string name="failed_write_blackbox">BlackBox में लिखने में विफल</string>
+    <string name="loading_history">--- इतिहास लोड हो रहा है ---</string>
+    <string name="log_cleared_toast">लॉग साफ़ किया गया</string>
+    <string name="log_copied_toast">लॉग क्लिपबोर्ड पर कॉपी किया गया</string>
+    <string name="log_reset_confirm_msg">यह सभी संग्रहीत कनेक्शन लॉग को स्थायी रूप से हटा देगा। यह कार्रवाई पूर्ववत नहीं की जा सकती।</string>
+    <string name="log_reset_confirm_title">लॉग इतिहास रीसेट करें?</string>
+    <string name="failed_reset_log">लॉग रीसेट करने में विफल: %s</string>
+    <string name="log_reset_log">लॉग रीसेट किया गया</string>
+    <string name="log_reset_user">उपयोगकर्ता द्वारा लॉग रीसेट</string>
+    <string name="log_size_bytes">%d B</string>
+    <string name="log_size_format">आकार: %1$s / 10MB</string>
+    <string name="log_size_kb">%.1f KB</string>
+    <string name="log_size_mb">%.2f MB</string>
+    <string name="log_warning_rapid_growth">लॉग फ़ाइल बहुत तेज़ी से बढ़ रही है, आपको जांचना चाहिए कि क्या कुछ विफल हो रहा है</string>
+    <string name="no_blackbox_found">--- कोई BlackBox फ़ाइल नहीं मिली ---</string>
+
+
+    <string name="auth_required_subtitle">सुरक्षित वातावरण को अक्षम करने के लिए प्रमाणित करें</string>
+    <string name="auth_required_title">प्रमाणीकरण आवश्यक है</string>
+    <string name="auth_success_disconnect">प्रमाणीकरण सफल। डिस्कनेक्ट हो रहा है...</string>
+    <string name="security_required_msg">सुरक्षित वातावरण को सक्षम करने से पहले आपको अपने डिवाइस पर PIN, पैटर्न या फ़िंगरप्रिंट सेट करना होगा।</string>
+    <string name="security_required_title">सुरक्षा आवश्यक</string>
+    <string name="unlock_watchdog_subtitle">Termux सुरक्षा को रोकने के लिए प्रमाणीकरण आवश्यक है</string>
+    <string name="unlock_watchdog_title">मास्टर वॉचडॉग अनलॉक करें</string>
+
+
+    <string name="battery_opt_denied">ऐप को 100% काम करने के लिए, कृपया बैटरी अनुकूलन को अक्षम करें।</string>
+    <string name="battery_opt_msg">वॉचडॉग के विश्वसनीय रूप से काम करने के लिए, कृपया इस ऐप के लिए बैटरी अनुकूलन को अक्षम करें।</string>
+    <string name="battery_opt_oppo_extra">\n\nOPPO/Realme पहचाना गया: कृपया सुनिश्चित करें कि आप इस ऐप की सेटिंग्स में \'Allow background activity\' सक्षम करें।</string>
+    <string name="battery_opt_title">बैटरी अनुकूलन</string>
+    <string name="battery_opt_xiaomi_extra">\n\nXiaomi पहचाना गया: कृपया सेटिंग्स में बैटरी सेवर को \'No restrictions\' पर सेट करें।</string>
+    <string name="go_to_settings">सेटिंग्स पर जाएं</string>
+
+
+    <string name="app_started">एप्लिकेशन शुरू हुआ</string>
+    <string name="deploy_wip_desc">Termux मॉड्यूल और वातावरण इंस्टॉलर जल्द ही यहां उपलब्ध होंगे।</string>
+    <string name="deploy_wip_title">WIP - निर्माणाधीन</string>
+
+    <string name="battery_custom">"Battery: "</string>
+    <string name="battery_no_value">Battery: --%</string>
+    <string name="hotspot_fdash">हॉटस्पॉट: --</string>
+    <string name="pref_file_internal">IIAB_Internal</string>
+    <string name="pref_key_setup_complete">setup_complete</string>
+    <string name="saved_toast">सहेजा गया</string>
+    <string name="settings_saved">सेटिंग्स सहेजी गईं</string>
+    <string name="uptime_no_value">अपटाइम: --</string>
+    <string name="version_footer_fallback">IIAB-oA · 2026 · Controller v0.1.xbeta</string>
+    <string name="version_footer_format">IIAB-oA · 2026 · Controller %1$s</string>
+    <string name="wi_fi_fdash">Wi-Fi: --</string>
+    <string name="setup_display_over_other_apps">Display over other apps</string>
+    <string name="setup_manage_all_permissions">Manage All Permissions</string>
+    <string name="setup_manage_termux_permissions">Manage Termux permissions</string>
+    <string name="setup_termux_custom_permissions">Termux custom permissions</string>
+</resources>

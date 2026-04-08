@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="sectionBackground" format="color" />
+    <attr name="sectionHeaderBackground" format="color" />
+    <declare-styleable name="ProgressButton">
+        <attr name="progressButtonColor" format="color" />
+        <attr name="progressButtonBackgroundColor" format="color" />
+        <attr name="progressButtonHeight" format="dimension" />
+        <attr name="progressButtonDuration" format="integer" />
+    </declare-styleable>
+</resources>
