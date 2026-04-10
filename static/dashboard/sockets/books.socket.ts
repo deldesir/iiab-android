@@ -262,9 +262,9 @@ export const handleBooksEvents = (socket: Socket) => {
             socket.emit('local_book_status', { id: bookId, status: 'deleted' });
             socket.emit('refresh_local_books');
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('[Books] Delete Error:', error);
-            socket.emit('local_book_status', { id: bookId, status: 'error' });
+            socket.emit('local_book_status', { id: bookId, status: 'error', message: error.message || 'Unknown error' });
         }
     });
 
@@ -353,9 +353,9 @@ export const handleBooksEvents = (socket: Socket) => {
                 console.log(`[Books] Batch added successfully via API: ${book.title}`);
                 socket.emit('book_status_update', { id: book.id, status: 'completed' });
 
-            } catch (err) {
+            } catch (err: any) {
                 console.error(`[Books] Error batch processing book ${book.id}:`, err);
-                socket.emit('book_status_update', { id: book.id, status: 'error' });
+                socket.emit('book_status_update', { id: book.id, status: 'error', message: err.message });
             } finally {
                 if (fs.existsSync(tempFilePath)) {
                     fs.unlinkSync(tempFilePath);
