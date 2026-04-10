@@ -30,7 +30,8 @@ public class PortalActivity extends AppCompatActivity {
     private static final String TAG = "IIAB-Portal";
     private WebView webView;
     private boolean isPageLoading = false;
-
+    private android.webkit.ValueCallback<android.net.Uri[]> filePathCallback;
+    private final static int FILECHOOSER_RESULTCODE = 100;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -191,6 +192,24 @@ public class PortalActivity extends AppCompatActivity {
         btnExit.setOnClickListener(v -> finish());
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setDomStorageEnabled(true);
+        webView.setWebChromeClient(new android.webkit.WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView webView, android.webkit.ValueCallback<android.net.Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+                if (PortalActivity.this.filePathCallback != null) {
+                    PortalActivity.this.filePathCallback.onReceiveValue(null);
+                }
+                PortalActivity.this.filePathCallback = filePathCallback;
+
+                Intent intent = fileChooserParams.createIntent();
+                try {
+                    startActivityForResult(intent, FILECHOOSER_RESULTCODE);
+                } catch (android.content.ActivityNotFoundException e) {
+                    PortalActivity.this.filePathCallback = null;
+                    return false;
+                }
+                return true;
+            }
+        });
 
         // Port and Mirror logic
         int tempPort = prefs.getSocksPort();
@@ -241,6 +260,33 @@ public class PortalActivity extends AppCompatActivity {
             webView.goBack();
         } else {
             super.onBackPressed();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == FILECHOOSER_RESULTCODE) {
+            if (filePathCallback == null) return;
+
+            android.net.Uri[] results = null;
+
+            if (resultCode == RESULT_OK && data != null) {
+                String dataString = data.getDataString();
+                if (dataString != null) {
+                    results = new android.net.Uri[]{android.net.Uri.parse(dataString)};
+                } else if (data.getClipData() != null) {
+                    int count = data.getClipData().getItemCount();
+                    results = new android.net.Uri[count];
+                    for (int i = 0; i < count; i++) {
+                        results[i] = data.getClipData().getItemAt(i).getUri();
+                    }
+                }
+            }
+
+            filePathCallback.onReceiveValue(results);
+            filePathCallback = null;
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 }
