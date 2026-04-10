@@ -66,3 +66,431 @@ document.addEventListener("DOMContentLoaded", () => {
     loadLanguage();
     switchTab('home');
 });
+
+// ==========================================
+// APP: Books Manager Logic
+// ==========================================
+
+let activeBookTab = 'local';
+let remoteBooksData = [];
+let localBooksData = [];
+let selectedRemoteBooks = [];
+let activeDownloads = 0;
+let pendingCalibreAction = null;
+const MAX_DOWNLOADS = 5;
+let selectedRemoteBook = null; 
+let catalogIsSynced = false;
+
+// --- Synchronization Engine Listeners ---
+socket.on('books_sync_status', (data) => {
+    const container = document.getElementById('books-content-container');
+    if (data.status === 'checking' || data.status === 'downloading') {
+        container.innerHTML = `
+            <div class="text-center text-info py-5">
+                <div class="spinner-border spinner-border-sm me-2"></div>${data.msg}
+            </div>`;
+    }
+    else if (data.status === 'error' && !catalogIsSynced) {
+        setTimeout(() => switchBookTab('local'), 2000);
+    }
+});
+
+socket.on('books_ready_to_load', () => {
+    catalogIsSynced = true;
+    switchBookTab('local'); // Default to Local books after sync
+});
+
+// --- Tab Navigation ---
+function switchBookTab(tabId) {
+    activeBookTab = tabId;
+
+    document.querySelectorAll('#books-tab-nav .nav-link').forEach(el => el.classList.remove('active'));
+    document.getElementById(`nav-${tabId === 'educational' ? 'edu' : tabId}`).classList.add('active');
+    document.getElementById('global-book-search').value = '';
+
+    const actionBar = document.getElementById('books-action-bar');
+    if (tabId === 'local') {
+        actionBar.classList.add('hidden-section');
+        socket.emit('request_local_books');
+    } else {
+        actionBar.classList.remove('hidden-section');
+        socket.emit('request_books', { filter: tabId, query: '' });
+    }
+}
+
+// --- Search Router ---
+function handleGlobalSearch(query) {
+    if (query.length > 0 && query.length < 3) return;
+
+    if (activeBookTab === 'local') {
+        const filtered = localBooksData.filter(b =>
+            b.title.toLowerCase().includes(query.toLowerCase()) ||
+            (b.author && b.author.toLowerCase().includes(query.toLowerCase()))
+        );
+        renderLocalBooks(filtered);
+    } else {
+        socket.emit('request_books', { filter: 'search', query: query });
+    }
+}
+
+// ==========================================
+// RENDER: LOCAL BOOKS (Rich Cards)
+// ==========================================
+socket.on('local_books_ready', (books) => {
+    localBooksData = books;
+    if (activeBookTab === 'local') {
+        renderLocalBooks(books);
+        } else if (remoteBooksData.length > 0) {
+        renderRemoteBooks(remoteBooksData);
+    }
+});
+
+socket.on('refresh_local_books', () => {
+    socket.emit('request_local_books');
+});
+
+function renderLocalBooks(books) {
+    const container = document.getElementById('books-content-container');
+    container.className = "row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4";
+    container.innerHTML = '';
+
+    if (books.length === 0) {
+        container.innerHTML = '<div class="col-12 text-center text-secondary py-5">No local books found. Check the Top 100 tab!</div>';
+        return;
+    }
+
+    books.forEach(book => {
+        const coverUrl = `/books/cover/${book.id}`;
+        const readUrl = `/books/read/${book.id}/epub`;
+
+        const card = `
+            <div class="col" id="local-card-${book.id}">
+                <div class="card h-100 border-0 shadow-sm zim-card">
+                    <img src="${coverUrl}" onerror="this.src='https://via.placeholder.com/300x450?text=No+Cover'" class="card-img-top" style="height: 250px; object-fit: cover; border-radius: 8px 8px 0 0;">
+                    <div class="card-body p-3 d-flex flex-column">
+                        <h6 class="fw-bold mb-1 text-truncate" title="${book.title}">${book.title}</h6>
+                        <small class="text-secondary mb-2">${book.author || 'Unknown'} • ${book.year || 'N/A'}</small>
+                        <div class="mt-auto d-flex gap-2">
+                            <a href="${readUrl}" target="_blank" class="btn btn-sm btn-success flex-grow-1 fw-bold">Read</a>
+                            <button id="btn-del-${book.id}" class="btn btn-sm btn-outline-danger" onclick="deleteLocalBook(${book.id})">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.innerHTML += card;
+    });
+}
+
+function deleteLocalBook(id) {
+    if (confirm("Are you sure you want to delete this book?")) {
+		pendingCalibreAction = { type: 'delete', payload: id };
+        socket.emit('delete_local_book', id);
+    }
+}
+
+// ==========================================
+// RENDER: REMOTE BOOKS (Text List w/ Checkboxes)
+// ==========================================
+socket.on('books_list_ready', (books) => {
+    remoteBooksData = books;
+    if (activeBookTab !== 'local') renderRemoteBooks(books);
+});
+
+function renderRemoteBooks(books) {
+    const container = document.getElementById('books-content-container');
+    container.className = "list-group shadow-sm";
+    container.innerHTML = '';
+
+    if (books.length === 0) {
+        container.innerHTML = '<div class="list-group-item text-center text-secondary py-5 border-0">No books found in remote catalog.</div>';
+        return;
+    }
+
+    books.forEach(book => {
+        const localMatch = localBooksData.find(lb => lb.title.toLowerCase() === book.title.toLowerCase());
+        const isChecked = selectedRemoteBooks.includes(book.gutenberg_id) ? 'checked' : '';
+        const isLocalDisabled = localMatch ? 'disabled' : '';
+        const opacity = localMatch ? 'opacity-75' : '';
+        const badgeText = localMatch ? 'Local' : 'Info';
+        const badgeClass = localMatch ? 'bg-success' : 'bg-primary';
+        const localIdParam = localMatch ? localMatch.id : 'null';
+
+        const listItem = `
+            <label class="list-group-item list-group-item-action d-flex align-items-center py-3 border-secondary cursor-pointer ${opacity}">
+                <input class="form-check-input me-3 mt-0 flex-shrink-0" type="checkbox" value="${book.gutenberg_id}" onchange="toggleBookSelection(this, '${book.gutenberg_id}')" ${isChecked} ${isLocalDisabled}>
+
+                <div class="flex-grow-1" style="min-width: 0;">
+                    <h6 class="mb-1 fw-bold text-primary text-truncate">${book.title}</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-secondary text-truncate pe-2">${book.author}</small>
+                        <span class="badge ${badgeClass} rounded-pill flex-shrink-0" onclick="event.preventDefault(); openBookModal('${book.gutenberg_id}', ${localIdParam})">${badgeText}</span>
+                    </div>
+                </div>
+            </label>
+        `;
+        container.innerHTML += listItem;
+    });
+}
+
+// --- Checkbox & Batch Download Logic ---
+function toggleBookSelection(checkbox, bookId) {
+    if (checkbox.checked) {
+        if (selectedRemoteBooks.length + activeDownloads >= MAX_DOWNLOADS) {
+            checkbox.checked = false;
+            const modal = new bootstrap.Modal(document.getElementById('bookLimitWarningModal'));
+            modal.show();
+            return;
+        }
+        selectedRemoteBooks.push(bookId);
+    } else {
+        selectedRemoteBooks = selectedRemoteBooks.filter(id => id !== bookId);
+    }
+    updateBookDownloadBtn();
+}
+
+function updateBookDownloadBtn() {
+    const btn = document.getElementById('books-batch-download-btn');
+    if (selectedRemoteBooks.length > 0) {
+        btn.classList.remove('disabled');
+        btn.innerText = `DOWNLOAD (${selectedRemoteBooks.length})`;
+    } else {
+        btn.classList.add('disabled');
+        btn.innerText = 'DOWNLOAD';
+    }
+}
+
+function downloadSelectedBooks() {
+    if (selectedRemoteBooks.length === 0) return;
+
+    const booksToDownload = selectedRemoteBooks.map(id => {
+        const b = remoteBooksData.find(b => b.gutenberg_id === id);
+        if (b) {
+            return {
+                id: b.gutenberg_id,
+                title: b.title,
+                url: b.download_url
+            };
+        }
+        return undefined;
+    }).filter(b => b !== undefined);
+
+    activeDownloads += booksToDownload.length;
+
+    const btn = document.getElementById('books-batch-download-btn');
+    btn.classList.add('disabled');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>DOWNLOADING...';
+
+    pendingCalibreAction = { type: 'download', payload: booksToDownload };
+    socket.emit('download_books_batch', booksToDownload);
+
+    selectedRemoteBooks = [];
+
+    setTimeout(() => {
+        switchBookTab('local');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        updateBookDownloadBtn();
+    }, 1500);
+}
+
+// --- Security & Text Formatting ---
+function formatBookDescription(text) {
+    if (!text || text === 'No description available for this book.') {
+        return 'No description available for this book.';
+    }
+
+    // Escape html to prevent XSS
+    const escapeHTML = (str) => {
+        return str.replace(/[&<>'"]/g, tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag] || tag));
+    };
+
+    let safeText = escapeHTML(text);
+
+    // Safe regex site/domain to parse urls
+    const wikiRegex = /(https:\/\/[a-zA-Z0-9-]+\.wikipedia\.org\/[^\s)\]'".]+)/g;
+
+    safeText = safeText.replace(wikiRegex, (url) => {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-primary text-decoration-underline fw-bold">${url}</a>`;
+    });
+
+    // Translate new lines to html
+    return safeText.replace(/\n/g, '<br>');
+}
+
+// --- The Modal Experience ---
+function openBookModal(id, localBookId = null) {
+    const book = remoteBooksData.find(b => b.gutenberg_id === id);
+    if (!book) return;
+
+    selectedRemoteBook = book;
+
+    const coverUrl = `https://www.gutenberg.org/cache/epub/${book.gutenberg_id}/pg${book.gutenberg_id}.cover.medium.jpg`;
+
+    document.getElementById('modal-cover-img').src = coverUrl;
+    document.getElementById('modal-title').innerText = book.title;
+    document.getElementById('modal-author').innerText = book.author;
+    document.getElementById('modal-desc').innerHTML = formatBookDescription(book.description);
+
+    const btn = document.getElementById('modal-download-btn');
+
+    if (localBookId) {
+        btn.className = "btn btn-success w-100 fw-bold text-uppercase";
+        btn.innerText = "📖 Read in Calibre-Web";
+        btn.onclick = function() {
+            window.open(`/books/read/${localBookId}/epub`, '_blank');
+            const modalEl = document.getElementById('bookDetailsModal');
+            bootstrap.Modal.getInstance(modalEl).hide();
+        };
+    } else if (activeDownloads >= MAX_DOWNLOADS) {
+        btn.className = "btn btn-secondary w-100 fw-bold disabled text-uppercase";
+        btn.innerText = "⏳ Queue Full (Wait for current downloads)";
+        btn.onclick = null;
+    } else {
+        btn.className = "btn btn-primary w-100 fw-bold text-uppercase";
+        btn.innerText = "📥 Download & Add to Calibre-Web";
+        btn.onclick = function() {
+            startDownloadFromModal();
+        };
+    }
+
+    const modalEl = document.getElementById('bookDetailsModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+}
+
+function startDownloadFromModal() {
+    if (!selectedRemoteBook || activeDownloads >= MAX_DOWNLOADS) return;
+
+    activeDownloads++;
+
+    const modalEl = document.getElementById('bookDetailsModal');
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.hide();
+
+    const bookData = [{
+        id: selectedRemoteBook.gutenberg_id,
+        title: selectedRemoteBook.title,
+        url: selectedRemoteBook.download_url
+    }];
+
+    pendingCalibreAction = { type: 'download', payload: bookData };
+    socket.emit('download_books_batch', bookData);
+
+    const btn = document.getElementById('books-batch-download-btn');
+    if (btn) {
+        btn.classList.remove('disabled');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>DOWNLOADING...';
+    }
+
+    setTimeout(() => {
+        switchBookTab('local');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        updateBookDownloadBtn();
+    }, 1000);
+}
+
+// --- Status Updates ---
+socket.on('book_status_update', (data) => {
+    if (data.status === 'completed' || data.status === 'error') {
+        if (activeDownloads > 0) activeDownloads--;
+    }
+});
+
+// Initialization
+socket.on('connect', () => {
+    console.log('[Socket] Connected to server. Triggering catalog sync...');
+    socket.emit('request_local_books');
+    socket.emit('trigger_catalog_sync');
+});
+
+// ==========================================
+// CALIBRE-WEB FALLBACK AUTHENTICATION
+// ==========================================
+
+// 1. Listen for auth failure from the backend
+socket.on('calibre_auth_required', () => {
+    // Hide the download spinner/status if it's stuck
+    const batchBtn = document.getElementById('books-batch-download-btn');
+    if (batchBtn && activeDownloads > 0) {
+        batchBtn.classList.remove('disabled');
+        batchBtn.innerText = `DOWNLOAD (${selectedRemoteBooks.length || activeDownloads})`;
+        // Reset the active downloads since the batch failed
+        activeDownloads = 0;
+    }
+
+    // Show the login modal
+    const loginModal = new bootstrap.Modal(document.getElementById('calibreLoginModal'));
+    loginModal.show();
+});
+
+// 2. Submit new credentials
+function submitCalibreLogin() {
+    const user = document.getElementById('calibre-user-input').value.trim();
+    const pass = document.getElementById('calibre-pass-input').value.trim();
+
+    if (!user || !pass) {
+        alert("Please enter both username and password.");
+        return;
+    }
+
+    // Send to backend
+    socket.emit('update_calibre_credentials', { user: user, pass: pass });
+
+    // Hide Modal
+    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('calibreLoginModal'));
+    modalInstance.hide();
+
+    // Clear the password field for security
+    document.getElementById('calibre-pass-input').value = '';
+}
+
+// 3. Listen for update confirmation and auto-retry the pending action
+socket.on('calibre_auth_updated', () => {
+    // We hide the modal just in case it wasn't hidden properly
+    const modal = bootstrap.Modal.getInstance(document.getElementById('calibreLoginModal'));
+    if (modal) modal.hide();
+
+    if (pendingCalibreAction) {
+        console.log("Auto-retrying pending action:", pendingCalibreAction.type);
+
+        // We relaunch the "Loading..." interface if it was a download
+        if (pendingCalibreAction.type === 'download') {
+            const btn = document.getElementById('books-batch-download-btn');
+            if (btn) {
+                btn.classList.add('disabled');
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>DOWNLOADING...';
+            }
+            activeDownloads += pendingCalibreAction.payload.length;
+            socket.emit('download_books_batch', pendingCalibreAction.payload);
+
+            setTimeout(() => switchBookTab('local'), 1000);
+        }
+        // We resend the order if it was to delete
+        else if (pendingCalibreAction.type === 'delete') {
+            socket.emit('delete_local_book', pendingCalibreAction.payload);
+        }
+
+        // We clear the memory so that it doesn't happen again.
+        pendingCalibreAction = null;
+    }
+});
+
+// 4. Toggle Password Visibility
+function togglePasswordVisibility() {
+    const passInput = document.getElementById('calibre-pass-input');
+    const toggleBtn = document.getElementById('toggle-pass-btn');
+
+    if (passInput.type === 'password') {
+        passInput.type = 'text';
+        toggleBtn.innerText = '🙈'; // Ojo cerrado
+    } else {
+        passInput.type = 'password';
+        toggleBtn.innerText = '👁️'; // Ojo abierto
+    }
+}

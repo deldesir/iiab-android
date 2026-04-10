@@ -41,6 +41,7 @@ INSTALL_FALLBACK="https://raw.githubusercontent.com/iiab/iiab-factory/refs/heads
 ENABLE_INDEX_PAGE="${ENABLE_INDEX_PAGE:-1}"
 ENABLE_DEMO_CONTENTS="${ENABLE_DEMO_CONTENTS:-1}"
 DEMO_REPO_URL="https://iiab.switnet.org/android/static_demo/"
+PG_CATALOG_URL="https://iiab.switnet.org/android/pg/catalog.db.gz"
 
 CURL="curl -fsSL --retry 5 --retry-connrefused --retry-delay 2"
 
@@ -313,6 +314,26 @@ install_iiaboa_dashboard() {
   # Install node dependencies
   log "Running npm install for the dashboard..."
   (cd "$dash_dest" && npm install)
+
+  # Books dashboard
+  log "Pre-seeding Gutenberg Catalog Database..."
+  local books_dir="${dash_dest}/books"
+  mkdir -p "$books_dir"
+
+  if $CURL "$PG_CATALOG_URL" -o "${books_dir}/catalog.db.gz"; then
+      # Download the hash
+      $CURL "${PG_CATALOG_URL}.sha256" -o "${books_dir}/catalog.db.gz.sha256" || warn "Failed to download catalog hash"
+
+      # Extract the database
+      log "Extracting catalog.db..."
+      gunzip -c "${books_dir}/catalog.db.gz" > "${books_dir}/catalog.db"
+
+      # Clean up the compressed file (Node.js doesn't need it locally)
+      rm -f "${books_dir}/catalog.db.gz"
+      ok "Gutenberg Catalog pre-installed successfully!"
+  else
+      warn "Failed to download Gutenberg catalog database. It will be downloaded on first load if internet is available."
+  fi
 
   # Setup pdsm service
   log "Configuring dash-node PDSM service..."

@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import { handleMapsEvents } from './sockets/maps.socket';
 import { handleKiwixEvents } from './sockets/kiwix.socket';
 import { handleHomeEvents } from './sockets/home.socket';
+import { handleBooksEvents } from './sockets/books.socket';
 
 const app = express();
 const server = http.createServer(app);
@@ -40,6 +41,7 @@ io.on('connection', (socket: Socket) => {
     handleMapsEvents(socket);
     handleKiwixEvents(socket);
     handleHomeEvents(socket);
+    handleBooksEvents(socket);
     
     socket.on('disconnect', () => {
         console.log(`Client disconnected (ID: ${socket.id}).`);

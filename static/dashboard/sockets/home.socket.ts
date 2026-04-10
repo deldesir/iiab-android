@@ -9,7 +9,6 @@ async function getSystemStats() {
     let stats = {
         hostname: os.hostname(),
         ip: 'Unknown',
-        uptime: os.uptime(),
         disk: { total: 0, used: 0, free: 0, percent: 0 },
         ram: { total: 0, used: 0, percent: 0 },
         swap: { total: 0, used: 0, percent: 0 }
@@ -108,7 +107,6 @@ export const handleHomeEvents = (socket: Socket) => {
         const uiData = {
             hostname: stats.hostname,
             ip: stats.ip,
-            uptime: Math.floor(stats.uptime / 60) + ' min',
             diskTotal: formatBytes(stats.disk.total),
             diskUsed: formatBytes(stats.disk.used),
             diskFree: formatBytes(stats.disk.free),

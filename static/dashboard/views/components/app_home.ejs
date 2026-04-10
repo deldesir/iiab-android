@@ -1,12 +1,11 @@
-<div id="panel-home" class="app-panel pb-5">
+<div id="panel-home" class="app-panel pb-2">
     
     <div class="d-flex justify-content-between align-items-end mb-4 border-bottom border-secondary pb-3">
         <div>
             <h2 class="mb-0 fw-bold">IIAB-oA Dashboard</h2>
             <div class="text-secondary" style="font-size: 1.1em;">
-                <span id="sys-hostname" class="text-info fw-bold">Loading...</span> &nbsp;·&nbsp; 
-                IP: <span id="sys-ip">...</span> &nbsp;·&nbsp; 
-                Uptime: <span id="sys-uptime">...</span>
+                <span id="sys-hostname" class="text-info fw-bold">Loading...</span>
+                IP: <span id="sys-ip">...</span>
             </div>
         </div>
         <div class="text-end text-secondary">
@@ -73,6 +72,15 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-6">
+            <div class="stat-card d-flex align-items-center cursor-pointer" onclick="switchTab('books')" style="cursor: pointer;">
+                <div class="icon-box" style="background: rgba(13, 110, 253, 0.2); color: #0d6efd;">📖</div>
+                <div class="ms-3">
+                    <h5 class="mb-0">Books Downloader</h5>
+                    <div class="text-secondary small">Curated catalog for Calibre-Web</div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -84,7 +92,6 @@
     socket.on('home_stats_ready', (stats) => {
         document.getElementById('sys-hostname').textContent = stats.hostname;
         document.getElementById('sys-ip').textContent = stats.ip;
-        document.getElementById('sys-uptime').textContent = stats.uptime;
         
         // Disk
         document.getElementById('disk-used-text').textContent = stats.diskUsed;

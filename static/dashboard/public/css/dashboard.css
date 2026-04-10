@@ -6,6 +6,7 @@
     --app-radius: 12px;
     --transition-speed: 0.3s;
     --accent-color: #0d6efd;
+    --info-orange: #fd7e14;
 
     /* Light Mode Custom Colors */
     --bg-main: #f8f9fa;
@@ -26,6 +27,7 @@
     --hover-bg: rgba(255,255,255,0.1);
     --text-main: #f8f9fa;
     --text-secondary: #ced4da;
+    --info-orange: #e85d04;
 }
 
 /* =========================================
@@ -258,5 +260,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 .form-control::placeholder {
     color: var(--text-secondary) !important;
+    opacity: 0.5 !important;
     font-size: 1rem;
+}
+
+/* --- External Wikipedia link icon --- */
+#modal-desc a[href*="wikipedia.org"]::after {
+    content: "↗";
+    font-size: 1em;
+    font-weight: bold;
+    color: var(--accent-color);
+    text-decoration: none;
 }
