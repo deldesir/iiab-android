@@ -54,11 +54,24 @@ const loadLanguage = () => {
 
 // --- Tabs Logic ---
 function switchTab(tabName) {
-    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+    // Turn off ONLY the main tabs
+    document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.remove('active'));
+
+    // Hide all app panels
     document.querySelectorAll('.app-panel').forEach(el => el.classList.add('hidden-section'));
 
-    document.getElementById(`tab-${tabName}`).classList.add('active');
-    document.getElementById(`panel-${tabName}`).classList.remove('hidden-section');
+    // Turn on the clicked main tab and its panel
+    const activeTab = document.getElementById(`tab-${tabName}`);
+    if (activeTab) activeTab.classList.add('active');
+
+    const activePanel = document.getElementById(`panel-${tabName}`);
+    if (activePanel) activePanel.classList.remove('hidden-section');
+
+    // If we enter the books panel, force the correct sub-tab to be highlighted
+    if (tabName === 'books') {
+        // activeBookTab always remembers which sub-tab you were on (defaults to 'local')
+        document.getElementById(`nav-${activeBookTab === 'educational' ? 'edu' : activeBookTab}`).classList.add('active');
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -184,8 +197,18 @@ function renderLocalBooks(books) {
 
 function deleteLocalBook(id) {
     if (confirm("Are you sure you want to delete this book?")) {
-		pendingCalibreAction = { type: 'delete', payload: id };
+        console.log(`[Dashboard] 🗑️ Starting deletion of workbook ID: ${id}`);
+
+        // We give visual feedback: We change the trash can for a spinner
+        const btn = document.getElementById(`btn-del-${id}`);
+        if (btn) {
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btn.classList.add('disabled');
+        }
+
+        pendingCalibreAction = { type: 'delete', payload: id };
         socket.emit('delete_local_book', id);
+        console.log(`[Dashboard] 📡 Signal 'delete_local_book' sent to the Node.js server`);
     }
 }
 
@@ -399,6 +422,10 @@ function startDownloadFromModal() {
 socket.on('book_status_update', (data) => {
     if (data.status === 'completed' || data.status === 'error') {
         if (activeDownloads > 0) activeDownloads--;
+    }
+
+    if (data.status === 'error') {
+        alert(`❌ The book download or upload failed.\n\nServer Reason: ${data.message}\n\nMake sure you are not logged in multiple tabs at once.`);
     }
 });
 
