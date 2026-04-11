@@ -302,18 +302,31 @@ install_iiaboa_dashboard() {
   local dash_src="${IIABOA_OPT_DIR}/static/dashboard"
   local dash_dest="/library/dashboard"
 
-  log "Run nodejs installation role"
-  sed -i '/^nodejs_install:/d' /etc/iiab/local_vars.yml
-  echo "nodejs_install: True" | tee -a /etc/iiab/local_vars.yml
-  (cd /opt/iiab/iiab && bash runrole nodejs)
+  log "Setting up Node.js environment..."
+  if is_32bits; then
+    log "32-bit architecture detected. Installing repo nodejs and yarn to avoid IO bottlenecks..."
+    apt-get install -y nodejs npm
+    npm install -g yarn
+  else
+    log "64-bit architecture detected. Running IIAB nodejs role..."
+    sed -i '/^nodejs_install:/d' /etc/iiab/local_vars.yml
+    echo "nodejs_install: True" | tee -a /etc/iiab/local_vars.yml
+    (cd /opt/iiab/iiab && bash runrole nodejs)
+  fi
 
   # Copy dashboard files
   mkdir -p "$dash_dest"
   rsync -Aax "${dash_src}/" "$dash_dest/"
 
   # Install node dependencies
-  log "Running npm install for the dashboard..."
-  (cd "$dash_dest" && npm install)
+  log "Installing Node dependencies for the dashboard..."
+  if is_32bits; then
+    log "Using Yarn for 32-bit installation..."
+    (cd "$dash_dest" && yarn install)
+  else
+    log "Using NPM for 64-bit installation..."
+    (cd "$dash_dest" && npm install)
+  fi
 
   # Books dashboard
   log "Pre-seeding Gutenberg Catalog Database..."
