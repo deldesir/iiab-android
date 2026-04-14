@@ -12,12 +12,15 @@ import android.os.Bundle;
 import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.webkit.ProxyConfig;
 import androidx.webkit.ProxyController;
 import androidx.webkit.WebViewFeature;
+
 import java.util.concurrent.Executor;
+
 import android.graphics.Bitmap;
 import android.view.View;
 import android.widget.Button;
@@ -32,6 +35,7 @@ public class PortalActivity extends AppCompatActivity {
     private boolean isPageLoading = false;
     private android.webkit.ValueCallback<android.net.Uri[]> filePathCallback;
     private final static int FILECHOOSER_RESULTCODE = 100;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -148,6 +152,7 @@ public class PortalActivity extends AppCompatActivity {
 
                 return true; // return true means: "WebView, I'll handle it, you ignore this click"
             }
+
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);

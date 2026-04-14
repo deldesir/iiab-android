@@ -32,7 +32,7 @@ public class TermuxCallbackReceiver extends BroadcastReceiver {
                         logMsg += ": " + stderr;
                     }
                 }
-                
+
                 // Write to BlackBox log
                 IIABWatchdog.writeToBlackBox(context, logMsg);
             }

@@ -31,11 +31,13 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
 import com.google.android.material.snackbar.Snackbar;
 
 import java.text.SimpleDateFormat;
@@ -203,7 +205,8 @@ public class UsageFragment extends Fragment implements View.OnClickListener {
         boolean vpnActive = mainActivity.prefs.getEnable();
         boolean watchdogActive = mainActivity.prefs.getWatchdogEnable();
 
-        if (dashboardManager != null) dashboardManager.setTunnelState(vpnActive, mainActivity.isProxyDegraded);
+        if (dashboardManager != null)
+            dashboardManager.setTunnelState(vpnActive, mainActivity.isProxyDegraded);
 
         if (vpnActive) {
             button_control.setText(R.string.control_disable);
@@ -325,7 +328,8 @@ public class UsageFragment extends Fragment implements View.OnClickListener {
                     btnServerControl.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.btn_watchdog_on));
                     watchdogControl.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.btn_watchdog_on));
                 } else {
-                    if (fusionAnimator == null || !fusionAnimator.isRunning()) deckContainer.setBackgroundColor(Color.TRANSPARENT);
+                    if (fusionAnimator == null || !fusionAnimator.isRunning())
+                        deckContainer.setBackgroundColor(Color.TRANSPARENT);
                     btnServerControl.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.btn_danger));
                     watchdogControl.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.btn_watchdog_off));
                 }
@@ -419,7 +423,8 @@ public class UsageFragment extends Fragment implements View.OnClickListener {
                     scrollToBottom();
                 }
                 if (logProgress != null) logProgress.setVisibility(View.GONE);
-                if (logWarning != null) logWarning.setVisibility(isRapidGrowth ? View.VISIBLE : View.GONE);
+                if (logWarning != null)
+                    logWarning.setVisibility(isRapidGrowth ? View.VISIBLE : View.GONE);
                 updateLogSizeUI();
                 mainActivity.isReadingLogs = false;
             });
@@ -467,6 +472,7 @@ public class UsageFragment extends Fragment implements View.OnClickListener {
                             updateLogSizeUI();
                             Toast.makeText(requireContext(), R.string.log_cleared_toast, Toast.LENGTH_SHORT).show();
                         }
+
                         @Override
                         public void onError(String message) {
                             Toast.makeText(requireContext(), getString(R.string.failed_reset_log, message), Toast.LENGTH_SHORT).show();

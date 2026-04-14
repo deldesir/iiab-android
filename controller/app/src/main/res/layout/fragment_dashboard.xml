@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dash_bg_main">
@@ -18,7 +19,7 @@
             android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="@color/dash_text_primary"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -32,57 +33,113 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
 
-                <TextView
-                    android:id="@+id/dash_text_wifi_ip"
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="@color/dash_text_primary" />
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/dash_text_hotspot_ip"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Wi-Fi: "
+                        android:textColor="?android:attr/textColorSecondary" />
+
+                    <TextView
+                        android:id="@+id/dash_text_wifi_ip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textStyle="bold"
+                        tools:text="192.168.1.158" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="@color/dash_text_primary" />
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hotspot: "
+                        android:textColor="?android:attr/textColorSecondary" />
+
+                    <TextView
+                        android:id="@+id/dash_text_hotspot_ip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textStyle="bold"
+                        tools:text="--" />
+                </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"
-                android:gravity="center_vertical">
+                android:layout_marginBottom="16dp">
 
-                <TextView
-                    android:id="@+id/dash_text_uptime"
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="@color/dash_text_primary" />
+                    android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/dash_text_battery"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Uptime: "
+                        android:textColor="?android:attr/textColorSecondary" />
+
+                    <TextView
+                        android:id="@+id/dash_text_uptime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textStyle="bold"
+                        tools:text="9d 06h 34m" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:textColor="@color/dash_text_primary" />
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Battery: "
+                        android:textColor="?android:attr/textColorSecondary" />
+
+                    <TextView
+                        android:id="@+id/dash_text_battery"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textStyle="bold"
+                        tools:text="100%" />
+                </LinearLayout>
             </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/dash_divider"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="16dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginBottom="8dp">
+
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -90,14 +147,16 @@
                     android:text="@string/dash_main_storage"
                     android:textStyle="bold"
                     android:textColor="@color/dash_text_primary" />
+
                 <TextView
                     android:id="@+id/dash_text_storage"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="-- GB / -- GB"
                     android:textColor="@color/dash_text_secondary"
-                    android:textSize="12sp"/>
+                    android:textSize="12sp" />
             </LinearLayout>
+
             <ProgressBar
                 android:id="@+id/dash_progress_storage"
                 style="?android:attr/progressBarStyleHorizontal"
@@ -107,7 +166,7 @@
                 android:progressTint="@color/dash_bar_storage"
                 android:progressBackgroundTint="@color/dash_bar_bg"
                 android:progress="0"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="16dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -149,7 +208,7 @@
                         android:progressDrawable="@drawable/rounded_progress_bar"
                         android:progressTint="@color/dash_bar_ram"
                         android:progressBackgroundTint="@color/dash_bar_bg"
-                        android:progress="0"/>
+                        android:progress="0" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -186,7 +245,7 @@
                         android:progressDrawable="@drawable/rounded_progress_bar"
                         android:progressTint="@color/dash_bar_swap"
                         android:progressBackgroundTint="@color/dash_bar_bg"
-                        android:progress="0"/>
+                        android:progress="0" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -200,7 +259,7 @@
             android:textStyle="bold"
             android:textColor="@color/dash_text_primary"
             android:layout_marginTop="24dp"
-            android:layout_marginBottom="8dp"/>
+            android:layout_marginBottom="8dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -243,7 +302,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/dash_divider"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginBottom="12dp" />
 
             <LinearLayout
                 android:id="@+id/dash_card_termux_state"
@@ -257,7 +316,7 @@
                     android:layout_width="12dp"
                     android:layout_height="12dp"
                     android:background="@drawable/led_off"
-                    android:layout_marginEnd="12dp"/>
+                    android:layout_marginEnd="12dp" />
 
                 <TextView
                     android:id="@+id/text_termux_state"
@@ -265,6 +324,62 @@
                     android:layout_height="wrap_content"
                     android:text="@string/dash_termux_searching"
                     android:textColor="@color/dash_text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/dash_arch_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:baselineAligned="false">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/dash_arch_info_termux"
+                        android:textSize="12sp"
+                        android:textColor="?android:attr/textColorSecondary" />
+
+                    <TextView
+                        android:id="@+id/dash_text_termux_arch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary"
+                        tools:text="arm64-v8a" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/dash_arch_info_pos"
+                        android:textSize="12sp"
+                        android:textColor="?android:attr/textColorSecondary" />
+
+                    <TextView
+                        android:id="@+id/dash_text_debian_arch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary"
+                        tools:text="arm64" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
@@ -282,14 +397,13 @@
             android:paddingHorizontal="0dp"
             android:background="?attr/selectableItemBackground"
             android:clickable="true"
-            android:focusable="true"/>
+            android:focusable="true" />
 
         <LinearLayout
             android:id="@+id/modules_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
-        </LinearLayout>
+            android:orientation="vertical"></LinearLayout>
 
         <Space
             android:layout_width="match_parent"

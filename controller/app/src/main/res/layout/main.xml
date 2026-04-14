@@ -75,7 +75,7 @@
         app:tabSelectedTextColor="#FFFFFF"
         app:tabTextColor="#888888"
         app:tabTextAppearance="@style/CustomTabTextStyle"
-        android:background="#1A1A1A"/>
+        android:background="#1A1A1A" />
 
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/view_pager"
@@ -89,7 +89,8 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:text="v0.1.x"
-        android:textColor="@color/footer_text_color" android:textSize="11sp"
+        android:textColor="@color/footer_text_color"
+        android:textSize="11sp"
         android:padding="8dp"
         android:background="#1A1A1A" />
 </LinearLayout>

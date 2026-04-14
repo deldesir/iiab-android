@@ -41,7 +41,7 @@ public class IIABWatchdog {
     public static final String ACTION_LOG_MESSAGE = "org.iiab.controller.LOG_MESSAGE";
     public static final String EXTRA_MESSAGE = "org.iiab.controller.EXTRA_MESSAGE";
     public static final String ACTION_TERMUX_OUTPUT = "org.iiab.controller.TERMUX_OUTPUT";
-    
+
     public static final String PREF_RAPID_GROWTH = "log_rapid_growth";
 
     private static final boolean DEBUG_ENABLED = true;
@@ -81,12 +81,12 @@ public class IIABWatchdog {
         // Callback mechanism to confirm execution
         Intent callbackIntent = new Intent(context, TermuxCallbackReceiver.class);
         callbackIntent.setAction(ACTION_TERMUX_OUTPUT);
-        
+
         int flags = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             flags |= PendingIntent.FLAG_IMMUTABLE;
         }
-        
+
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, callbackIntent, flags);
         intent.putExtra("com.termux.service.RUN_COMMAND_CALLBACK", pendingIntent);
 
@@ -140,7 +140,7 @@ public class IIABWatchdog {
      */
     public static void writeToBlackBox(Context context, String message) {
         File logFile = new File(context.getFilesDir(), BLACKBOX_FILE);
-        
+
         // 1. Perform maintenance if file size is nearing limit
         if (logFile.exists() && logFile.length() > MAX_FILE_SIZE * 0.9) {
             maintenance(context, logFile);
@@ -164,7 +164,7 @@ public class IIABWatchdog {
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.DAY_OF_YEAR, -MAX_DAYS);
         Date cutoffDate = cal.getTime();
-        
+
         boolean deletedByDate = false;
 
         try (BufferedReader br = new BufferedReader(new FileReader(logFile))) {
