@@ -14,11 +14,13 @@ package org.iiab.controller;
 
 import android.Manifest;
 import android.os.Bundle;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.app.AlertDialog;
+
 import android.content.Intent;
 import android.content.Context;
 import android.content.IntentFilter;
@@ -58,9 +60,11 @@ import androidx.annotation.NonNull;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
+
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+
 import androidx.viewpager2.widget.ViewPager2;
 
 import java.io.BufferedReader;
@@ -103,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void setUsageFragment(UsageFragment fragment) {
         this.usageFragment = fragment;
     }
+
     private final Handler timeoutHandler = new Handler(android.os.Looper.getMainLooper());
     private Runnable timeoutRunnable;
     private boolean isWifiActive = false;
@@ -132,8 +137,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String message = intent.getStringExtra(IIABWatchdog.EXTRA_MESSAGE);
                 addToLog(message);
                 if (usageFragment != null) usageFragment.updateLogSizeUI();
-            }
-            else if (WatchdogService.ACTION_STATE_STARTED.equals(action)) {
+            } else if (WatchdogService.ACTION_STATE_STARTED.equals(action)) {
                 long elapsed = System.currentTimeMillis() - pulseStartTime;
                 long fullCycle = 1200;
 
@@ -151,8 +155,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 new Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                     if (usageFragment != null) usageFragment.finalizeEntryPulse();
                 }, timeToNextCycleEnd);
-            }
-            else if (WatchdogService.ACTION_STATE_STOPPED.equals(action)) {
+            } else if (WatchdogService.ACTION_STATE_STOPPED.equals(action)) {
                 // Service is down! Give it a 1.5 second visual margin, then stop the exit pulse.
                 new Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                     if (usageFragment != null) usageFragment.finalizeExitPulse();
@@ -168,9 +171,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Intercept launch and redirect to Setup Wizard if first time
         SharedPreferences internalPrefs = getSharedPreferences(getString(R.string.pref_file_internal), Context.MODE_PRIVATE);
         if (!internalPrefs.getBoolean(getString(R.string.pref_key_setup_complete), false)) {
-                startActivity(new Intent(this, SetupActivity.class));
-                finish();
-                return;
+            startActivity(new Intent(this, SetupActivity.class));
+            finish();
+            return;
         }
 
         prefs = new Preferences(this);
@@ -185,9 +188,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
             switch (position) {
-                case 0: tab.setText(R.string.tab_status); break;
-                case 1: tab.setText(R.string.tab_usage); break;
-                case 2: tab.setText(R.string.tab_deploy); break;
+                case 0:
+                    tab.setText(R.string.tab_status);
+                    break;
+                case 1:
+                    tab.setText(R.string.tab_usage);
+                    break;
+                case 2:
+                    tab.setText(R.string.tab_deploy);
+                    break;
             }
         }).attach();
         versionFooter = findViewById(R.id.version_text);
@@ -261,7 +270,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         sizeUpdateRunnable = new Runnable() {
             @Override
             public void run() {
-                if (usageFragment != null && usageFragment.isAdded()) usageFragment.updateLogSizeUI();
+                if (usageFragment != null && usageFragment.isAdded())
+                    usageFragment.updateLogSizeUI();
                 sizeUpdateHandler.postDelayed(this, 10000);
             }
         };
@@ -341,13 +351,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             // Attempt 2 (At 2 seconds)
             if (!boxAlive) {
-                try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException ignored) {
+                }
                 boxAlive = pingUrl("http://box/home", true);
             }
 
             // Attempt 3 (At 3 seconds)
             if (!boxAlive) {
-                try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ignored) {
+                }
                 boxAlive = pingUrl("http://box/home", true);
             }
 
@@ -376,6 +392,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             runOnUiThread(this::updateUIColorsAndVisibility);
         }).start();
     }
+
     private void prepareVpn() {
         Intent intent = VpnService.prepare(MainActivity.this);
         if (intent != null) {
@@ -460,8 +477,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void updateThemeToggleButton(int mode) {
-        if (mode == AppCompatDelegate.MODE_NIGHT_NO) themeToggle.setImageResource(R.drawable.ic_theme_dark);
-        else if (mode == AppCompatDelegate.MODE_NIGHT_YES) themeToggle.setImageResource(R.drawable.ic_theme_light);
+        if (mode == AppCompatDelegate.MODE_NIGHT_NO)
+            themeToggle.setImageResource(R.drawable.ic_theme_dark);
+        else if (mode == AppCompatDelegate.MODE_NIGHT_YES)
+            themeToggle.setImageResource(R.drawable.ic_theme_light);
         else themeToggle.setImageResource(R.drawable.ic_theme_system);
     }
 
@@ -480,7 +499,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onStop() {
         super.onStop();
-        try { unregisterReceiver(logReceiver); } catch (Exception e) {}
+        try {
+            unregisterReceiver(logReceiver);
+        } catch (Exception e) {
+        }
         stopLogSizeUpdates();
     }
 
@@ -552,6 +574,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startActivity(intent);
         }
     }
+
     public void handleServerLaunchClick(View v) {
         // Set a hard timeout as a safety net
         timeoutRunnable = () -> {
@@ -648,32 +671,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-     private void startTermuxEnvironmentVisible(String actionFlag) {
-             Intent intent = new Intent();
-             intent.setClassName("com.termux", "com.termux.app.RunCommandService");
-             intent.setAction("com.termux.RUN_COMMAND");
+    private void startTermuxEnvironmentVisible(String actionFlag) {
+        Intent intent = new Intent();
+        intent.setClassName("com.termux", "com.termux.app.RunCommandService");
+        intent.setAction("com.termux.RUN_COMMAND");
 
-             intent.putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home");
-             intent.putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/env");
-             intent.putExtra("com.termux.RUN_COMMAND_ARGUMENTS", new String[]{
-                     "INTENT_MODE=headless",
-                     "/data/data/com.termux/files/usr/bin/bash",
-                     "/data/data/com.termux/files/usr/bin/iiab-termux",
-                     actionFlag
-             });
+        intent.putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home");
+        intent.putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/env");
+        intent.putExtra("com.termux.RUN_COMMAND_ARGUMENTS", new String[]{
+                "INTENT_MODE=headless",
+                "/data/data/com.termux/files/usr/bin/bash",
+                "/data/data/com.termux/files/usr/bin/iiab-termux",
+                actionFlag
+        });
 
-             intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", false);
-             try {
-                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                             startForegroundService(intent);
-                     } else {
-                             startService(intent);
-                     }
-                     addToLog(getString(R.string.sent_to_termux, actionFlag));
-             } catch (Exception e) {
-                     addToLog(getString(R.string.failed_termux_intent, e.getMessage()));
-             }
-     }
+        intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", false);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
+            }
+            addToLog(getString(R.string.sent_to_termux, actionFlag));
+        } catch (Exception e) {
+            addToLog(getString(R.string.failed_termux_intent, e.getMessage()));
+        }
+    }
 
     private void updateConnectivityStatus() {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -697,7 +720,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         break;
                     }
                 }
-            } catch (Exception ex) {}
+            } catch (Exception ex) {
+            }
         }
 
         // Store states for the QR button logic
@@ -733,6 +757,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             versionFooter.setText(getString(R.string.version_footer_fallback));
         }
     }
+
     private void forceTermuxToForeground() {
         try {
             Intent intent = getPackageManager().getLaunchIntentForPackage("com.termux");

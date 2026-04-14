@@ -25,10 +25,12 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.File;
@@ -45,6 +47,11 @@ public class DashboardFragment extends Fragment {
 
     private TextView txtDeviceName;
     private TextView txtWifiIp, txtHotspotIp, txtUptime, txtBattery, badgeStatus, txtStorage, txtRam, txtSwap, txtTermuxState;
+    private TextView txtTermuxArch, txtDebianArch;
+    private LinearLayout archContainer;
+    private String cachedTermuxArch = null;
+    private String cachedDebianArch = null;
+    private boolean isArchCalculated = false;
     private TextView modulesTitle;
     private ProgressBar progStorage, progRam, progSwap;
     private View ledTermuxState;
@@ -97,6 +104,9 @@ public class DashboardFragment extends Fragment {
 
         ledTermuxState = view.findViewById(R.id.led_termux_state);
         txtTermuxState = view.findViewById(R.id.text_termux_state);
+        txtTermuxArch = view.findViewById(R.id.dash_text_termux_arch);
+        txtDebianArch = view.findViewById(R.id.dash_text_debian_arch);
+        archContainer = view.findViewById(R.id.dash_arch_container);
         modulesContainer = view.findViewById(R.id.modules_container);
         modulesTitle = view.findViewById(R.id.dash_modules_title);
 
@@ -150,16 +160,15 @@ public class DashboardFragment extends Fragment {
                 String.format(Locale.US, "%dd %02dh %02dm", days, hours, minutes) :
                 String.format(Locale.US, "%02dh %02dm", hours, minutes);
 
-        txtUptime.setText(Html.fromHtml(getString(R.string.dash_uptime_format, timeStr), Html.FROM_HTML_MODE_LEGACY));
-
-        txtWifiIp.setText(Html.fromHtml(getString(R.string.dash_wifi_format, getWifiIp()), Html.FROM_HTML_MODE_LEGACY));
-        txtHotspotIp.setText(Html.fromHtml(getString(R.string.dash_hotspot_format, getHotspotIp()), Html.FROM_HTML_MODE_LEGACY));
+        txtUptime.setText(timeStr);
+        txtWifiIp.setText(getWifiIp());
+        txtHotspotIp.setText(getHotspotIp());
 
         int batteryLevel = getBatteryPercentage();
         if (batteryLevel >= 0) {
-            txtBattery.setText(Html.fromHtml(getString(R.string.dash_battery_format, batteryLevel), Html.FROM_HTML_MODE_LEGACY));
+            txtBattery.setText(batteryLevel + "%");
         } else {
-            txtBattery.setText(Html.fromHtml(getString(R.string.dash_battery_no_value), Html.FROM_HTML_MODE_LEGACY));
+            txtBattery.setText("--%");
         }
 
         // --- 1. GET REAL RAM AND SWAP FROM LINUX ---
@@ -170,7 +179,8 @@ public class DashboardFragment extends Fragment {
                 if (line.startsWith("MemTotal:")) memTotal = parseMemLine(line);
                 else if (line.startsWith("MemAvailable:")) memAvailable = parseMemLine(line);
                     // If phone is old and doesn't have "MemAvailable", use "MemFree"
-                else if (memAvailable == 0 && line.startsWith("MemFree:")) memAvailable = parseMemLine(line);
+                else if (memAvailable == 0 && line.startsWith("MemFree:"))
+                    memAvailable = parseMemLine(line);
                 else if (line.startsWith("SwapTotal:")) swapTotal = parseMemLine(line);
                 else if (line.startsWith("SwapFree:")) swapFree = parseMemLine(line);
             }
@@ -235,7 +245,7 @@ public class DashboardFragment extends Fragment {
                 // Margins to prevent them from sticking together
                 int margin = 8;
                 if (col == 0) cellParams.setMargins(0, 0, margin, 0); // Left
-                else if (col == 1) cellParams.setMargins(margin/2, 0, margin/2, 0); // Center
+                else if (col == 1) cellParams.setMargins(margin / 2, 0, margin / 2, 0); // Center
                 else cellParams.setMargins(margin, 0, 0, 0); // Right
 
                 cell.setLayoutParams(cellParams);
@@ -301,6 +311,16 @@ public class DashboardFragment extends Fragment {
 
             // 4. Update the UI on the main thread
             getActivity().runOnUiThread(() -> {
+                if (archContainer != null) {
+                    if (isArchCalculated && currentSystemState != SystemState.NONE) {
+                        archContainer.setVisibility(View.VISIBLE);
+                        txtTermuxArch.setText(cachedTermuxArch);
+                        txtDebianArch.setText(cachedDebianArch);
+                    } else {
+                        archContainer.setVisibility(View.GONE);
+                    }
+                }
+
                 // Configure the Top Traffic Light (Server Status)
                 if (currentSystemState == SystemState.ONLINE) {
                     badgeStatus.setText(R.string.dash_online);
@@ -394,6 +414,7 @@ public class DashboardFragment extends Fragment {
             return 0;
         }
     }
+
     // --- METHODS FOR OBTAINING IPs ---
     private String getWifiIp() {
         return getIpByInterface("wlan0");
@@ -467,12 +488,8 @@ public class DashboardFragment extends Fragment {
     // The 5 possible system states
     // --- MASTER STATE EVALUATOR ---
     private SystemState evaluateSystemState(boolean isNginxAlive) {
-        // 1. Does the Nginx server respond? (The network doesn't lie)
-        if (isNginxAlive) {
-            return SystemState.ONLINE;
-        }
 
-        // 2. Does Termux physically exist on the Android device?
+        // 1. Does Termux physically exist on the Android device?
         boolean isTermuxInstalled = false;
         try {
             requireContext().getPackageManager().getPackageInfo("com.termux", 0);
@@ -483,12 +500,24 @@ public class DashboardFragment extends Fragment {
 
         File stateDir = new File(Environment.getExternalStorageDirectory(), ".iiab_state");
 
-        // Ghost Handling: If Termux is uninstalled, but garbage remains, delete it.
+        // Ghost Handling: If Termux is uninstalled, clean up and reset cache.
         if (!isTermuxInstalled) {
+            isArchCalculated = false;
             if (stateDir.exists()) {
                 deleteRecursive(stateDir);
             }
             return SystemState.NONE;
+        }
+
+        if (!isArchCalculated) {
+            cachedTermuxArch = getTermuxArch();
+            cachedDebianArch = getDebianArch(cachedTermuxArch);
+            isArchCalculated = true;
+        }
+
+        // 2. Does the Nginx server respond? (The network doesn't lie)
+        if (isNginxAlive) {
+            return SystemState.ONLINE;
         }
 
         // 3. Is IIAB fully compiled/restored and ready?
@@ -524,5 +553,35 @@ public class DashboardFragment extends Fragment {
             }
         }
         fileOrDirectory.delete();
+    }
+
+    // --- METHODS FOR OBTAINING ARCHITECTURES ---
+    private String getTermuxArch() {
+        try {
+            android.content.pm.ApplicationInfo info = requireContext().getPackageManager().getApplicationInfo("com.termux", 0);
+            String nativeLibDir = info.nativeLibraryDir;
+
+            if (nativeLibDir != null) {
+                if (nativeLibDir.endsWith("arm64")) return "arm64-v8a";
+                if (nativeLibDir.endsWith("arm")) return "armeabi-v7a";
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            return "N/A";
+        }
+
+        if (android.os.Build.SUPPORTED_ABIS.length > 0) {
+            return android.os.Build.SUPPORTED_ABIS[0];
+        }
+        return "unknown";
+    }
+
+    private String getDebianArch(String androidArch) {
+        if (androidArch == null || androidArch.equals("N/A")) return "N/A";
+        String lower = androidArch.toLowerCase();
+
+        if (lower.contains("arm64") || lower.contains("aarch64")) return "arm64";
+        if (lower.contains("armeabi") || lower.contains("armv7")) return "armhf";
+
+        return lower;
     }
 }

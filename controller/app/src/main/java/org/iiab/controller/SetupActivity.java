@@ -31,6 +31,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
+
 import com.google.android.material.snackbar.Snackbar;
 
 public class SetupActivity extends AppCompatActivity {
@@ -193,13 +194,13 @@ public class SetupActivity extends AppCompatActivity {
         btnManageAll.setOnClickListener(v -> openAppSettings());
         // Direct access to Termux Overlay permissions
         btnTermuxOverlay.setOnClickListener(v -> {
-                try {
-                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                        intent.setData(Uri.parse("package:com.termux"));
-                        startActivity(intent);
-                    } catch (Exception e) {
-                        Snackbar.make(v, R.string.termux_not_installed_error, Snackbar.LENGTH_LONG).show();
-                }
+            try {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                intent.setData(Uri.parse("package:com.termux"));
+                startActivity(intent);
+            } catch (Exception e) {
+                Snackbar.make(v, R.string.termux_not_installed_error, Snackbar.LENGTH_LONG).show();
+            }
         });
 
         // Direct access to Termux settings to grant Files/Storage permission

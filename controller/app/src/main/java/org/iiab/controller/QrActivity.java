@@ -22,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
+
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
@@ -40,7 +41,7 @@ public class QrActivity extends AppCompatActivity {
     private ImageView qrImageView;
     private ImageButton btnFlip;
     private View cardContainer;
-    
+
     private String wifiIp = null;
     private String hotspotIp = null;
     private boolean showingWifi = true; // Tracks which network is currently displayed
@@ -127,7 +128,7 @@ public class QrActivity extends AppCompatActivity {
     private void updateQrDisplay() {
         String currentIp = showingWifi ? wifiIp : hotspotIp;
         String title = showingWifi ? getString(R.string.qr_title_wifi) : getString(R.string.qr_title_hotspot);
-        
+
         // 8085 is the default port for the IIAB interface
         String url = "http://" + currentIp + ":8085/home";
 
@@ -164,7 +165,8 @@ public class QrActivity extends AppCompatActivity {
                     }
                 }
             }
-        } catch (Exception ignored) { }
+        } catch (Exception ignored) {
+        }
     }
 
     /**
@@ -178,7 +180,7 @@ public class QrActivity extends AppCompatActivity {
             int width = bitMatrix.getWidth();
             int height = bitMatrix.getHeight();
             Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
-            
+
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
                     bmp.setPixel(x, y, bitMatrix.get(x, y) ? Color.BLACK : Color.WHITE);

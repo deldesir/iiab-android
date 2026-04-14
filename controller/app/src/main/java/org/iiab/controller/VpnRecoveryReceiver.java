@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
+
 import androidx.core.app.NotificationCompat;
 
 public class VpnRecoveryReceiver extends BroadcastReceiver {
@@ -39,11 +40,11 @@ public class VpnRecoveryReceiver extends BroadcastReceiver {
 
     private void showRecoveryNotification(Context context) {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID, context.getString(R.string.recovery_channel_name),
-                NotificationManager.IMPORTANCE_HIGH
+                    CHANNEL_ID, context.getString(R.string.recovery_channel_name),
+                    NotificationManager.IMPORTANCE_HIGH
             );
             channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             if (manager != null) manager.createNotificationChannel(channel);
@@ -54,8 +55,8 @@ public class VpnRecoveryReceiver extends BroadcastReceiver {
         uiIntent.putExtra(EXTRA_RECOVERY, true);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
-            context, 0, uiIntent, 
-            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                context, 0, uiIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)

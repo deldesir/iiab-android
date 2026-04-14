@@ -30,6 +30,7 @@ public class LogManager {
 
     public interface LogClearCallback {
         void onSuccess();
+
         void onError(String message);
     }
 

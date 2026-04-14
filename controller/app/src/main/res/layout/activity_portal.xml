@@ -47,13 +47,51 @@
             android:orientation="horizontal"
             android:paddingBottom="8dp">
 
-            <Button android:id="@+id/btnBack" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="◀" android:textSize="20sp" style="?android:attr/buttonBarButtonStyle"/>
-            <Button android:id="@+id/btnHome" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🏠" android:textSize="20sp" style="?android:attr/buttonBarButtonStyle"/>
-            <Button android:id="@+id/btnReload" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="↻" android:textSize="20sp" style="?android:attr/buttonBarButtonStyle"/>
+            <Button
+                android:id="@+id/btnBack"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="◀"
+                android:textSize="20sp"
+                style="?android:attr/buttonBarButtonStyle" />
 
-            <Button android:id="@+id/btnExit" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="✖" android:textSize="20sp" style="?android:attr/buttonBarButtonStyle" android:textColor="#D32F2F" />
+            <Button
+                android:id="@+id/btnHome"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🏠"
+                android:textSize="20sp"
+                style="?android:attr/buttonBarButtonStyle" />
 
-            <Button android:id="@+id/btnForward" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="▶" android:textSize="20sp" style="?android:attr/buttonBarButtonStyle"/>
+            <Button
+                android:id="@+id/btnReload"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="↻"
+                android:textSize="20sp"
+                style="?android:attr/buttonBarButtonStyle" />
+
+            <Button
+                android:id="@+id/btnExit"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="✖"
+                android:textSize="20sp"
+                style="?android:attr/buttonBarButtonStyle"
+                android:textColor="#D32F2F" />
+
+            <Button
+                android:id="@+id/btnForward"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="▶"
+                android:textSize="20sp"
+                style="?android:attr/buttonBarButtonStyle" />
         </LinearLayout>
 
     </LinearLayout>

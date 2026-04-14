@@ -69,6 +69,8 @@
     <string name="dash_state_online">IIAB-oA is online.</string>
     <string name="dash_state_termux_only">Termux found, go to Installation tab to manage it.</string>
     <string name="dash_termux_searching">Searching for installation...</string>
+    <string name="dash_arch_info_termux">"Termux arch: "</string>
+    <string name="dash_arch_info_pos">"PRoot-Distro arch: "</string>
 
     <string name="dash_installed_modules">Installed Modules</string>
     <string name="dash_books">Books</string>

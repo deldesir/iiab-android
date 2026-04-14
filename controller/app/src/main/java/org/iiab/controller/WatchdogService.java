@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.util.Log;
+
 import androidx.core.app.NotificationCompat;
 
 public class WatchdogService extends Service {
@@ -83,6 +84,7 @@ public class WatchdogService extends Service {
 
         super.onDestroy();
     }
+
     private PendingIntent getHeartbeatPendingIntent() {
         Intent intent = new Intent(this, WatchdogService.class);
         intent.setAction(ACTION_HEARTBEAT);
@@ -101,12 +103,12 @@ public class WatchdogService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // This wakes up the device even in Doze Mode
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-            SystemClock.elapsedRealtime() + HEARTBEAT_INTERVAL_MS,
-            pendingIntent);
+                    SystemClock.elapsedRealtime() + HEARTBEAT_INTERVAL_MS,
+                    pendingIntent);
         } else {
             alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-            SystemClock.elapsedRealtime() + HEARTBEAT_INTERVAL_MS,
-            pendingIntent);
+                    SystemClock.elapsedRealtime() + HEARTBEAT_INTERVAL_MS,
+                    pendingIntent);
         }
     }
 
@@ -126,8 +128,8 @@ public class WatchdogService extends Service {
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID, getString(R.string.watchdog_channel_name),
-                NotificationManager.IMPORTANCE_HIGH
+                    CHANNEL_ID, getString(R.string.watchdog_channel_name),
+                    NotificationManager.IMPORTANCE_HIGH
             );
             channel.setDescription(getString(R.string.watchdog_channel_desc));
             NotificationManager manager = getSystemService(NotificationManager.class);

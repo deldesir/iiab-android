@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="Theme.IIABController" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -11,15 +12,18 @@
         <item name="sectionBackground">@color/section_body_bg_light</item>
         <item name="sectionHeaderBackground">@color/section_header_bg</item>
     </style>
+
     <style name="Theme.TransparentQR" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:backgroundDimEnabled">false</item>
     </style>
+
     <style name="PurpleSwitchTheme" parent="">
         <item name="colorControlActivated">#8A2BE2</item>
     </style>
+
     <style name="CustomTabTextStyle" parent="TextAppearance.Design.Tab">
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">13sp</item>

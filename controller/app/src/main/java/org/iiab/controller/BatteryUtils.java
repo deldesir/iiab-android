@@ -16,6 +16,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.appcompat.app.AlertDialog;
 
@@ -68,7 +69,8 @@ public class BatteryUtils {
                     intent.setComponent(new ComponentName("com.coloros.oppoguardelf", "com.coloros.oppoguardelf.Permission.BackgroundAllowAppListActivity"));
                     activity.startActivity(intent);
                     success = true;
-                } catch (Exception e2) {}
+                } catch (Exception e2) {
+                }
             }
         } else if (manufacturer.contains("xiaomi")) {
             try {
@@ -78,7 +80,8 @@ public class BatteryUtils {
                 intent.putExtra("package_label", activity.getString(R.string.app_name));
                 activity.startActivity(intent);
                 success = true;
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
 
         if (!success) {
@@ -86,7 +89,8 @@ public class BatteryUtils {
                 Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
                 intent.setData(Uri.parse("package:" + packageName));
                 activity.startActivity(intent);
-            } catch (Exception ex) {}
+            } catch (Exception ex) {
+            }
         }
     }
 }

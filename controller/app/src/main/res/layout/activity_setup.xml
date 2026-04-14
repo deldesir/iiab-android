@@ -39,7 +39,7 @@
                 android:textStyle="bold"
                 android:textColor="?android:attr/textColorPrimary"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="16dp" />
 
             <TextView
                 android:id="@+id/setup_welcome_text"
@@ -47,7 +47,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:textColor="?android:attr/textColorSecondary"
-                android:layout_marginBottom="24dp"/>
+                android:layout_marginBottom="24dp" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_perm_notifications"
@@ -58,7 +58,7 @@
                 android:textSize="16sp"
                 android:paddingVertical="12dp"
                 android:layout_marginBottom="8dp"
-                android:theme="@style/PurpleSwitchTheme"/>
+                android:theme="@style/PurpleSwitchTheme" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_perm_termux"
@@ -69,7 +69,7 @@
                 android:textSize="16sp"
                 android:paddingVertical="12dp"
                 android:layout_marginBottom="8dp"
-                android:theme="@style/PurpleSwitchTheme"/>
+                android:theme="@style/PurpleSwitchTheme" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_perm_storage"
@@ -80,7 +80,7 @@
                 android:textSize="16sp"
                 android:paddingVertical="12dp"
                 android:layout_marginBottom="8dp"
-                android:theme="@style/PurpleSwitchTheme"/>
+                android:theme="@style/PurpleSwitchTheme" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_perm_vpn"
@@ -91,7 +91,7 @@
                 android:textSize="16sp"
                 android:paddingVertical="12dp"
                 android:layout_marginBottom="8dp"
-                android:theme="@style/PurpleSwitchTheme"/>
+                android:theme="@style/PurpleSwitchTheme" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_perm_battery"
@@ -101,7 +101,7 @@
                 android:textColor="?android:attr/textColorPrimary"
                 android:textSize="16sp"
                 android:paddingVertical="12dp"
-                android:theme="@style/PurpleSwitchTheme"/>
+                android:theme="@style/PurpleSwitchTheme" />
 
             <Button
                 android:id="@+id/btn_manage_all"
@@ -126,7 +126,7 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="?android:attr/textColorPrimary"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="8dp" />
 
             <Button
                 android:id="@+id/btn_termux_overlay"
