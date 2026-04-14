@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageButton themeToggle;
     private ImageButton btnSettings;
     private android.widget.ImageView headerIcon;
+    private long updateDownloadId = -1;
 
     // Tabs UI
     private TabLayout tabLayout;
@@ -201,6 +202,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }).attach();
         versionFooter = findViewById(R.id.version_text);
         setVersionFooter();
+        versionFooter.setOnClickListener(v -> checkForUpdates(true));
+
         viewPager.setCurrentItem(0, false);
 
         // 1. Initialize Result Launchers
@@ -266,6 +269,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         updateUI();
 
         addToLog(getString(R.string.app_started));
+        checkForUpdates(false);
 
         sizeUpdateRunnable = new Runnable() {
             @Override
@@ -421,6 +425,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onPause() {
         super.onPause();
+
+        try {
+            unregisterReceiver(downloadReceiver);
+        } catch (IllegalArgumentException e) {
+            // Ignore if it wasn't registered
+        }
+
         stopLogSizeUpdates();
         serverCheckHandler.removeCallbacks(serverCheckRunnable);
     }
@@ -428,6 +439,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
+        // Register download listener
+        IntentFilter filter = new IntentFilter(android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(downloadReceiver, filter, Context.RECEIVER_EXPORTED);
+        } else {
+            registerReceiver(downloadReceiver, filter);
+        }
         //  Check permissions status
         updateHeaderIconsOpacity();
         // Check battery status whenever returning to the app
@@ -823,6 +841,132 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return Environment.isExternalStorageManager();
         } else {
             return ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+    private void checkForUpdates(boolean isManual) {
+        if (isManual) {
+            runOnUiThread(() -> Toast.makeText(this, R.string.ota_toast_checking, Toast.LENGTH_SHORT).show());
+        }
+
+        new Thread(() -> {
+            try {
+                // Check update JSON data
+                Log.d(TAG, "OTA: Connecting to https://iiab.switnet.org/android/apk/update.json");
+                URL url = new URL("https://iiab.switnet.org/android/apk/update.json");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(5000);
+                conn.setRequestMethod("GET");
+
+                int responseCode = conn.getResponseCode();
+                Log.d(TAG, "OTA: HTTP response code: " + responseCode);
+
+                if (responseCode == 200) {
+                    BufferedReader reader = new BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                    reader.close();
+
+                    Log.d(TAG, "OTA: Downloaded JSON: " + response.toString());
+
+                    org.json.JSONObject json = new org.json.JSONObject(response.toString());
+                    int serverVersionCode = json.getInt("versionCode");
+                    String serverVersionName = json.getString("versionName");
+                    String apkName = json.getString("apkName");
+                    String changelog = json.getString("changelog");
+
+                    // Get current version
+                    int currentVersionCode = BuildConfig.VERSION_CODE;
+                    Log.d(TAG, "OTA: Server Version=" + serverVersionCode + " | Local Version=" + currentVersionCode);
+
+                    // Check against current version
+                    if (serverVersionCode > currentVersionCode) {
+                        String downloadUrl = "https://iiab.switnet.org/android/apk/" + apkName;
+                        runOnUiThread(() -> showUpdateDialog(serverVersionName, changelog, downloadUrl));
+                    } else if (isManual) {
+                        runOnUiThread(() -> Toast.makeText(MainActivity.this, R.string.ota_toast_latest, Toast.LENGTH_LONG).show());
+                    }
+                } else if (isManual) {
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, getString(R.string.ota_toast_error_server, responseCode), Toast.LENGTH_SHORT).show());
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "OTA: Critical error checking for updates", e);
+                if (isManual) {
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, R.string.ota_toast_error_network, Toast.LENGTH_SHORT).show());
+                }
+            }
+        }).start();
+    }
+    private void showUpdateDialog(String versionName, String changelog, String downloadUrl) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(getString(R.string.update_dialog_title, versionName))
+                .setMessage(getString(R.string.update_dialog_message, changelog))
+                .setPositiveButton(R.string.update_dialog_positive, (dialog, which) -> {
+                    startDownload(downloadUrl);
+                })
+                .setNegativeButton(R.string.update_dialog_negative, null)
+                .setCancelable(false)
+                .show();
+    }
+
+    private void startDownload(String downloadUrl) {
+        // Remove old files preventing overlap
+        java.io.File oldApk = new java.io.File(
+                android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS),
+                "iiab_update.apk"
+        );
+        if (oldApk.exists()) {
+            oldApk.delete();
+        }
+
+        android.app.DownloadManager.Request request = new android.app.DownloadManager.Request(android.net.Uri.parse(downloadUrl));
+
+        request.setTitle(getString(R.string.download_title));
+        request.setDescription(getString(R.string.download_description));
+
+        request.setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+        request.setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, "iiab_update.apk");
+
+        android.app.DownloadManager manager = (android.app.DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+        if (manager != null) {
+            updateDownloadId = manager.enqueue(request);
+            android.widget.Toast.makeText(this, R.string.download_started_toast, android.widget.Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private final android.content.BroadcastReceiver downloadReceiver = new android.content.BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            long id = intent.getLongExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+            if (id == updateDownloadId) {
+                installApk();
+            }
+        }
+    };
+
+    private void installApk() {
+        java.io.File apkFile = new java.io.File(
+                android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS),
+                "iiab_update.apk"
+        );
+
+        if (apkFile.exists()) {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            android.net.Uri apkUri = androidx.core.content.FileProvider.getUriForFile(
+                    this,
+                    BuildConfig.APPLICATION_ID + ".provider",
+                    apkFile
+            );
+
+            intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            startActivity(intent);
         }
     }
 }
