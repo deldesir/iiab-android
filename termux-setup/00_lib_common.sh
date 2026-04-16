@@ -259,7 +259,7 @@ iiab_login() {
   # Reminder: Android battery policy must be configured before long installs.
   if [[ "${POWER_MODE_BATTERY_PROMPT:-1}" -eq 1 ]]; then
     local bst="$POWER_MODE_BATTERY_STAMP"
-    if [[ ! -f "$bst" ]]; then
+    if [[ ! -f "$bst" && ! -f "${ANDROID_SHARED_STATE_DIR}/flag_perm_battery" ]]; then
       warn "Reminder: for reliable long installs, set Termux -> Battery to 'Unrestricted'."
       power_mode_battery_instructions
       if tty_yesno_default_n "[iiab] Open Termux App info now to adjust Battery policy? [y/N]: "; then
