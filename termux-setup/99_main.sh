@@ -339,6 +339,7 @@ while [[ $# -gt 0 ]]; do
     --debug) DEBUG=1; shift ;;
     --install-self) set_mode "install-self"; shift ;;
     --welcome) set_mode "welcome"; shift ;;
+    --json-vars) set_mode "json-vars"; shift ;;
     -h|--help) usage; exit 0 ;;
     --version)
       log "installed version: $(get_iiab_termux_version "$0")"
@@ -373,6 +374,11 @@ while [[ $# -gt 0 ]]; do
         BACKUP_RESTORE_TARGET="AUTO"
         shift 1
       fi
+      ;;
+    --install-module)
+      set_mode "install-module"
+      INSTALL_TARGET="${2:-}"
+      shift 2
       ;;
     --no-meta4)
       PULL_USE_META4=0
@@ -477,6 +483,10 @@ main() {
       welcome_interactive "Preview"
       ;;
 
+    json-vars)
+      cmd_json_vars
+      ;;
+
     login)
       iiab_login
       ;;
@@ -497,6 +507,10 @@ main() {
       run_barebones_logic
       cmd_pull_rootfs "$BACKUP_RESTORE_TARGET" "$PULL_USE_META4" "$PULL_KEEP_TARBALL" "$PULL_ARCH_MISMATCH_OK"
       self_check
+      ;;
+
+    install-module)
+      cmd_install_module "$INSTALL_TARGET"
       ;;
 
     remove-iiab)

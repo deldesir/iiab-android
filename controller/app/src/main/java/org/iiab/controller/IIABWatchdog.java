@@ -74,7 +74,7 @@ public class IIABWatchdog {
         // 1. Absolute path to the command (String)
         intent.putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/true");
         // 2. Execute silently in the background (Boolean, critical)
-        intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", true);
+        intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", false);
         // 3. Avoid saving session history (String "0" = no action)
         intent.putExtra("com.termux.RUN_COMMAND_SESSION_ACTION", "0");
 

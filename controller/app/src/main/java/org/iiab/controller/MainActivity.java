@@ -731,6 +731,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    // --- TERMUX HEADLESS BRIDGE ---
+    public void executeTermuxCommandHeadless(String actionFlag) {
+        try {
+            android.util.Log.d("IIAB-MainActivity", "Firing Visible Intent (Bypassing Background Limits): " + actionFlag);
+            android.content.Intent intent = new android.content.Intent();
+            intent.setClassName("com.termux", "com.termux.app.RunCommandService");
+            intent.setAction("com.termux.RUN_COMMAND");
+            intent.putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home");
+
+            intent.putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/env");
+
+            String[] splitFlags = actionFlag.split(" ");
+            java.util.List<String> argsList = new java.util.ArrayList<>();
+            argsList.add("INTENT_MODE=headless");
+            argsList.add("/data/data/com.termux/files/usr/bin/bash");
+            argsList.add("/data/data/com.termux/files/usr/bin/iiab-termux");
+            argsList.addAll(java.util.Arrays.asList(splitFlags));
+
+            intent.putExtra("com.termux.RUN_COMMAND_ARGUMENTS", argsList.toArray(new String[0]));
+
+            intent.putExtra("com.termux.RUN_COMMAND_BACKGROUND", false);
+            intent.putExtra("com.termux.RUN_COMMAND_SESSION_ACTION", "0");
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("IIAB-MainActivity", "Error firing visible intent", e);
+        }
+    }
+
     private void updateConnectivityStatus() {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         boolean isWifiOn = wifiManager != null && wifiManager.isWifiEnabled();

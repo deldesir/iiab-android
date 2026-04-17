@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # -----------------------------------------------------------------------------
-# GENERATED FILE: 2026-04-16T08:13:22-06:00 - do not edit directly.
+# GENERATED FILE: 2026-04-17T09:20:26-06:00 - do not edit directly.
 # Source modules: termux-setup/*.sh + manifest.sh
 # Rebuild: (cd termux-setup && bash build_bundle.sh)
 # -----------------------------------------------------------------------------
@@ -358,6 +358,9 @@ iiab_login() {
   set +e
    if [[ "${INTENT_MODE:-}" == "headless" ]]; then
      boxyp_log "Running in APK Headless mode (no TTY, sleep infinity)"
+     if command -v am >/dev/null 2>&1; then
+         am start -n org.iiab.controller/org.iiab.controller.MainActivity >/dev/null 2>&1 || true
+     fi
      proot-distro login iiab -- bash -lc "/usr/local/bin/pdsm start && sleep infinity"
      rc=$?
    elif [[ -r /dev/tty ]]; then
@@ -386,6 +389,9 @@ iiab_stop() {
   # Graceful shutdown of internal services using 'pdsm'
   if iiab_exists; then
     log "Executing 'pdsm stop' for internal services..."
+     if command -v am >/dev/null 2>&1; then
+         am start -n org.iiab.controller/org.iiab.controller.MainActivity >/dev/null 2>&1 || true
+     fi
     # Send the command into proot. The script won't fail if a service fails.
     proot-distro login iiab -- /usr/local/bin/pdsm stop || warn "Partial failure while stopping services via pdsm."
   fi
@@ -403,6 +409,109 @@ iiab_stop() {
   fi
 
   ok "All IIAB services have been successfully stopped."
+}
+
+cmd_json_vars() {
+  local yaml_content=""
+
+  # Extract content directly from inside PRoot
+  if iiab_exists; then
+     yaml_content="$(proot-distro login iiab -- cat /etc/iiab/local_vars.yml 2>/dev/null || true)"
+  fi
+
+  # If it fails or is empty, return an empty JSON
+  if [[ -z "$yaml_content" ]]; then
+     if [[ "${INTENT_MODE:-}" == "headless" ]]; then
+        mkdir -p "$ANDROID_SHARED_STATE_DIR" 2>/dev/null || true
+        echo "{}" > "${ANDROID_SHARED_STATE_DIR}/local_vars.json"
+     else
+        echo "{}"
+     fi
+     return 1
+  fi
+
+  # Ultra-fast parsing with awk: Looks for lines ending in _install: or _enabled: with True/False
+  local json_data
+  json_data=$(echo "$yaml_content" | awk -F':' '/^[a-zA-Z0-9_]+_(install|enabled):[ \t]+(True|False|true|false)/ {
+      key=$1;
+      val=$2;
+      gsub(/^[ \t]+|[ \t]+$/, "", val); # Remove leading/trailing spaces
+      if (tolower(val) == "true") val="true"; else val="false";
+      printf "  \"%s\": %s,\n", key, val;
+  }' | sed '$ s/,$//') # Remove the trailing comma to make it valid JSON
+
+  local final_json="{\n${json_data}\n}"
+
+  # If called from the app (headless), write to the shared file. Otherwise, print to terminal.
+  if [[ "${INTENT_MODE:-}" == "headless" ]]; then
+     mkdir -p "$ANDROID_SHARED_STATE_DIR" 2>/dev/null || true
+     echo -e "$final_json" > "${ANDROID_SHARED_STATE_DIR}/local_vars.json"
+     if command -v am >/dev/null 2>&1; then
+         am start -n org.iiab.controller/org.iiab.controller.MainActivity >/dev/null 2>&1 || true
+     fi
+  else
+     echo -e "$final_json"
+  fi
+}
+
+cmd_install_module() {
+  local role="$1"
+  [[ -z "$role" ]] && die "You must specify a module/role to install."
+
+  log "Preparing to install module: $role"
+
+  if ! iiab_exists; then
+    die "IIAB Debian (alias 'iiab') is not installed."
+  fi
+
+  # Safety guard: Dashboard is auto-installed, it shouldn't be executed via runrole
+  if [[ "$role" == "dashboard" ]]; then
+    warn "Role '$role' is managed automatically. Skipping runrole execution."
+    return 0
+  fi
+
+  # Update local_vars.yml inside PRoot
+  log "Updating local_vars.yml for $role..."
+  proot-distro login iiab -- bash -c "
+    sed -i -E '/^[[:space:]]*${role}_(install|enabled)[[:space:]]*:/d' /etc/iiab/local_vars.yml
+    echo '${role}_install: True' >> /etc/iiab/local_vars.yml
+    echo '${role}_enabled: True' >> /etc/iiab/local_vars.yml
+  "
+
+  # Execute Ansible runrole
+  log "Executing Ansible runrole for $role..."
+  local rc=0
+  set +e
+
+  # Execute runrole preserving interactivity (TTY) if available
+  if [[ -r /dev/tty ]]; then
+    proot-distro login iiab < /dev/tty -- bash -lc "cd /opt/iiab/iiab && ./runrole $role"
+    rc=$?
+  else
+    proot-distro login iiab -- bash -lc "cd /opt/iiab/iiab && ./runrole $role"
+    rc=$?
+  fi
+  set -e
+
+  if (( rc == 0 )); then
+    ok "Module $role installed successfully!"
+  else
+    warn_red "Module $role installation failed or completed with errors (rc=$rc)."
+  fi
+
+  # Bounce back to Controller App if called via Android Intent
+  if [[ "${INTENT_MODE:-}" == "headless" ]]; then
+     log "Refreshing JSON state for the Controller App..."
+     cmd_json_vars > /dev/null 2>&1 || true
+
+     if command -v am >/dev/null 2>&1; then
+         log "Returning control to Android App..."
+         sleep 1 # Brief visual pause before bouncing back
+         am start -n org.iiab.controller/org.iiab.controller.MainActivity >/dev/null 2>&1 || true
+     fi
+  fi
+
+  return $rc
 }
 
 ### --- Pre-flight Check & Metrics ---
@@ -563,6 +672,8 @@ ${BLU}=== CORE & INSTALL ===${RST}
   ${GRN}--barebones${RST}     Minimal installation: Termux base + proxy (no rootfs)
   ${GRN}--start, --login${RST} Start / Login IIAB Debian
   ${GRN}--iiab-android${RST}  Install/update 'iiab-android' tool inside proot
+  ${GRN}--install-module [M]${RST} Install a specific Ansible role (e.g. books)
+  ${GRN}--json-vars${RST}     Export local_vars.yml status as JSON (for Controller App)
 
 ${BLU}=== ADB & SYSTEM TUNING ===${RST}
   ${GRN}--with-adb${RST}      Baseline + Debian + ADB wireless pair/connect
@@ -3504,6 +3615,7 @@ while [[ $# -gt 0 ]]; do
     --debug) DEBUG=1; shift ;;
     --install-self) set_mode "install-self"; shift ;;
     --welcome) set_mode "welcome"; shift ;;
+    --json-vars) set_mode "json-vars"; shift ;;
     -h|--help) usage; exit 0 ;;
     --version)
       log "installed version: $(get_iiab_termux_version "$0")"
@@ -3538,6 +3650,11 @@ while [[ $# -gt 0 ]]; do
         BACKUP_RESTORE_TARGET="AUTO"
         shift 1
       fi
+      ;;
+    --install-module)
+      set_mode "install-module"
+      INSTALL_TARGET="${2:-}"
+      shift 2
       ;;
     --no-meta4)
       PULL_USE_META4=0
@@ -3642,6 +3759,10 @@ main() {
       welcome_interactive "Preview"
       ;;
 
+    json-vars)
+      cmd_json_vars
+      ;;
+
     login)
       iiab_login
       ;;
@@ -3662,6 +3783,10 @@ main() {
       run_barebones_logic
       cmd_pull_rootfs "$BACKUP_RESTORE_TARGET" "$PULL_USE_META4" "$PULL_KEEP_TARBALL" "$PULL_ARCH_MISMATCH_OK"
       self_check
+      ;;
+
+    install-module)
+      cmd_install_module "$INSTALL_TARGET"
       ;;
 
     remove-iiab)

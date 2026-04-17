@@ -1,31 +1,424 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp">
+    android:background="@color/dash_bg_main">
 
-    <ImageView
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:src="@drawable/ic_auto_towing"
-        app:tint="?android:attr/textColorPrimary" />
-
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/deploy_wip_title"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:layout_marginTop="16dp" />
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/deploy_wip_desc"
-        android:gravity="center"
-        android:textColor="?android:attr/textColorSecondary"
-        android:layout_marginTop="8dp" />
-</LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/rounded_button"
+            android:backgroundTint="@color/dash_module_bg"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
+            android:baselineAligned="false">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <View
+                    android:id="@+id/led_install_termux"
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/led_off"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/install_led_termux"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:gravity="center_vertical" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <View
+                    android:id="@+id/led_install_dev_mode"
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/led_off"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/install_led_dev_options"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:lines="2"
+                    android:gravity="center_vertical" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <View
+                    android:id="@+id/led_install_dcpr"
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/led_off"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/txt_install_dcpr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/install_led_child_process"
+                    android:textColor="@color/dash_text_secondary"
+                    android:textSize="12sp"
+                    android:lines="2"
+                    android:gravity="center_vertical" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0.8"
+                android:orientation="horizontal"
+                android:gravity="center">
+
+                <View
+                    android:id="@+id/led_install_ppk"
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/led_off"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/txt_install_ppk"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/install_led_ppk"
+                    android:textColor="@color/dash_text_secondary"
+                    android:textSize="12sp"
+                    android:gravity="center_vertical" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/advanced_gathering_wrapper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:id="@+id/install_advanced_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="▼ Advanced Gathering"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="?android:attr/textColorPrimary"
+                android:paddingVertical="8dp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <LinearLayout
+                android:id="@+id/advanced_gathering_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible"
+                android:paddingTop="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <Button
+                        android:id="@+id/btn_connect_adb"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/install_btn_connect_adb"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        android:background="@drawable/rounded_button"
+                        android:backgroundTint="#444444"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:background="@drawable/rounded_button"
+                        android:backgroundTint="@color/dash_module_bg"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="8dp">
+
+                        <View
+                            android:id="@+id/led_wireless_adb"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:background="@drawable/led_off"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/install_led_wireless_adb"
+                            android:textColor="#FFFFFF"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:background="@drawable/rounded_button"
+                    android:backgroundTint="@color/dash_module_bg">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="@string/install_placeholder_cpu"
+                        android:textColor="@color/dash_text_secondary"
+                        android:textStyle="italic"
+                        android:textSize="12sp" />
+                </FrameLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/install_header_fast"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/dash_divider"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/install_desc_fast"
+            android:textColor="@color/dash_text_primary"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="32dp">
+
+            <Button
+                android:id="@+id/btn_fast_install"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:text="@string/install_btn_install"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/rounded_button"
+                android:backgroundTint="#008000"
+                android:layout_marginEnd="8dp"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/btn_fast_delete"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:text="@string/install_btn_delete"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/rounded_button"
+                android:backgroundTint="#FF0000"
+                android:layout_marginStart="8dp"
+                android:textAllCaps="false" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+          <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/install_header_roles"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold"
+            android:textSize="18sp" />
+
+            <LinearLayout
+                android:id="@+id/btn_refresh_modules"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:padding="8dp"
+                android:clickable="true"
+                android:focusable="true">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔄 Refresh"
+                    android:textColor="@color/dash_text_secondary"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/install_modules_disclaimer"
+            android:textColor="@color/dash_text_primary"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp" />
+
+        <LinearLayout
+            android:id="@+id/install_roles_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="8dp">
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/install_discrepancy_warning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@drawable/rounded_button"
+            android:backgroundTint="#44FF0000"
+            android:padding="12dp"
+            android:layout_marginBottom="24dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/install_warning_discrepancy_icon"
+                android:textColor="#FF5555"
+                android:textSize="16sp"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/txt_discrepancy_msg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/install_warning_discrepancy_msg"
+                android:textColor="#FFCCCC"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_launch_install"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="@string/install_btn_launch"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/rounded_button"
+            android:backgroundTint="#008000"
+            android:layout_marginBottom="32dp"
+            android:textAllCaps="false" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/install_header_advanced"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/dash_divider"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/install_desc_advanced"
+            android:textColor="@color/dash_text_primary"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="32dp">
+
+            <Button
+                android:id="@+id/btn_advanced_reset"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:text="@string/install_btn_reset"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:background="@drawable/rounded_button"
+                android:backgroundTint="#FFC107"
+                android:layout_marginEnd="8dp"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/btn_advanced_backup"
+                android:layout_width="0dp"
+                android:layout_height="60dp"
+                android:layout_weight="1"
+                android:text="@string/install_btn_backup"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/rounded_button"
+                android:backgroundTint="#2196F3"
+                android:layout_marginStart="8dp"
+                android:textAllCaps="false" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="40dp" />
+
+    </LinearLayout>
+</ScrollView>

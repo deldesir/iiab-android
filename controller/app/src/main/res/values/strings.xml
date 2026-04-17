@@ -248,4 +248,38 @@
     <string name="ota_toast_error_server">Error contacting server (%1$d)</string>
     <string name="ota_toast_error_network">Network error or invalid JSON.</string>
     <string name="ota_toast_cooldown">Please wait a few seconds before checking again.</string>
+
+    <string name="install_led_dev_options">Developer Mode</string>
+    <string name="install_led_child_process">Child process restriction</string>
+    <string name="install_led_ppk">PPK  256</string>
+    <string name="install_led_termux">Termux</string>
+
+    <string name="install_header_fast">Fast Installation</string>
+    <string name="install_desc_fast">Runs fast installation from prebuilt images</string>
+
+    <string name="install_header_roles">Modules management</string>
+
+    <string name="install_header_advanced">Advanced setup</string>
+    <string name="install_desc_advanced">Install everything from scratch</string>
+
+    <string name="install_btn_install">Install</string>
+    <string name="install_btn_delete">Delete</string>
+    <string name="install_btn_launch">Launch installation</string>
+
+    <string name="install_adv_gathering_title">Advanced Gathering</string>
+    <string name="install_btn_connect_adb">Connect Wireless Debugging</string>
+    <string name="install_led_wireless_adb">Wireless Debugging</string>
+    <string name="install_placeholder_cpu">Live CPU Usage (ADB required)</string>
+    <string name="install_warning_discrepancy_icon">⚠️</string>
+    <string name="install_warning_discrepancy_msg">Please check the installation manually, seems there is a discrepancy among what\'s stated and detected.</string>
+    <string name="install_msg_confirmed">Module installation confirmed successfully, only one reinstallation is allowed.</string>
+    <string name="install_msg_finished">All installations are complete!</string>
+    <string name="install_modules_disclaimer">Module installation may take several minutes depending on your internet speed and device performance.</string>
+    <string name="install_btn_reset">Scratch Reset</string>
+    <string name="install_btn_backup">Backup</string>
+    <string name="install_dialog_reset_title">Scratch Reset</string>
+    <string name="install_dialog_reset_msg">Are you sure? This action will remove the installation to manually install from scratch.</string>
+    <string name="install_dialog_reset_confirm">Yes, Reset</string>
+    <string name="install_dialog_reset_cancel">Cancel</string>
+
 </resources>

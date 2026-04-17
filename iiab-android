@@ -359,6 +359,12 @@ install_iiaboa_dashboard() {
   log "Configuring Nginx for the dashboard..."
   cp "${dash_src}/dash-node-nginx.conf" "/etc/nginx/conf.d/dash-node-nginx.conf"
 
+  # Set local_vars.yml technical truth while role lands on main repo.
+  sed -i -E '/^[[:space:]]*dashboard_(install|enabled)[[:space:]]*:/d' "$LOCAL_VARS_DEST"
+  
+  echo "dashboard_install: True" >> "$LOCAL_VARS_DEST"
+  echo "dashboard_enabled: True" >> "$LOCAL_VARS_DEST"
+
   log "Restarting Nginx..."
   /usr/local/bin/pdsm restart nginx
 
