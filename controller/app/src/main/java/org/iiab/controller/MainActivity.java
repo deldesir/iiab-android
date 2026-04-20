@@ -132,6 +132,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Runnable serverCheckRunnable;
     private static final int CHECK_INTERVAL_MS = 3000;
 
+    public void invalidateModuleStateTrust() {
+        getSharedPreferences("iiab_queue_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("is_module_state_trusted", false)
+                .apply();
+    }
+
+    public boolean isModuleStateTrusted() {
+        return getSharedPreferences("iiab_queue_prefs", Context.MODE_PRIVATE)
+                .getBoolean("is_module_state_trusted", true);
+    }
+    public boolean isTermuxInstalled() {
+        try {
+            getPackageManager().getPackageInfo("com.termux", 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
     private final BroadcastReceiver logReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -704,7 +724,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void startTermuxEnvironmentVisible(String actionFlag) {
+    public void startTermuxEnvironmentVisible(String actionFlag) {
         Intent intent = new Intent();
         intent.setClassName("com.termux", "com.termux.app.RunCommandService");
         intent.setAction("com.termux.RUN_COMMAND");
@@ -1060,6 +1080,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     .putBoolean("termux_tapped_storage", false)
                     .putLong("termux_install_signature", isTermuxInstalled ? currentTermuxInstallTime : 0)
                     .apply();
+            invalidateModuleStateTrust();
         } else if (isTermuxInstalled && savedTermuxSignature == 0) {
             // First time tracking an existing installation
             internalPrefs.edit().putLong("termux_install_signature", currentTermuxInstallTime).apply();

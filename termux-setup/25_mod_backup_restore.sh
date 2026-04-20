@@ -11,6 +11,52 @@ get_android_arch() {
   esac
 }
 
+cmd_list_backups() {
+  local json_content="{\"backups\": ["
+  local first=1
+
+  # Use a while loop to iterate over all ls results sorted by date
+  while IFS= read -r file; do
+    [[ -n "$file" && -f "$file" ]] || continue
+
+    local filename="${file##*/}"
+    local size; size="$(du -h "$file" | awk '{print $1}')"
+
+    local date_str
+    if date --version >/dev/null 2>&1; then
+      date_str="$(date -r "$file" +"%Y-%m-%d %H:%M")"
+    else
+      local epoch; epoch="$(stat -c %Y "$file")"
+      date_str="$(date -d "@$epoch" +"%Y-%m-%d %H:%M" 2>/dev/null || echo "Unknown")"
+    fi
+
+    # Handle commas for JSON formatting
+    if [[ $first -eq 1 ]]; then
+      first=0
+    else
+      json_content+=","
+    fi
+    
+    # Add the object to the array
+    json_content+="{\"filename\": \"$filename\", \"size\": \"$size\", \"date\": \"$date_str\"}"
+  done < <(ls -1t "${HOME}"/iiab-android_rootfs_*.tar.gz 2>/dev/null || true)
+
+  json_content+="]}"
+
+  # --- BEHAVIOR DUALITY ---
+  if [[ "${INTENT_MODE:-}" == "headless" ]]; then
+    mkdir -p "$ANDROID_SHARED_STATE_DIR" 2>/dev/null || true
+    echo "$json_content" > "${ANDROID_SHARED_STATE_DIR}/backups_list.json"
+
+    if command -v am >/dev/null 2>&1; then
+       sleep 1
+       am start -n org.iiab.controller/org.iiab.controller.MainActivity >/dev/null 2>&1 || true
+    fi
+  else
+    echo "$json_content"
+  fi
+}
+
 cmd_backup_rootfs() {
   local custom_path="${1:-}"
   local out_file
@@ -25,14 +71,15 @@ cmd_backup_rootfs() {
     # Format: YYYY.DDD.HHMM (Day of year: %j)
     ts="$(date -u +"%Y.%j.%H%M")"
     arch="$(get_android_arch)"
-    out_file="iiab-android_rootfs_${ts}_${arch}.tar.gz"
+    out_file_name="iiab-android_rootfs_${ts}_${arch}.tar.gz"
+    out_file_path="${HOME}/$out_file_name"
   fi
 
   log "Starting backup of IIAB Debian..."
-  log "Destination: $out_file"
+  log "Destination: $out_file_path"
 
-  if proot-distro backup iiab --output "$out_file"; then
-    ok "Backup completed successfully: $out_file"
+  if proot-distro backup iiab --output "$out_file_path"; then
+    ok "Backup completed successfully: $out_file_name"
   else
     warn_red "Failed to create backup."
     return 1
@@ -41,9 +88,20 @@ cmd_backup_rootfs() {
 
 cmd_restore_rootfs() {
   local backup_file="${1:-}"
+  rm -f "${ANDROID_SHARED_STATE_DIR}/restore_error_flag" 2>/dev/null || true
 
   [[ -z "$backup_file" ]] && die "You must specify the path to the backup file to restore."
   [[ -f "$backup_file" ]] || die "Backup file does not exist: $backup_file"
+
+  if [[ -z "$backup_file" || ! -f "$backup_file" ]]; then
+    if [[ "${INTENT_MODE:-}" == "headless" ]]; then
+      mkdir -p "$ANDROID_SHARED_STATE_DIR" 2>/dev/null || true
+      touch "${ANDROID_SHARED_STATE_DIR}/restore_error_flag"
+      # Pause for android parsing
+      sleep 2
+    fi
+    die "Backup file does not exist: $backup_file"
+  fi
 
   have proot-distro || die "proot-distro is not installed."
 
@@ -53,14 +111,19 @@ cmd_restore_rootfs() {
     log_yel "Restoration will overwrite the current system."
   fi
 
+
   if proot-distro restore "$backup_file"; then
     ok "Restoration completed successfully."
     BASELINE_OK=1
 
-    # Sync state to Android App: System restored and ready!
+    # Sync state to Android App: Restored and ready!
     set_android_state_flag "flag_system_installed"
     set_android_state_flag "flag_iiab_ready"
   else
+    if [[ "${INTENT_MODE:-}" == "headless" ]]; then
+      touch "${ANDROID_SHARED_STATE_DIR}/restore_error_flag"
+      sleep 2
+    fi
     warn_red "Failed to restore backup."
     return 1
   fi

@@ -41,14 +41,37 @@ ensure_proot_distro() {
 proot_install_iiab_safe() {
   local out rc
   set +e
+
   local help
   help="$(proot-distro install --help 2>&1 || true)"
   if ! printf '%s\n' "$help" | grep -q -- '--override-alias'; then
     warn_red "proot-distro is too old (missing --override-alias). Please upgrade Termux packages and retry."
     return 1
   fi
-  out="$(proot-distro install --override-alias iiab debian 2>&1)"
-  rc=$?
+
+  if [[ "${INTENT_MODE:-}" == "headless" ]]; then
+    log_yel "Headless mode: Using tmux to provide a virtual PTY to PRoot..."
+    have tmux || termux_apt install tmux >/dev/null 2>&1 || true
+    # Launch proot-distro encapsulated in a virtual session (real PTY guaranteed)
+    tmux new-session -d -s iiab_setup "proot-distro install --override-alias iiab debian"
+    log "Extracting and configuring base system (this will take a few minutes)..."
+    while tmux has-session -t iiab_setup 2>/dev/null; do
+        sleep 3
+        printf "."
+    done
+    echo ""
+    # Verify if the virtual installation was successful
+    if iiab_exists; then
+        rc=0
+    else
+        rc=1
+        out="Fatal failure inside the tmux session."
+    fi
+  else
+    out="$(proot-distro install --override-alias iiab debian 2>&1)"
+    rc=$?
+  fi
+
   set -e
   if [[ $rc -eq 0 ]]; then return 0; fi
   if echo "$out" | grep -qi "already installed"; then

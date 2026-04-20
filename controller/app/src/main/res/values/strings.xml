@@ -249,24 +249,26 @@
     <string name="ota_toast_error_network">Network error or invalid JSON.</string>
     <string name="ota_toast_cooldown">Please wait a few seconds before checking again.</string>
 
-    <string name="install_led_dev_options">Developer Mode</string>
+    <string name="install_led_dev_options">Developer\nMode</string>
     <string name="install_led_child_process">Child process restriction</string>
     <string name="install_led_ppk">PPK  256</string>
     <string name="install_led_termux">Termux</string>
 
     <string name="install_header_fast">Fast Installation</string>
-    <string name="install_desc_fast">Runs fast installation from prebuilt images</string>
+    <string name="install_desc_fast">Provisions a prebuilt system image containing default modules and demo content</string>
 
-    <string name="install_header_roles">Modules management</string>
+    <string name="install_header_roles">Module management</string>
 
-    <string name="install_header_advanced">Advanced setup</string>
-    <string name="install_desc_advanced">Install everything from scratch</string>
+    <string name="install_header_maintenance">Maintenance &#38; Recovery</string>
+    <string name="install_desc_maintenance">Perform system management tasks</string>
 
     <string name="install_btn_install">Install</string>
+    <string name="install_btn_reinstall">Reinstall</string>
+    <string name="install_msg_termux_missing">Please prepare the Termux app with the base installation first.</string>
     <string name="install_btn_delete">Delete</string>
     <string name="install_btn_launch">Launch installation</string>
 
-    <string name="install_adv_gathering_title">Advanced Gathering</string>
+    <string name="install_adv_monitoring_title">Advanced monitoring</string>
     <string name="install_btn_connect_adb">Connect Wireless Debugging</string>
     <string name="install_led_wireless_adb">Wireless Debugging</string>
     <string name="install_placeholder_cpu">Live CPU Usage (ADB required)</string>
@@ -278,8 +280,21 @@
     <string name="install_btn_reset">Scratch Reset</string>
     <string name="install_btn_backup">Backup</string>
     <string name="install_dialog_reset_title">Scratch Reset</string>
-    <string name="install_dialog_reset_msg">Are you sure? This action will remove the installation to manually install from scratch.</string>
+    <string name="install_dialog_reset_msg">Are you sure? This action will completely remove the current installation and its data, requiring a fresh install from the CLI.</string>
     <string name="install_dialog_reset_confirm">Yes, Reset</string>
     <string name="install_dialog_reset_cancel">Cancel</string>
+    <string name="install_msg_offline_trusted">Server is offline. Module state is trusted and up to date.</string>
+    <string name="install_msg_server_running_lock">Please turn off the server to manage modules.</string>
+    <string name="install_btn_restore">Restore Backup</string>
+    <string name="install_btn_force_stop">Force Stop Termux</string>
+    <string name="install_adv_select_backup">▶ Select backup...</string>
+    <string name="install_adv_select_backup_open">▼ Select backup...</string>
+    <string name="install_msg_fetching_backups">Fetching backups...</string>
+    <string name="install_msg_no_backups">No backups detected.</string>
+    <string name="install_msg_restore_failed">Restoration did not proceed as expected. Please try again.</string>
+    <string name="install_msg_backup_na">N/A</string>
+    <string name="install_msg_backup_details">File: %1$s\nSize: %2$s  |  Date: %3$s</string>
+    <string name="install_msg_restore_starting">Starting restore of %1$s…</string>
+    <string name="install_msg_select_backup_first">Please select a backup first.</string>
 
 </resources>
