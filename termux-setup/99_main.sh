@@ -346,6 +346,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     --update) set_mode "update"; shift ;;
+    --list-backups) set_mode "list-backups"; shift ;;
     --backup-rootfs)
       set_mode "backup-rootfs"
       # Check if the next argument is a path (and not another flag)
@@ -493,6 +494,10 @@ main() {
 
     stop)
       iiab_stop
+      ;;
+
+    list-backups)
+      cmd_list_backups
       ;;
 
     backup-rootfs)
