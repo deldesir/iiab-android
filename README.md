@@ -52,9 +52,9 @@ Before installing, you need to set up your Android device.  These initial steps 
 
    To run the installation and to keep IIAB services alive in the background, you must allow Termux to run without battery restrictions:
 
-   * Go to your Android **Settings -> Apps -> Termux -> Battery**.
-   * Set it to **Unrestricted**, **Don't optimize**, or **Allow background activity** (the exact label varies by vendor).  If you leave this restricted, Android may kill the process when your screen turns off!
-   > **Note:** Because this policy is important for a successful setup, our installation script will prompt you to verify this later.  Thank you for paying attention to the manual! 😉
+   * Go to your Android **Settings -> Apps -> Termux -> Battery** or **App battery usage**.
+   * Set it to **Unrestricted** or **Don't optimize** or **Allow background usage** or **Allow background activity** (exact label varies by vendor).  If you leave this restricted, Android may kill the process when your screen turns off!
+   > **Note:** Because this policy is important for a successful setup, our installation script will prompt you to verify this later!  😉  <!-- Thank you for paying attention to the manual! -->
 
 3. **Enable Developer Options & Process Limits**
 
