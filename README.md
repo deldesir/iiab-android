@@ -50,12 +50,13 @@ Before installing, you need to set up your Android device.  These initial steps 
 
 2. **Configure Battery Settings (Important)**
 
-   To run the installation and to keep IIAB services alive in the background, you must allow Termux to run without battery restrictions.
+   To run the installation and to keep IIAB services alive in the background, you must allow Termux to run without battery restrictions:
+
    * Go to your Android **Settings -> Apps -> Termux -> Battery**.
    * Set it to **Unrestricted**, **Don't optimize**, or **Allow background activity** (the exact label varies by vendor).  If you leave this restricted, Android may kill the process when your screen turns off!
    > **Note:** Because this policy is important for a successful setup, our installation script will prompt you to verify this later.  Thank you for paying attention to the manual! 😉
 
-3. **Enable Developer Options & Process Limits**
+4. **Enable Developer Options & Process Limits**
 
    * Go to **Settings > About phone** (or About tablet) and tap **Build number** seven times rapidly to enable Developer Options.
    * **For Android 14 and newer:** Go back to **Settings -> System -> Developer options** and turn on `Disable child process restrictions`.
@@ -66,7 +67,7 @@ Before installing, you need to set up your Android device.  These initial steps 
 
 ### Part 2: Choose your installation path
 
-There are two main ways to install IIAB on Android.  If you are unsure, we recommend the **Pre-built** method.
+There are two main ways to install IIAB on Android.  If you are unsure, we recommend the **Pre-built** method:
 
 **Pre-built - Fast & simple**  
 This is the recommended path for most users.  Instead of compiling the software on your phone, it downloads a ready-to-use, pre-configured IIAB system.  It saves a lot of time, minimizes potential errors, and gets you up and running quickly.
@@ -118,7 +119,7 @@ This is the foundational build path with no shortcuts.  Your device will downloa
 
 1. Open Termux and prepare the full environment:
 
-   ```bash
+   ```
    curl iiab.io/termux.txt | bash
    ```
 
@@ -134,7 +135,7 @@ This is the foundational build path with no shortcuts.  Your device will downloa
    iiab-android
    ```
 
-   *Tip: As with any custom IIAB installation, if the installer fails or gets interrupted, you can always resume from where it left off by running: `iiab -f`*
+   *Tip: As with any custom IIAB installation, if the installer fails or gets interrupted, you can always resume from where it left off by running:* `iiab -f`
 
 4. If the installer completes successfully, you'll see a text box reading:
 
