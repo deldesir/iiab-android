@@ -10,6 +10,7 @@
     </queries>
 
     <application
+        android:name=".IIABApplication"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -73,6 +74,10 @@
                 <action android:name="org.iiab.controller.TERMUX_OUTPUT" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".AdbPairingReceiver"
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"

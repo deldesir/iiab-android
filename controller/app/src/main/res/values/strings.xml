@@ -250,8 +250,8 @@
     <string name="ota_toast_cooldown">Please wait a few seconds before checking again.</string>
 
     <string name="install_led_dev_options">Developer\nMode</string>
-    <string name="install_led_child_process">Child process restriction</string>
-    <string name="install_led_ppk">PPK  256</string>
+    <string name="install_led_child_process">Processes \nRestriction</string>
+    <string name="install_led_ppk">Process \nPhantom Killer</string>
     <string name="install_led_termux">Termux</string>
 
     <string name="install_header_fast">Fast Installation</string>
@@ -297,4 +297,39 @@
     <string name="install_msg_restore_starting">Starting restore of %1$s…</string>
     <string name="install_msg_select_backup_first">Please select a backup first.</string>
 
+    <string name="adb_notif_title">IIAB Wireless Debugging</string>
+    <string name="adb_notif_desc">ADB ports found! Tap \'Enter PIN\' below.</string>
+    <string name="adb_notif_action_pin">Enter PIN</string>
+    <string name="adb_notif_input_hint">Enter 6-digit PIN</string>
+
+    <string name="adb_toast_pairing">Pairing securely (Native)...</string>
+    <string name="adb_toast_pin_invalid">Invalid PIN. Must be 6 digits.</string>
+    <string name="adb_toast_pairing_failed">Pairing failed. Please try again.</string>
+    <string name="adb_toast_scan_timeout">ADB scan timed out. Try again.</string>
+
+    <string name="adb_status_connected">Connected!</string>
+    <string name="adb_status_offline">Offline</string>
+    <string name="adb_btn_connect">Connect to ADB</string>
+    <string name="adb_btn_disconnect">Disconnect ADB</string>
+    <string name="adb_btn_scanning">Scanning network...</string>
+
+    <string name="adb_desc_monitoring">Required to monitor CPU usage, manage Child processes restrictions, and fix Phantom Process Killer (PPK).</string>
+    <string name="adb_graph_title">CPU History (60 seconds)</string>
+    <string name="adb_snack_dev_options">Open Developer Options manually</string>
+    <string name="adb_ppk_default">Default (32)</string>
+    <string name="adb_ppk_limit_not_required"><![CDATA[PPK Limit: <b>%1$s</b><br><small>(Not required)</small>]]></string>
+    <string name="adb_ppk_limit_active"><![CDATA[PPK Limit: <b>%1$s</b>]]></string>
+
+    <string name="adb_cp_disabled_ok"><![CDATA[Processes Restriction<br><b>(Disabled - OK)</b>]]></string>
+    <string name="adb_cp_enabled_limiting"><![CDATA[Processes Restriction<br><b>(Enabled - LIMITING)</b>]]></string>
+    <string name="adb_cp_unknown"><![CDATA[Processes Restriction<br><b>(Unknown)</b>]]></string>
+    <string name="adb_cp_not_required"><![CDATA[Processes Restriction<br><small>(Not required)</small>]]></string>
+
+    <string name="adb_cp_checking"><![CDATA[Processes Restriction<br><i>(Checking...)</i>]]></string>
+    <string name="adb_ppk_checking"><![CDATA[PPK Limit<br><i>(Checking...)</i>]]></string>
+    <string name="adb_cp_idle">Processes Restriction\n(--)</string>
+    <string name="adb_ppk_idle">PPK Limit\n(--)</string>
+
+    <string name="adb_snack_disabling_cp">Disabling Processes Restrictions...</string>
+    <string name="adb_snack_setting_ppk">Setting PPK limit to 256...</string>
 </resources>

@@ -69,6 +69,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/container_led_dcpr"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -92,6 +93,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/container_led_ppk"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -116,6 +118,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/section_adv_monitoring"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -139,6 +142,93 @@
                 android:layout_height="1dp"
                 android:background="@color/dash_divider"
                 android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/container_adv_monitoring"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/adb_desc_monitoring"
+                    android:textColor="@color/dash_text_secondary"
+                    android:textSize="14sp"
+                    android:layout_marginBottom="16dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <Button
+                        android:id="@+id/btn_adb_action"
+                        android:layout_width="0dp"
+                        android:layout_height="60dp"
+                        android:layout_weight="1"
+                        android:text="@string/adb_btn_connect"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"
+                        android:background="@drawable/rounded_button"
+                        android:backgroundTint="#2196F3"
+                        android:textAllCaps="false"
+                        android:layout_marginEnd="16dp" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="60dp"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:background="@drawable/rounded_button"
+                        android:backgroundTint="@color/dash_module_bg"
+                        android:paddingHorizontal="24dp">
+
+                        <View
+                            android:id="@+id/led_adb_status"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:background="@drawable/led_off"
+                            android:layout_marginBottom="4dp" />
+
+                        <TextView
+                            android:id="@+id/txt_adb_led_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/adb_status_offline"
+                            android:textColor="@color/dash_text_secondary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:orientation="vertical"
+                    android:background="@drawable/rounded_button"
+                    android:backgroundTint="@color/dash_module_bg"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/adb_graph_title"
+                        android:textColor="@color/dash_text_secondary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginStart="8dp"/>
+
+                    <com.github.mikephil.charting.charts.LineChart
+                        android:id="@+id/cpu_chart"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
 
         <TextView
