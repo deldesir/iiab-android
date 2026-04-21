@@ -2,7 +2,7 @@
 
 **[Internet-in-a-Box (IIAB)](https://internet-in-a-box.org) on Android** will allow millions of people worldwide to build their own family libraries, inside their own phones!
 
-As of March 2026, these IIAB Apps are supported:
+As of April 2026, these IIAB Apps are supported:
 
 * **Calibre-Web** (eBooks & videos)
 * **Kiwix** (Wikipedias, etc)
