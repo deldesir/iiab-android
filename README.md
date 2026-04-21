@@ -285,11 +285,11 @@ You will then be in an IIAB Debian shell with access to the IIAB CLI (command-li
 
 ## What about 32-bit?
 
-IIAB on Android runs on older 32-bit devices, and we are making progress!  [**Maps is now supported**](https://github.com/iiab/iiab/pull/4302).
+IIAB on Android runs on older 32-bit devices, and we are making progress!  [**IIAB Maps is now supported**](https://github.com/iiab/iiab/pull/4302).
 
-However, there are still limitations:
+However, there are limitations:
 
-* Kiwix: Currently not supported on 32-bit.
+* Kiwix (currently not supported on 32-bit)
 
 While we would love to close [this gap](https://github.com/iiab/iiab-android/issues/35), porting Kiwix to this architecture requires significant development resources.  As a result, active development for this feature is currently on hold.  Community contributions are welcome if you have the expertise to help us tackle this!
 
@@ -297,7 +297,7 @@ In the meantime, you can try the current state of our pre-built rootfs:
 
 **For older 32-bit devices:**
 
-```bash
+```
 curl iiab.io/termux.txt | bash -s pull-rootfs
 ```
 
@@ -309,7 +309,7 @@ If you want to remove the IIAB installation and all associated apps, follow thes
 
 1. Remove the IIAB installation and data:
 
-   ```bash
+   ```
    iiab-termux --remove-rootfs
    ```
 
