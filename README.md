@@ -37,7 +37,7 @@ Before installing, you need to set up your Android device. These initial steps a
 ### Part 1: Prerequisites & Device Setup
 
 1. **Install F-Droid & Termux**
-   * Download and install **F-Droid** ([https://f-droid.org/F-Droid.apk](https://f-droid.org/F-Droid.apk)). You will need to allow installation from unknown sources from your default web browser.
+   * Download and install **F-Droid** ([https://f-droid.org/F-Droid.apk](https://f-droid.org/F-Droid.apk), ~12 MB). You will need to allow installation from unknown sources from your default web browser.
    * Open F-Droid and wait a moment for the repositories to update automatically in the background.
    * Install **Termux** and **Termux:API**. Most browsers will recognize these direct links after installing F-Droid: 
      * [**Termux**](https://f-droid.org/packages/com.termux)
