@@ -38,12 +38,14 @@ Before installing, you need to set up your Android device.  These initial steps 
 
 1. **Install F-Droid & Termux**
 
+   Open this web page (https://github.com/iiab/iiab-android) in your Android browser, so you can click on the links below:
+
    * Download and install **F-Droid** ([https://f-droid.org/F-Droid.apk](https://f-droid.org/F-Droid.apk), ~12 MB).  You will need to allow installation from unknown sources from your web browser.
    * Open F-Droid and wait a moment for the repositories to update automatically in the background.
    * Install **Termux** and **Termux:API**.  Most browsers will recognize these direct links after installing F-Droid: 
      * [**Termux**](https://f-droid.org/packages/com.termux)
      * [**Termux:API**](https://f-droid.org/packages/com.termux.api)
-     * *(Alternatively, you can just search for them directly inside the F-Droid app).*
+     * *(Alternatively, search for "Termux" and then "Termux API" using the green search button in the bottom-right of the F-Droid app).*
 
    > **Note:** You might see a *"This app was built for an older version of Android..."* label.  Ignore this; it only affects auto-updates.  Manual updates will continue to work.  [You can learn more on the subject here.](https://github.com/termux/termux-packages/wiki/Termux-and-Android-10/3e8102ecd05c4954d67971ff2b508f32900265f7)
 
