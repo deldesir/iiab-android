@@ -56,7 +56,7 @@ Before installing, you need to set up your Android device.  These initial steps 
    * Set it to **Unrestricted**, **Don't optimize**, or **Allow background activity** (the exact label varies by vendor).  If you leave this restricted, Android may kill the process when your screen turns off!
    > **Note:** Because this policy is important for a successful setup, our installation script will prompt you to verify this later.  Thank you for paying attention to the manual! 😉
 
-4. **Enable Developer Options & Process Limits**
+3. **Enable Developer Options & Process Limits**
 
    * Go to **Settings > About phone** (or About tablet) and tap **Build number** seven times rapidly to enable Developer Options.
    * **For Android 14 and newer:** Go back to **Settings -> System -> Developer options** and turn on `Disable child process restrictions`.
