@@ -58,8 +58,8 @@ Before installing, you need to set up your Android device.  These initial steps 
 
 3. **Enable Developer Options & Process Limits**
 
-   * Go to **Settings > About phone** (or About tablet) and tap **Build number** seven times rapidly to enable Developer Options.
-   * **For Android 14 and newer:** Go back to **Settings -> System -> Developer options** and turn on `Disable child process restrictions`.
+   * Go to **Settings > About phone** (or About tablet) and tap **Build number** or **Software version** seven times rapidly to enable Developer Options.
+   * **For Android 14 and newer:** Go back to **Settings -> System** or **General settings** -> **Developer options** and turn on `Disable child process restrictions`.
    * **For Android 8 to 11:** No special process restrictions apply.  You are good to go!
    * **For Android 12 and 13:** *Please see the special section at the bottom of this guide regarding the "Phantom Process Killer" (PPK) before proceeding, as it might interrupt your installation.*
 
