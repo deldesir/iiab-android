@@ -38,23 +38,21 @@ Before installing, you need to set up your Android device.  These initial steps 
 
 1. **Install F-Droid & Termux**
 
-   Open this web page (https://github.com/iiab/iiab-android) in your Android browser, so you can click on the links below:
+   **Open this web page (https://github.com/iiab/iiab-android) in your Android browser, so you can click the links below:**
 
-   * Download and install **F-Droid** ([https://f-droid.org/F-Droid.apk](https://f-droid.org/F-Droid.apk), ~12 MB).  You will need to allow installation from unknown sources from your web browser.
+   * Download and install [**F-Droid**](https://f-droid.org/F-Droid.apk) (~12 MB).  You will need to allow installation from unknown sources from your web browser.
    * Open F-Droid and wait a moment for the repositories to update automatically in the background.
    * Install **Termux** and **Termux:API**.  Most browsers will recognize these direct links after installing F-Droid: 
-     * [**Termux**](https://f-droid.org/packages/com.termux)
-     * [**Termux:API**](https://f-droid.org/packages/com.termux.api)
+     * [**Termux**](https://f-droid.org/packages/com.termux) (~109 MB)
+     * [**Termux:API**](https://f-droid.org/packages/com.termux.api) (~4 MB)
      * *(Alternatively, search for "Termux" and then "Termux API" using the green search button in the bottom-right of the F-Droid app).*
-
-   > **Note:** You might see a *"This app was built for an older version of Android..."* label.  Ignore this; it only affects auto-updates.  Manual updates will continue to work.  [You can learn more on the subject here.](https://github.com/termux/termux-packages/wiki/Termux-and-Android-10/3e8102ecd05c4954d67971ff2b508f32900265f7)
+   > **Note:** You might see a *"This app was built for an older version of Android..."* label.  Ignore this; it only affects auto-updates.  Manual updates will continue to work.  [You can learn more here.](https://github.com/termux/termux-packages/wiki/Termux-and-Android-10/3e8102ecd05c4954d67971ff2b508f32900265f7)
 
 2. **Configure Battery Settings (Important)**
 
    To run the installation or keep IIAB services alive in the background, you must allow Termux to run without battery restrictions.
    * Go to your Android **Settings -> Apps -> Termux -> Battery**.
    * Set it to **Unrestricted**, **Don't optimize**, or **Allow background activity** (the exact label varies by vendor).  If you leave this restricted, Android may kill the process when your screen turns off!
-
    > **Note:** Because this policy is important for a successful setup, our installation script will prompt you to verify this later.  Thank you for paying attention to the manual! 😉
 
 3. **Enable Developer Options & Process Limits**
