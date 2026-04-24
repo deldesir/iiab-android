@@ -2,10 +2,10 @@
     <h2 class="mb-4 fw-bold border-bottom border-secondary pb-3">Map Extraction Dashboard</h2>
     
     <div class="card mb-4 p-3 border-secondary shadow-sm">
-        <label for="raw-command" class="form-label text-warning fw-bold">Execute "New Maps" shell command:</label>
+        <label for="raw-command" class="form-label text-warning fw-bold">Execute IIAB Maps shell command:</label>
         <div class="row g-2 align-items-stretch">
             <div class="col-12 col-md-10">
-                <textarea id="raw-command" class="form-control border-0 h-100" rows="2" style="resize: none;" placeholder="e.g.: sudo /opt/iiab/maps/..."></textarea>
+                <textarea id="raw-command" class="form-control shell-input border-0 h-100" rows="2" style="resize: none;" placeholder="e.g.: sudo /opt/iiab/maps/..."></textarea>
             </div>
             <div class="col-12 col-md-2">
                 <button id="btn-start" class="btn btn-primary w-100 h-100 fw-bold">Start</button>
@@ -100,20 +100,29 @@
     let mapsInMemory = [];
     const mapsContainer = document.getElementById('maps-container');
     const mapsStatus = document.getElementById('maps-status');
+    const btnRefreshMaps = document.getElementById('btn-refresh-maps');
 
     // Request data on app load and refresh button
     function requestUpdate() {
         mapsStatus.classList.remove('hidden-section');
+        mapsContainer.style.opacity = '0.5'; // Dim the current cards
+        
+        // Lock the button and provide visual feedback
+        btnRefreshMaps.disabled = true;
+        btnRefreshMaps.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>Refreshing...`;
         socket.emit('request_maps_catalog');
     }
 
     requestUpdate();
-    document.getElementById('btn-refresh-maps').addEventListener('click', requestUpdate);
+    btnRefreshMaps.addEventListener('click', requestUpdate);
 
     // Receive catalog from Node
     socket.on('maps_catalog_ready', (catalog) => {
         mapsInMemory = catalog;
         mapsStatus.classList.add('hidden-section');
+        mapsContainer.style.opacity = '1'; // Restore visibility
+        btnRefreshMaps.disabled = false;
+        btnRefreshMaps.textContent = 'Refresh List';
         renderMapsGrid();
     });
 

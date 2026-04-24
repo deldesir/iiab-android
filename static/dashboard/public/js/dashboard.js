@@ -78,6 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
     themeManager.init();
     loadLanguage();
     switchTab('home');
+    discoverDashboardModules();
+    floatingMenuManager.init();
 });
 
 // ==========================================
@@ -164,7 +166,7 @@ socket.on('refresh_local_books', () => {
 
 function renderLocalBooks(books) {
     const container = document.getElementById('books-content-container');
-    container.className = "row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4";
+    container.className = "row row-cols-1 row-cols-sm-2 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4";
     container.innerHTML = '';
 
     if (books.length === 0) {
@@ -521,3 +523,170 @@ function togglePasswordVisibility() {
         toggleBtn.innerText = '👁️'; // Ojo abierto
     }
 }
+
+// ==========================================
+// MOBILE FLOATING MENU MANAGER (Advanced Physics)
+// ==========================================
+const floatingMenuManager = {
+	breakpoint: 576,
+    init() {
+        this.menu = document.querySelector('.app-sidebar');
+        if (!this.menu) return;
+
+        this.isDragging = false;
+        this.edge = 'right';
+        this.inactivityTimeout = null;
+        this.velocityX = 0; // To measure if the user performs a hard swipe
+
+        if (window.innerWidth >= this.breakpoint) return;
+
+        this.menu.addEventListener('pointerdown', this.onPointerDown.bind(this));
+        document.addEventListener('pointermove', this.onPointerMove.bind(this));
+        document.addEventListener('pointerup', this.onPointerUp.bind(this));
+        document.addEventListener('pointercancel', this.onPointerUp.bind(this));
+        window.addEventListener('resize', this.snapToEdge.bind(this));
+        this.menu.addEventListener('click', () => this.resetTimer());
+
+        // Initialize snapped to one edge on load
+        this.snapToEdge();
+        this.resetTimer();
+    },
+
+    onPointerDown(e) {
+        if (e.target.closest('a') || e.target.closest('button')) return;
+
+        this.isDragging = true;
+        this.velocityX = 0;
+
+        // Remove edge fusion and hidden state on grab (returns to floating pill)
+        this.menu.classList.remove('collapsed-left', 'collapsed-right', 'fused-left', 'fused-right');
+        this.menu.classList.add('dragging');
+
+        this.menu.setPointerCapture(e.pointerId);
+        clearTimeout(this.inactivityTimeout);
+    },
+
+    onPointerMove(e) {
+        if (!this.isDragging) return;
+
+        // Capture velocity and direction (positive=right, negative=left)
+        this.velocityX = e.movementX;
+
+        let newX = e.clientX - (this.menu.offsetWidth / 2);
+        this.menu.style.left = `${newX}px`;
+    },
+
+onPointerUp(e) {
+        if (!this.isDragging) return;
+        this.isDragging = false;
+        this.menu.classList.remove('dragging');
+        this.menu.releasePointerCapture(e.pointerId);
+
+        const screenWidth = window.innerWidth;
+
+        // 1. "Smash" Detection (Throw by velocity)
+        // Evaluate if the user forcefully threw the menu to one side
+        const isSmashLeft = this.velocityX < -15;
+        const isSmashRight = this.velocityX > 15;
+        let isSmash = false;
+
+        // 2. Evaluate the exact physical position of the pill's center
+        const menuRect = this.menu.getBoundingClientRect();
+        const menuCenterX = menuRect.left + (menuRect.width / 2);
+
+        // 3. DECISION MAKING
+        if (isSmashLeft) {
+            this.edge = 'left';
+            isSmash = true;
+        } else if (isSmashRight) {
+            this.edge = 'right';
+            isSmash = true;
+        } else {
+            // IF NOT THROWN: Apply the 50% screen rule
+            // If the pill's center crosses the middle of the screen, switch sides
+            if (menuCenterX < screenWidth / 2) {
+                this.edge = 'left';
+            } else {
+                this.edge = 'right';
+            }
+        }
+
+        // Execute movement and timer
+        this.snapToEdge();
+        this.resetTimer(isSmash);
+    },
+
+snapToEdge() {
+        // 1. KILL SWITCH (Landscape or Desktop)
+        if (window.innerWidth >= this.breakpoint) {
+            this.menu.style.left = '';
+            this.menu.style.transform = ''; // Clear transformations
+            this.menu.classList.remove('fused-left', 'fused-right', 'collapsed-left', 'collapsed-right', 'dragging');
+            return;
+        }
+
+        // 2. NORMAL MOBILE LOGIC
+        const screenWidth = window.innerWidth;
+
+        if (this.edge === 'left') {
+            this.menu.style.left = '0px';
+            this.menu.classList.add('fused-left');
+            this.menu.classList.remove('fused-right');
+        } else {
+            this.menu.style.left = `${screenWidth - this.menu.offsetWidth}px`;
+            this.menu.classList.add('fused-right');
+            this.menu.classList.remove('fused-left');
+        }
+    },
+
+    resetTimer(isSmash = false) {
+        // On Landscape or PC, clear the timer so it never collapses
+        if (window.innerWidth >= this.breakpoint) {
+            clearTimeout(this.inactivityTimeout);
+            return;
+        }
+
+        clearTimeout(this.inactivityTimeout);
+        this.menu.classList.remove('collapsed-left', 'collapsed-right');
+
+        const timeoutDuration = isSmash ? 200 : 4000;
+
+        this.inactivityTimeout = setTimeout(() => {
+            if (!this.isDragging && window.matchMedia("(orientation: portrait)").matches) {
+                this.menu.classList.add(this.edge === 'left' ? 'collapsed-left' : 'collapsed-right');
+            }
+        }, timeoutDuration);
+    }
+};
+
+// ==========================================
+// MODULE DISCOVERY LOGIC
+// ==========================================
+const discoverDashboardModules = async () => {
+    // Only check modules that we know might not be installed
+    const modules = ['kiwix', 'maps', 'books'];
+    
+    const promises = modules.map(async (mod) => {
+        try {
+            const response = await fetch(`/${mod}/`, { method: "HEAD", cache: "no-store" });
+            
+            if (response.status !== 404) {
+                // Module exists, reveal its card and sidebar button
+                const card = document.getElementById(`card-${mod}`);
+                const tabBtn = document.getElementById(`tab-${mod}`); // Assuming the sidebar button has this ID format
+                
+                if (card) card.style.display = 'block';
+                if (tabBtn) tabBtn.style.display = 'flex';
+            }
+        } catch (error) {
+            // If there's a network error (container is down), reveal it anyway
+            // assuming it is installed, just offline.
+            const card = document.getElementById(`card-${mod}`);
+            const tabBtn = document.getElementById(`tab-${mod}`);
+            if (card) card.style.display = 'block';
+            if (tabBtn) tabBtn.style.display = 'flex';
+        }
+    });
+
+    await Promise.all(promises);
+};

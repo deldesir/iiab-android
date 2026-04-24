@@ -6,24 +6,16 @@
         <hr class="border-secondary opacity-25">
     </div>
 
-    <div class="mb-4">
-        <div class="input-group input-group-lg shadow-sm">
-            <span class="input-group-text bg-surface border-end-0 text-secondary">🔍</span>
-            <input type="text" class="form-control border-start-0 ps-2" id="global-book-search" placeholder="Search local or remote catalog..." onkeyup="handleGlobalSearch(this.value)">
-        </div>
+    <div class="custom-search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="form-control border-secondary" id="global-book-search" placeholder="Search local or remote catalog..." onkeyup="handleGlobalSearch(this.value)">
     </div>
 
-    <ul class="nav nav-tabs mb-4 border-secondary" id="books-tab-nav">
-        <li class="nav-item">
-            <a class="nav-link active cursor-pointer fw-bold" id="nav-local" onclick="switchBookTab('local')">📚 My Local Books</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link cursor-pointer fw-bold" id="nav-top" onclick="switchBookTab('top')">🏆 Top 100</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link cursor-pointer fw-bold" id="nav-edu" onclick="switchBookTab('educational')">🎓 Educational & Children</a>
-        </li>
-    </ul>
+    <div class="books-tabs-grid" id="books-tab-nav">
+        <a class="nav-link tab-50 active" id="nav-local" onclick="switchBookTab('local')">📚 Local Books</a>
+        <a class="nav-link tab-50" id="nav-top" onclick="switchBookTab('top')">🏆 Top 100</a>
+        <a class="nav-link tab-100" id="nav-edu" onclick="switchBookTab('educational')">🎓 Educational & Children</a>
+    </div>
 
     <div id="books-action-bar" class="d-flex justify-content-between align-items-center mb-3 hidden-section">
         <div class="d-flex align-items-center"></div>

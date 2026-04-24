@@ -54,7 +54,9 @@ body {
 }
 
 .btn {
-    display: flex; align-items: center; justify-content: center;
+    display: none;
+    opacity: 0;
+    align-items: center; justify-content: center;
     padding: 18px; border-radius: 14px; text-decoration: none;
     font-size: 20px; font-weight: bold;
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);

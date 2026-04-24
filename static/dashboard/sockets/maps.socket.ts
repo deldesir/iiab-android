@@ -6,7 +6,7 @@ import path from 'path';
 // Critical paths in the backend
 const SCRIPTS_DIR = '/opt/iiab/maps/tile-extract/';
 const EXTRACT_SCRIPT = path.join(SCRIPTS_DIR, 'tile-extract.py');
-const CATALOG_JSON = '/library/www/osm/maps/extracts.json';
+const CATALOG_JSON = '/library/www/maps/extracts.json';
 
 // --- FUNCTION: Read existing regions from JSON ---
 function getMapsCatalog() {
@@ -17,17 +17,26 @@ function getMapsCatalog() {
         const fileContent = fs.readFileSync(CATALOG_JSON, 'utf8');
         const data = JSON.parse(fileContent);
         
-        // Transform JSON format {"regions": {"name": [bbox...]}} 
-        // to an array manageable by the web: [{name, bbox}]
         const regions = [];
         if (data && data.regions) {
             for (const name in data.regions) {
-                // Format coordinates to 4 decimals so they look clean
-                const bbox = data.regions[name].map((coord: number) => coord.toFixed(4));
-                regions.push({
-                    name: name,
-                    bbox: bbox.join(', ') // "min_lon, min_lat, max_lon, max_lat"
-                });
+                const regionData = data.regions[name];
+
+                // Validation in case an old map does not have the new format
+                if (regionData && regionData.bbox && Array.isArray(regionData.bbox)) {
+                    const bbox = regionData.bbox.map((coord: number) => coord.toFixed(4));
+                    regions.push({
+                        name: name,
+                        bbox: bbox.join(', ')
+                    });
+                } else if (Array.isArray(regionData)) {
+                    // It maintains support for the old format through backward compatibility.
+                    const bbox = regionData.map((coord: number) => coord.toFixed(4));
+                    regions.push({
+                        name: name,
+                        bbox: bbox.join(', ')
+                    });
+                }
             }
         }
         return regions;
@@ -80,8 +89,11 @@ export const handleMapsEvents = (socket: Socket) => {
 
     // A. Send catalog to the web
     socket.on('request_maps_catalog', () => {
-        const catalog = getMapsCatalog();
-        socket.emit('maps_catalog_ready', catalog);
+        // UX: Artificial 800ms delay to prevent visual flickering (glitches) on the frontend
+        setTimeout(() => {
+            const catalog = getMapsCatalog();
+            socket.emit('maps_catalog_ready', catalog);
+        }, 800);
     });
 
     // B. Process raw order (copy-paste) with strict validation

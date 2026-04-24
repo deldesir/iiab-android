@@ -1,5 +1,9 @@
+/* ==========================================================================
+   IIAB-oA DASHBOARD STYLESHEET
+   ========================================================================== */
+
 /* =========================================
-   VARIABLES & THEMING
+   1. VARIABLES & THEMING
    ========================================= */
 :root {
     /* Geometry & Ergonomics */
@@ -19,7 +23,7 @@
 }
 
 [data-bs-theme='dark'] {
-    /* Dark Mode Custom Colors (Preserving your exact original shades) */
+    /* Dark Mode Custom Colors */
     --bg-main: #121212;
     --surface-bg: #1e1e1e;
     --sidebar-bg: #121212;
@@ -31,7 +35,7 @@
 }
 
 /* =========================================
-   BASE STYLES & GEOMETRY
+   2. BASE STYLES & TYPOGRAPHY
    ========================================= */
 body { 
     font-family: 'Inter', -apple-system, sans-serif;
@@ -49,13 +53,35 @@ h1, h2, h3, h4, h5, h6 {
     display: none !important; 
 }
 
+/* Increase contrast on secondary texts */
+.text-secondary, .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* All Uppercase for Navigation and Headers */
+.nav-text,
+.sidebar-title {
+    text-transform: uppercase;
+    font-size: 0.80rem;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+/* =========================================
+   3. UI COMPONENTS & FORMS
+   ========================================= */
 /* Universal Card Geometry & Elevation */
-.card, .app-panel, .stat-card, .map-card {
+.card, .app-panel, .stat-card, .map-card, .list-group-item, .modal-content, .alert {
     border-radius: var(--app-radius) !important;
-    background-color: var(--surface-bg);
-    border: 1px solid var(--border-color);
+    background-color: var(--surface-bg) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
     transition: all var(--transition-speed) ease;
-    padding-top: 15px;
+}
+
+/* Custom internal padding for main panels */
+.app-panel, .stat-card, .map-card {
+    padding: 15px 20px;
 }
 
 /* Add depth/shadows only in Dark Mode */
@@ -63,7 +89,7 @@ h1, h2, h3, h4, h5, h6 {
 [data-bs-theme='dark'] .app-panel,
 [data-bs-theme='dark'] .stat-card,
 [data-bs-theme='dark'] .map-card {
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.05) !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
@@ -71,9 +97,73 @@ h1, h2, h3, h4, h5, h6 {
 .btn {
     border-radius: 8px;
     transition: transform 0.1s active, background-color 0.2s;
+    text-transform: uppercase;
+    font-size: 0.80rem;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    padding: 0.6rem 1.2rem;
 }
 .btn:active {
     transform: scale(0.96); /* Ergonomic tactile click */
+}
+
+/* Standard Inputs & Textareas */
+.form-control {
+    background-color: var(--surface-bg) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--border-color) !important;
+}
+.form-control::placeholder {
+    color: var(--text-secondary) !important;
+    opacity: 0.5 !important;
+    font-size: 1rem;
+}
+
+/* Search Container (Pill format with embedded icon) */
+.custom-search-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
+}
+.custom-search-container .form-control {
+    padding-left: 2.8rem; /* Space for the search icon */
+    padding-right: 1.5rem;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    border-radius: 30px;  /* Elegant pill shape */
+    background-color: transparent !important;
+}
+.custom-search-container .search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    pointer-events: none; /* Prevents blocking clicks on input */
+}
+
+/* Terminal / Shell Inputs (Maps) */
+.shell-input {
+    background-color: rgba(0, 0, 0, 0.2) !important; /* Darker to simulate terminal */
+    border: 1px solid var(--accent-color) !important;
+    color: var(--info-orange) !important;
+    font-family: monospace;
+    padding: 12px 15px;
+    border-radius: var(--app-radius);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+[data-bs-theme='light'] .shell-input {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* External Wikipedia link icon modifier */
+#modal-desc a[href*="wikipedia.org"]::after {
+    content: "↗";
+    font-size: 1em;
+    font-weight: bold;
+    color: var(--accent-color);
+    text-decoration: none;
 }
 
 /* Theme Toggle Button */
@@ -95,12 +185,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* =========================================
-   RESPONSIVE NAVIGATION
+   4. RESPONSIVE NAVIGATION & SIDEBAR
    ========================================= */
 .nav-btn {
+    display: flex;
+    align-items: center;
     cursor: pointer;
     border-radius: var(--app-radius);
     transition: background 0.2s, transform 0.2s;
+    text-decoration: none;
 }
 .nav-btn:hover, .nav-btn.active {
     background-color: var(--hover-bg);
@@ -110,8 +203,8 @@ h1, h2, h3, h4, h5, h6 {
     margin-right: 10px;
 }
 
-/* Desktop (PC) */
-@media (min-width: 768px) {
+/* Desktop & Landscape (PC & Tablets) */
+@media (min-width: 576px) {
     .app-sidebar {
         min-height: 100vh;
         background-color: var(--sidebar-bg);
@@ -119,43 +212,93 @@ h1, h2, h3, h4, h5, h6 {
         transition: background-color var(--transition-speed);
     }
     .nav-btn:hover {
-        transform: translateX(5px); /* Slide effect on desktop */
+        transform: translateX(5px); /* Gentle slide effect on desktop */
     }
 }
 
-/* Mobile (Phone) */
-@media (max-width: 767.98px) {
+/* Mobile (Phone) - Floating & Draggable Nav Pill */
+@media (max-width: 575.98px) {
     .app-sidebar {
         position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 10px; /* Initial position */
+        width: 65px;
         z-index: 1050; 
-        background-color: var(--sidebar-bg) !important;
-        border-top: 1px solid var(--border-color);
-        padding: 10px 0 !important;
-        transition: background-color var(--transition-speed);
+        background-color: var(--surface-bg) !important;
+        border: 1px solid var(--border-color);
+        border-radius: 35px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        padding: 15px 0 !important;
+        touch-action: none; /* Prevents background scrolling when dragging */
+        transition: left 0.3s ease-out, transform 0.3s ease-in-out, opacity 0.3s, border-radius 0.3s, height 0.3s;
     }
-    .sidebar-title { display: none; } 
-    .app-sidebar .nav {
-        flex-direction: row !important; 
-        justify-content: space-evenly;
-    }
-    .nav-btn {
-        display: flex;
-        flex-direction: column; 
-        align-items: center;
-        padding: 5px;
-        font-size: 0.75rem; 
-    }
-    .nav-icon { margin-right: 0; margin-bottom: 2px; }
 
-    body { padding-bottom: 80px; }
-    .col-md-9 { padding: 15px !important; }
+    /* Hide text, keeping only icons to fit inside the pill */
+    .sidebar-title, .nav-text { display: none; }
+
+    .app-sidebar .nav {
+        flex-direction: column !important;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .nav-icon { margin-right: 0; font-size: 1.2rem; }
+
+    /* --- Physics States (Controlled by JS) --- */
+    .app-sidebar.dragging {
+        transition: none; /* Removes transition to instantly follow finger */
+        opacity: 0.9;
+        transform: translateY(-50%) scale(1.05); /* Glass "lift" effect */
+    }
+
+    /* Inactivity Collapsed States */
+    .app-sidebar.collapsed-left {
+        transform: translateY(-50%) translateX(-70%);
+        opacity: 0.5;
+    }
+    .app-sidebar.collapsed-right {
+        transform: translateY(-50%) translateX(70%);
+        opacity: 0.5;
+    }
+
+    /* Edge Fused States */
+    .app-sidebar.fused-left {
+        left: 0 !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        border-left: none !important;
+    }
+    .app-sidebar.fused-right {
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        border-right: none !important;
+    }
+
+    /* --- Drag Grips (Visual Affordance) --- */
+    .app-sidebar::before,
+    .app-sidebar::after {
+        content: "";
+        display: block;
+        width: 24px;
+        height: 10px;
+        margin: 0 auto;
+        opacity: 0.3;
+        /* Creates 3 horizontal lines to simulate plastic grips */
+        background: repeating-linear-gradient(
+            to bottom,
+            var(--text-main) 0,
+            var(--text-main) 2px,
+            transparent 2px,
+            transparent 4px
+        );
+    }
+    .app-sidebar::before { margin-bottom: 15px; } /* Top grip spacing */
+    .app-sidebar::after { margin-top: 15px; }     /* Bottom grip spacing */
 }
 
 /* =========================================
-   APP: HOME (DASHBOARD)
+   5. APP: HOME DASHBOARD
    ========================================= */
 .disk-bar-container {
     background: var(--border-color);
@@ -164,11 +307,18 @@ h1, h2, h3, h4, h5, h6 {
     overflow: hidden;
     display: flex;
 }
-.disk-segment-used { background: #5dbca5; transition: width 1s ease-in-out; }
-.disk-segment-free { background: transparent; flex-grow: 1; }
+.disk-segment-used {
+    background: #5dbca5;
+    transition: width 1s ease-in-out;
+}
+.disk-segment-free {
+    background: transparent;
+    flex-grow: 1;
+}
 
 .stat-card { padding: 20px; }
-.stat-card:hover { border-color: #5dbca5; }
+.stat-card:hover { border-color: #5dbca5 !important; }
+
 .icon-box {
     width: 50px;
     height: 50px;
@@ -180,9 +330,74 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* =========================================
-   APP: MAPS & KIWIX
+   6. APP: BOOKS MANAGER
    ========================================= */
-.map-card:hover { border-color: #dc3545; }
+/* Books Navigation Tabs (50/50 & 100 Layout) */
+.books-tabs-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.books-tabs-grid .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    border-radius: var(--app-radius);
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    text-align: center;
+}
+.books-tabs-grid .nav-link.active {
+    background-color: var(--hover-bg);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+/* Mobile defaults */
+.books-tabs-grid .tab-50 { flex: 1 1 45%; }
+.books-tabs-grid .tab-100 { flex: 1 1 100%; }
+
+/* Tablet/Landscape behavior: 33 / 33 / 33 */
+@media (min-width: 576px) {
+    .books-tabs-grid .tab-50,
+    .books-tabs-grid .tab-100 {
+        flex: 1 1 30%;
+    }
+}
+
+/* Internal alignment correction for book cards */
+.zim-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+}
+.zim-card .card-img-top {
+    width: 100%;
+    object-fit: cover;
+    border-radius: var(--app-radius) var(--app-radius) 0 0;
+}
+.zim-card .card-body {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Pushes content to fill the card */
+    padding: 15px !important;
+}
+.zim-card .mt-auto {
+    width: 100%; 
+    margin-top: auto !important; /* Pushes button block to the bottom */
+}
+
+/* =========================================
+   7. APP: MAPS & KIWIX
+   ========================================= */
+.map-card:hover { border-color: #dc3545 !important; }
 .map-coords { color: #888; font-size: 0.85em; font-family: monospace; }
 
 .collapse-btn-container {
@@ -197,15 +412,26 @@ h1, h2, h3, h4, h5, h6 {
     opacity: 1;
 }
 
-.filter-active { background-color: #198754 !important; color: white !important; border-color: #198754 !important;}
-.filter-inactive { background-color: transparent !important; color: #198754 !important; border-color: #198754 !important;}
+/* Kiwix Filter Buttons */
+.filter-active { 
+    background-color: #198754 !important; 
+    color: white !important; 
+    border-color: #198754 !important;
+}
+.filter-inactive { 
+    background-color: transparent !important; 
+    color: #198754 !important; 
+    border-color: #198754 !important;
+}
 
 /* =========================================
-   FLOATING ADJUSTMENTS & MOBILE SPACING
+   8. MOBILE ADJUSTMENTS & UTILITIES
    ========================================= */
 .floating-filter { bottom: 0; }
 
-@media (max-width: 767.98px) {
+@media (max-width: 575.98px) {
+    body { padding-bottom: 20px; } 
+
     .floating-filter { bottom: 80px !important; }
 
     .app-panel {
@@ -216,59 +442,5 @@ h1, h2, h3, h4, h5, h6 {
 
     #terminal, #kiwix-terminal { margin-top: 15px !important; }
     .zim-card, .map-card { margin-bottom: 15px !important; }
-
     .app-panel.pb-5 { padding-bottom: 120px !important; }
-}
-/* =========================================
-   TYPOGRAPHY & REFINEMENTS
-   ========================================= */
-/* Force all cards, modals, and list items to obey the theme background */
-.card, .stat-card, .map-card, .zim-card, .list-group-item, .modal-content, .alert {
-    background-color: var(--surface-bg) !important;
-    color: var(--bs-body-color) !important;
-    border-color: var(--border-color) !important;
-}
-
-/* All Uppercase for Navigation */
-.nav-text,
-.sidebar-title {
-    text-transform: uppercase;
-    font-size: 0.80rem;
-    letter-spacing: 1px;
-    font-weight: 600;
-}
-
-/* All Uppercase for Action Buttons */
-.btn {
-    text-transform: uppercase;
-    font-size: 0.80rem;
-    letter-spacing: 0.8px;
-    font-weight: 700;
-    padding: 0.6rem 1.2rem;
-}
-
-/* Increase contrast on secondary texts */
-.text-secondary, .text-muted {
-    color: var(--text-secondary) !important;
-}
-
-/* Fix for Search Inputs and Textareas in both themes */
-.form-control {
-    background-color: var(--surface-bg) !important;
-    color: var(--text-main) !important;
-    border: 1px solid var(--border-color) !important;
-}
-.form-control::placeholder {
-    color: var(--text-secondary) !important;
-    opacity: 0.5 !important;
-    font-size: 1rem;
-}
-
-/* --- External Wikipedia link icon --- */
-#modal-desc a[href*="wikipedia.org"]::after {
-    content: "↗";
-    font-size: 1em;
-    font-weight: bold;
-    color: var(--accent-color);
-    text-decoration: none;
 }

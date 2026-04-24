@@ -50,23 +50,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 2. Intelligent Discovery
     const discoverApps = async () => {
-        for (const [appName, url] of Object.entries(services)) {
+        const promises = Object.entries(services).map(async ([appName, url]) => {
             const btn = document.querySelector(`.btn-${appName}`);
-            if (!btn) continue;
+            if (!btn) return;
 
             try {
+                // Perform a quick ping
                 const response = await fetch(url, { method: "HEAD", cache: "no-store" });
 
-                if (response.status === 404) {
-                    // Not installed (hidden)
-                    btn.style.display = "none";
+                if (response.status !== 404) {
+                    // IF IT EXISTS: Show it in the UI, but initially "disabled"
+                    btn.style.display = "flex";
+                    btn.classList.add("disabled");
+
+                    // Quick trick to force DOM reflow so the CSS opacity transition triggers
+                    setTimeout(() => btn.style.opacity = "1", 10);
+                } else {
+                    // DOES NOT EXIST (e.g., 32-bits without Kiwix): Keep it hidden and remove from monitoring
                     btn.classList.add("not-installed");
                     delete services[appName];
                 }
             } catch (error) {
-                // Silent network failure, continuous monitoring will display update
+                // If the network fails (server is down but the app is installed)
+                // Reveal it as disabled so the user knows the app exists
+                // and let the continuous monitor attempt to revive it
+                btn.style.display = "flex";
+                btn.classList.add("disabled");
+                setTimeout(() => btn.style.opacity = "1", 10);
             }
-        }
+        });
+
+        // Wait for all pings to finish concurrently
+        await Promise.all(promises);
     };
 
     // 3. Smart Monitor (Adaptive Polling)
