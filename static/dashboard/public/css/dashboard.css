@@ -376,7 +376,7 @@ h1, h2, h3, h4, h5, h6 {
 .zim-card {
     display: flex;
     flex-direction: column;
-    overflow: hidden; 
+    overflow: hidden;
 }
 .zim-card .card-img-top {
     width: 100%;
@@ -390,7 +390,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 15px !important;
 }
 .zim-card .mt-auto {
-    width: 100%; 
+    width: 100%;
     margin-top: auto !important; /* Pushes button block to the bottom */
 }
 
@@ -413,14 +413,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Kiwix Filter Buttons */
-.filter-active { 
-    background-color: #198754 !important; 
-    color: white !important; 
+.filter-active {
+    background-color: #198754 !important;
+    color: white !important;
     border-color: #198754 !important;
 }
-.filter-inactive { 
-    background-color: transparent !important; 
-    color: #198754 !important; 
+.filter-inactive {
+    background-color: transparent !important;
+    color: #198754 !important;
     border-color: #198754 !important;
 }
 

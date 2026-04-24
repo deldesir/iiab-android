@@ -665,16 +665,16 @@ snapToEdge() {
 const discoverDashboardModules = async () => {
     // Only check modules that we know might not be installed
     const modules = ['kiwix', 'maps', 'books'];
-    
+
     const promises = modules.map(async (mod) => {
         try {
             const response = await fetch(`/${mod}/`, { method: "HEAD", cache: "no-store" });
-            
+
             if (response.status !== 404) {
                 // Module exists, reveal its card and sidebar button
                 const card = document.getElementById(`card-${mod}`);
                 const tabBtn = document.getElementById(`tab-${mod}`); // Assuming the sidebar button has this ID format
-                
+
                 if (card) card.style.display = 'block';
                 if (tabBtn) tabBtn.style.display = 'flex';
             }
