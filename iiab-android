@@ -32,7 +32,7 @@ fi
 GIT_REPO_IIABOA="https://github.com/iiab/iiab-android"
 IIABOA_OPT_DIR="/opt/iiab-android"
 SITE_UPDATER="/opt/iiab-android/static/site/site-updater.sh"
-#LOCAL_VARS_URL="https://raw.githubusercontent.com/iiab/iiab/refs/heads/master/vars/local_vars_android.yml"
+BASE_VARS_URL="https://raw.githubusercontent.com/iiab/iiab/refs/heads/master/vars/"
 LOCAL_VARS_DEST="/etc/iiab/local_vars.yml"
 
 INSTALL_PRIMARY="https://iiab.io/install.txt"
@@ -228,20 +228,17 @@ choose_local_vars_size() {
     read -r choice < /dev/tty || choice="2"
   fi
 
-  # TODO: Update URLs to master branch once PR #4394 is merged
-  local BASE_PR_URL="https://raw.githubusercontent.com/Ark74/iiab/0a1857a1dee33821bf2e44628d3b99eb08bc4a7b/vars"
-
   case "${choice}" in
     1)
-      LOCAL_VARS_URL="${BASE_PR_URL}/local_vars_android_small.yml"
+      LOCAL_VARS_URL="${BASE_VARS_URL}/local_vars_android_small.yml"
       log "Selected: Basic (Small)"
       ;;
     3)
-      LOCAL_VARS_URL="${BASE_PR_URL}/local_vars_android_large.yml"
+      LOCAL_VARS_URL="${BASE_VARS_URL}/local_vars_android_large.yml"
       log "Selected: Full (Large)"
       ;;
     *)
-      LOCAL_VARS_URL="${BASE_PR_URL}/local_vars_android_medium.yml"
+      LOCAL_VARS_URL="${BASE_VARS_URL}/local_vars_android_medium.yml"
       log "Selected: Standard (Medium)"
       ;;
   esac
